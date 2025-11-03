@@ -34,3 +34,19 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Stakeholder Portal Notes
+
+- Email (SMTP)
+  - Configure env vars to enable real email sending via SMTP:
+    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `COMPANY_EMAIL`
+  - If unset or `nodemailer` is not installed, emails are logged to the server console.
+
+- Document Upload Security
+  - File size limited to 10MB.
+  - Strict MIME allowlist with basic magic-number checks for: pdf, jpg/jpeg, png, docx, xlsx, pptx, txt.
+  - To integrate AV scanning (e.g., ClamAV), extend `app/api/stakeholder/document/route.ts` where indicated.
+
+- Pagination
+  - Messages: `GET /api/stakeholder/messages?limit=10&cursor=<lastId>`
+  - Documents: `GET /api/stakeholder/documents?limit=10&cursor=<lastId>`
