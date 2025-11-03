@@ -12,6 +12,7 @@ import { Stats } from 'fs';
 import ServicesSectionPage from './web-management/ServicesSectionPage';
 import SustainabilityPage from './web-management/SustainabilityPage';
 import InformationCenterPage from './web-management/InformationCenterPage';
+import GeothermalSitesPage from './web-management/GeothermalSitesPage';
 // TypeScript interfaces
 interface PageData {
   title: string;
@@ -225,8 +226,9 @@ const pageData: Record<string, PageData> = {
     title: 'Stats ',
     description: 'Manage the about us section content, team information, and company details.',
   },
-  information: { title: 'Information Center', description: 'Manage photos, videos, newsletters, and press releases.' },
-  sustainability: {
+  
+  geosites: { title: 'Geothermal Sites', description: 'Manage geothermal sites, zones, and map coordinates.' },
+sustainability: {
     title: 'Sustainability',
     description: 'Manage sustainability projects (ESIA) and partner stakeholders.',
   },
@@ -793,6 +795,7 @@ const pageComponents: Record<string, ComponentType> = {
   stats: StatsSectionPage,
   sustainability: SustainabilityPage,
   information: InformationCenterPage,
+  geosites: GeothermalSitesPage,
   about: AboutPage,
   services: ServicesSectionPage,
   portfolio: PortfolioPage,
@@ -984,6 +987,7 @@ const Sidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void; activePage
         { page: 'hero', text: 'Hero Section', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2" /> },
         { page: 'about', text: 'About Us', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
         { page: 'information', text: 'Information Center', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h10M4 14h8M4 18h6" /> },
+        { page: 'geosites', text: 'Geothermal Sites', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A2 2 0 012 15.382V5a2 2 0 012-2h16a2 2 0 012 2v10.382a2 2 0 01-1.553 1.894L15 20l-6 0z" /> },
         { page: 'sustainability', text: 'Sustainability', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 14a4 4 0 114-4H8a4 4 0 013 4z" /> },
         { page: 'stats', text: 'Stats ', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
         { page: 'services', text: 'Services', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
@@ -1099,7 +1103,7 @@ const AdminPanel: React.FC = () => {
   const [activePage, setActivePage] = useState('dashboard');
 
   const updateBreadcrumb = (page: string) => {
-    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'sustainability', 'services', 'portfolio', 'news', 'contact', 'footer'].includes(page);
+    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'news', 'contact', 'footer'].includes(page);
     return (
       <div className="hidden md:flex items-center text-sm text-gray-500 mb-2">
         <span>Dashboard</span>
@@ -1237,6 +1241,9 @@ const AdminPanel: React.FC = () => {
 };
 
 export default AdminPanel;
+
+
+
 
 
 
