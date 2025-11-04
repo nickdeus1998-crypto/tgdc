@@ -34,7 +34,8 @@ interface CoreValue {
   icon: string;
 }
 
-const timelineItems: TimelineItem[] = [
+// Defaults used before CMS data loads
+const defaultTimelineItems: TimelineItem[] = [
   {
     year: '2008',
     title: 'Foundation',
@@ -72,14 +73,14 @@ const timelineItems: TimelineItem[] = [
   },
 ];
 
-const stats: Stat[] = [
+const defaultStats: Stat[] = [
   { target: 15, label: 'Years of Experience' },
   { target: 8, label: 'Active Projects' },
   { target: 250, label: 'MW Potential' },
   { target: 50, label: 'Expert Team' },
 ];
 
-const backgroundItems: BackgroundItem[] = [
+const defaultBackgroundItems: BackgroundItem[] = [
   {
     title: 'Government Initiative',
     description:
@@ -102,7 +103,7 @@ const backgroundItems: BackgroundItem[] = [
   },
 ];
 
-const missionVision: MissionVisionItem[] = [
+const defaultMissionVision: MissionVisionItem[] = [
   {
     title: 'Our Mission',
     description:
@@ -131,7 +132,7 @@ const missionVision: MissionVisionItem[] = [
   },
 ];
 
-const coreValues: CoreValue[] = [
+const defaultCoreValues: CoreValue[] = [
   {
     title: 'Integrity',
     description:
@@ -153,11 +154,66 @@ const coreValues: CoreValue[] = [
 ];
 
 const AboutUs: React.FC = () => {
+  const [heroTitle, setHeroTitle] = useState<string>('About TGDC');
+  const [heroSubtitle, setHeroSubtitle] = useState<string>(
+    "Leading Tanzania's sustainable energy future through innovative geothermal development"
+  );
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(defaultTimelineItems);
+  const [stats, setStats] = useState<Stat[]>(defaultStats);
+  const [backgroundItems, setBackgroundItems] = useState<BackgroundItem[]>(defaultBackgroundItems);
+  const [missionVision, setMissionVision] = useState<MissionVisionItem[]>(defaultMissionVision);
+  const [coreValues, setCoreValues] = useState<CoreValue[]>(defaultCoreValues);
+
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const [counterValues, setCounterValues] = useState<{ [key: string]: number }>(
-    Object.fromEntries(stats.map((stat) => [stat.label, 0]))
+    Object.fromEntries(defaultStats.map((stat) => [stat.label, 0]))
   );
   const statsSectionRef = useRef<HTMLElement>(null);
+
+  // Load About Us content from CMS API
+  useEffect(() => {
+    const orDefaultArray = <T,>(arr: any, def: T[]): T[] => (Array.isArray(arr) && arr.length > 0 ? arr : def);
+    const load = async () => {
+      try {
+        const res = await fetch('/api/about');
+        if (!res.ok) return; // Keep defaults silently
+        const data = await res.json();
+        setHeroTitle(data.heroTitle || 'About TGDC');
+        setHeroSubtitle(
+          data.heroSubtitle || "Leading Tanzania's sustainable energy future through innovative geothermal development"
+        );
+        setTimelineItems(orDefaultArray<TimelineItem>(data.timeline, defaultTimelineItems));
+        setBackgroundItems(orDefaultArray<BackgroundItem>(data.background, defaultBackgroundItems));
+        setMissionVision(orDefaultArray<MissionVisionItem>(data.missionVision, defaultMissionVision));
+        setCoreValues(orDefaultArray<CoreValue>(data.coreValues, defaultCoreValues));
+        let incomingStats: Stat[] = Array.isArray(data.stats) ? data.stats : [];
+        // If About has no stats, fall back to global /api/stats (title/value)
+        if (!incomingStats.length) {
+          try {
+            const sRes = await fetch('/api/stats');
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              if (Array.isArray(sData)) {
+                incomingStats = sData.map((s: any) => ({ label: s.title, target: Number(s.value) || 0 }));
+              }
+            }
+          } catch {}
+        }
+        if (!incomingStats.length) incomingStats = defaultStats;
+        setStats(incomingStats);
+        // Reset counters mapping for incoming labels
+        setCounterValues(Object.fromEntries(incomingStats.map((s) => [s.label, 0])));
+      } catch (e) {
+        // Fail quietly and continue with defaults
+        console.error('About page load error', e);
+      }
+    };
+    load();
+  }, []);
+
+  // Keep a ref of latest stats to avoid stale closures in observers
+  const latestStatsRef = useRef<Stat[]>(stats);
+  useEffect(() => { latestStatsRef.current = stats; }, [stats]);
 
   useEffect(() => {
     // Fade-in animation observer
@@ -192,11 +248,16 @@ const AboutUs: React.FC = () => {
       }, 16);
     };
 
+    const hasAnimatedRef = { current: false } as { current: boolean };
     const statsObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            stats.forEach((stat) => animateCounter(stat.label, stat.target));
+            if (!hasAnimatedRef.current) {
+              hasAnimatedRef.current = true;
+              const currentStats = latestStatsRef.current || [];
+              currentStats.forEach((stat) => animateCounter(stat.label, stat.target));
+            }
             statsObserver.unobserve(entry.target);
           }
         });
@@ -234,10 +295,10 @@ const AboutUs: React.FC = () => {
             About Us 
           </span>
           <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
-            About TGDC
+            {heroTitle}
           </h1>
           <p className="text-white/90 text-lg md:text-xl mt-4 max-w-3xl">
-           Leading Tanzania's sustainable energy future through innovative geothermal development
+            {heroSubtitle}
           </p>
         </div>
       </section>

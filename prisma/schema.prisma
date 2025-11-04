@@ -28,6 +28,34 @@ model User {
   messagesReceived UserMessage[] @relation("UserMessageRecipient")
 }
 
+// About Us page content (CMS)
+model About {
+  id            Int      @id @default(autoincrement())
+  heroTitle     String?
+  heroSubtitle  String?
+  timeline      Json     // Array of { year, title, timeAgo, description }
+  background    Json     // Array of { title, description }
+  missionVision Json     // Array of { title, description, points: string[], icon, gradient }
+  coreValues    Json     // Array of { title, description, icon }
+  stats         Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Footer settings (singleton)
+model Footer {
+  id           Int      @id @default(autoincrement())
+  aboutText    String?
+  address      String?
+  email        String?
+  phone        String?
+  quickLinks   Json     // Array<{ label: string; url: string }>
+  socialLinks  Json     // Array<{ name: string; url: string; icon?: string }>
+  copyright    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Test {
   id        Int      @id @default(autoincrement())
   message   String

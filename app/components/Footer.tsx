@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 // Define interfaces for component props
@@ -38,6 +38,7 @@ interface SocialLink {
 interface FooterBottomProps {
   navLinks: LinkItem[];
   socialLinks: SocialLink[];
+  copyrightText: string;
 }
 
 // Contact Information Component
@@ -158,7 +159,7 @@ const VisitorCounter: React.FC<VisitorCounterProps> = ({ visitors }) => {
 };
 
 // Footer Bottom Section Component
-const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks }) => (
+const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copyrightText }) => (
   <div className="border-t border-gray-700 mt-12 pt-8">
     <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
       <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm">
@@ -185,7 +186,7 @@ const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks }) =>
       </div>
     </div>
     <div className="text-center mt-8 pt-6 border-t border-gray-700">
-      <p className="text-gray-400 text-sm mb-2">Copyright © 2019-2025 TGDC. All Rights Reserved.</p>
+      <p className="text-gray-400 text-sm mb-2">{copyrightText}</p>
       <p className="text-gray-500 text-xs leading-relaxed">
         The website is Designed, Developed And Maintained by e-Government Agency. Content Maintained by TGDC
       </p>
@@ -195,8 +196,11 @@ const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks }) =>
 
 // Main Footer Component
 const Footer: React.FC = () => {
-  const contactInfo: ContactInfoProps = {
-    address: `Nyumba Na. 25 Ursino\nBarabara ya Mwai Kibaki\n14801 Dar es Salaam`,
+  // Defaults (placeholders)
+  const defaultContactInfo: ContactInfoProps = {
+    address: `Nyumba Na. 25 Ursino
+Barabara ya Mwai Kibaki
+14801 Dar es Salaam`,
     phoneNumbers: ['+255 736 014801', '+255 736 014801'],
     email: 'info@tgdc.go.tz',
   };
@@ -209,7 +213,7 @@ const Footer: React.FC = () => {
     { name: 'GST', href: '#' },
   ];
 
-  const quickLinks: LinkItem[] = [
+  const defaultQuickLinks: LinkItem[] = [
     { name: 'News', href: '#' },
     { name: 'Video Gallery', href: '#' },
     { name: 'Photo Gallery', href: '#' },
@@ -224,7 +228,7 @@ const Footer: React.FC = () => {
     total: 14017,
   };
 
-  const socialLinks: SocialLink[] = [
+  const defaultSocialLinks: SocialLink[] = [
     {
       name: 'Twitter',
       href: '#',
@@ -270,6 +274,56 @@ const Footer: React.FC = () => {
     { name: 'Copyright Statement', href: '#' },
   ];
 
+  // State loaded from API or default placeholders
+  const [contactInfo, setContactInfo] = useState<ContactInfoProps>(defaultContactInfo);
+  const [quickLinks, setQuickLinks] = useState<LinkItem[]>(defaultQuickLinks);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
+  const [copyrightText, setCopyrightText] = useState<string>('Copyright © 2019-2025 TGDC. All Rights Reserved.');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/footer');
+        if (!res.ok) return; // keep defaults silently
+        const data = await res.json();
+        const address = data.address || defaultContactInfo.address;
+        const email = data.email || defaultContactInfo.email;
+        const phone = data.phone || defaultContactInfo.phoneNumbers[0];
+        setContactInfo({ address, email, phoneNumbers: phone ? [phone] : defaultContactInfo.phoneNumbers });
+
+        const ql = Array.isArray(data.quickLinks) ? data.quickLinks : [];
+        setQuickLinks(
+          ql.length
+            ? ql.map((l: any) => ({ name: l.label ?? l.name ?? 'Link', href: l.url ?? l.href ?? '#' }))
+            : defaultQuickLinks
+        );
+
+        const sl = Array.isArray(data.socialLinks) ? data.socialLinks : [];
+        setSocialLinks(
+          sl.length
+            ? sl.map((s: any) => ({
+                name: s.name ?? 'Social',
+                href: s.url ?? '#',
+                icon: (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <g dangerouslySetInnerHTML={{ __html: s.icon || '' }} />
+                  </svg>
+                ),
+              }))
+            : defaultSocialLinks
+        );
+
+        setCopyrightText(
+          data.copyright || `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`
+        );
+      } catch (e) {
+        // keep defaults on failure
+        console.error('Footer load error', e);
+      }
+    };
+    load();
+  }, []);
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -279,10 +333,17 @@ const Footer: React.FC = () => {
           <LinksSection title="Quick Links" links={quickLinks} />
           <VisitorCounter visitors={visitors} />
         </div>
-        <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} />
+        <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} copyrightText={copyrightText} />
       </div>
     </footer>
   );
 };
 
 export default Footer;
+
+
+
+
+
+
+

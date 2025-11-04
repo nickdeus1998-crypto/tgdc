@@ -13,6 +13,8 @@ import ServicesSectionPage from './web-management/ServicesSectionPage';
 import SustainabilityPage from './web-management/SustainabilityPage';
 import InformationCenterPage from './web-management/InformationCenterPage';
 import GeothermalSitesPage from './web-management/GeothermalSitesPage';
+import FooterSettingsPage from './web-management/FooterSettingsPage';
+import AboutUsPage from './web-management/AboutUsPage';
 // TypeScript interfaces
 interface PageData {
   title: string;
@@ -796,12 +798,12 @@ const pageComponents: Record<string, ComponentType> = {
   sustainability: SustainabilityPage,
   information: InformationCenterPage,
   geosites: GeothermalSitesPage,
-  about: AboutPage,
+  about: AboutUsPage,
   services: ServicesSectionPage,
   portfolio: PortfolioPage,
   news: NewsPage,
   contact: ContactPage,
-  footer: FooterPage,
+  footer: FooterSettingsPage,
   projects: ProjectManagement,
   tenders: TenderManagement,
   media: MediaPage,
