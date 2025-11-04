@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/prisma.ts"
+}
+
+datasource db {
+  provider = "sqlite" // Switch to "mysql" in production
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String // Store hashed passwords (e.g., using bcrypt)
+  role      String   @default("admin") // For CMS admin access
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations for internal messages
+  messagesSent     UserMessage[] @relation("UserMessageSender")
+  messagesReceived UserMessage[] @relation("UserMessageRecipient")
+}
+
+model Test {
+  id        Int      @id @default(autoincrement())
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Hero {
+  id         Int      @id @default(autoincrement())
+  title      String
+  subheading String
+  highlight  String? // New field
+  imageUrl   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Stat {
+  id    Int    @id @default(autoincrement())
+  title String // Label (e.g., "Users")
+  value Int // Numeric value (e.g., 1000)
+
+  @@map("stats")
+}
+
+model ServiceSection {
+  id        Int      @id @default(autoincrement())
+  headerOne String // e.g., main header text
+  headerTwo String // e.g., secondary header text
+  subheader String? // optional subheader for additional description
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[] // One-to-many relation to Service
+
+  @@map("service_sections") // Optional: maps to a custom table name
+}
+
+model Service {
+  id        Int    @id @default(autoincrement())
+  icon      String // e.g., "fas fa-map" for Font Awesome class
+  title     String
+  content   String // Maps to 'description'
+  features  Json? // Array of strings, e.g., ["Feature 1", "Feature 2"]
+  sectionId Int
+
+  section ServiceSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("services")
+}
+
+// Stakeholder portal models
+
+model Stakeholder {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String // hashed (scrypt)
+  company   String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  StakeholderMessage[]
+  documents StakeholderDocument[]
+}
+
+// Internal user-to-user messages (admin/users)
+model UserMessage {
+  id          Int       @id @default(autoincrement())
+  senderId    Int
+  recipientId Int
+  content     String
+  createdAt   DateTime  @default(now())
+  readAt      DateTime?
+
+  sender    User @relation("UserMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("UserMessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+}
+
+// News articles
+model News {
+  id         Int      @id @default(autoincrement())
+  title      String
+  category   String
+  date       DateTime @default(now())
+  content    String
+  images     Json? // array of string URLs
+  videos     Json? // array of string URLs
+  coverImage String? // primary image url for cards
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model StakeholderMessage {
+  id            Int      @id @default(autoincrement())
+  stakeholderId Int
+  subject       String
+  content       String
+  sentAt        DateTime @default(now())
+
+  stakeholder Stakeholder @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
+}
+
+model StakeholderDocument {
+  id            Int      @id @default(autoincrement())
+  stakeholderId Int
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  storagePath   String // path or object key
+  uploadedAt    DateTime @default(now())
+
+  stakeholder Stakeholder @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
+}
+
+// Lightweight web analytics (page views)
+model PageView {
+  id        Int      @id @default(autoincrement())
+  path      String
+  session   String? // anonymous session identifier from client
+  createdAt DateTime @default(now())
+}
+
+model Tender {
+  id       Int      @id @default(autoincrement())
+  ref      String
+  title    String
+  category String
+  status   String
+  deadline DateTime
+  publish  DateTime
+  scope    String
+  docs     String
+}
+
+// Sustainability content
+model SustainabilityProject {
+  id               Int      @id @default(autoincrement())
+  name             String
+  status           String
+  location         String
+  description      String
+  badgeColor       String  // tailwind class e.g., bg-emerald-50
+  badgeTextColor   String  // e.g., text-emerald-700
+  badgeBorderColor String  // e.g., border-emerald-100
+  isOpen           Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SustainabilityPartner {
+  id               Int      @id @default(autoincrement())
+  name             String
+  url              String
+  initial          String
+  category         String   // 'Fund support' | 'Technical support' | 'Capacity building'
+  badgeColor       String
+  badgeTextColor   String
+  badgeBorderColor String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Information Center items (photos, videos, newsletters, press)
+model InformationItem {
+  id          Int       @id @default(autoincrement())
+  kind        String    // 'photo' | 'video' | 'newsletter' | 'press'
+  title       String
+  description String?
+  url         String    // media link or file URL
+  thumbnail   String?   // optional thumbnail image
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Geothermal sites
+model GeothermalSite {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique // short id used by map/client (e.g., 'kisaki')
+  title     String
+  summary   String
+  details   Json              // array of strings
+  tag       String?
+  zone      String            // 'Eastern Zone' | 'Lake Zone' | 'Southern Zone' | 'Northern Zone' | 'Central Zone'
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

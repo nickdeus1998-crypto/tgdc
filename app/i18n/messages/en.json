@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "services": "Services",
+    "resources": "Resources",
+    "geothermalSites": "Geothermal Sites",
+    "sustainability": "Sustainability",
+    "informationCenter": "Information Center",
+    "procurement": "Procurement",
+    "news": "News",
+    "getStarted": "Get Started",
+    "stakeholders": "Stakeholders"
+  },
+  "common": {
+    "loading": "Loading...",
+    "errorLoading": "Failed to load section data."
+  },
+  "services": {
+    "ourExpertise": "Our Expertise",
+    "ctaTitle": "Ready to Start Your Geothermal Project?",
+    "ctaSubtitle": "Let our experts help you harness the power of geothermal energy. Contact us today for a consultation and discover how we can bring sustainable energy to your community.",
+    "ctaPrimary": "Get Free Consultation",
+    "ctaSecondary": "Download Service Guide",
+    "fallbackHeaderOne": "Comprehensive",
+    "fallbackHeaderTwo": "Geothermal Services",
+    "fallbackSubheader": "From initial site assessment to full-scale power plant operations, we provide end-to-end geothermal solutions tailored to your energy needs."
+  }
+}

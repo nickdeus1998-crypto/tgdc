@@ -1,0 +1,12 @@
+.news-card {
+  transition: all 0.3s ease;
+}
+.news-card:hover {
+  transform: translateY(-8px);
+}
+.read-more-btn {
+  transition: all 0.3s ease;
+}
+.read-more-btn:hover {
+  transform: translateX(4px);
+}

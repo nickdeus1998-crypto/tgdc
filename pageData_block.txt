@@ -1,0 +1,268 @@
+
+
+'use client';
+
+import React, { useState, useEffect, ComponentType } from 'react';
+import { createRoot } from 'react-dom/client';
+import ProjectManagement from './project-management/ProjectManagement';
+import TenderManagement from './tender-management';
+import HeroPage from './web-management/HeroPage';
+import Dashboard from './dashboard/Dashboard';
+import StatsSectionPage from './web-management/StatsSectionPage';
+import { Stats } from 'fs';
+import ServicesSectionPage from './web-management/ServicesSectionPage';
+import SustainabilityPage from './web-management/SustainabilityPage';
+import InformationCenterPage from './web-management/InformationCenterPage';
+import SustainabilityPage from './web-management/SustainabilityPage';
+
+// TypeScript interfaces
+interface PageData {
+  title: string;
+  description: string;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  color: string;
+}
+
+interface DashboardCard {
+  title: string;
+  value: string;
+  subtext: string;
+  gradient: string;
+}
+
+// Stakeholders page
+const StakeholdersPage: React.FC = () => {
+  const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState<string | null>(null)
+  const [items, setItems] = useState<Array<{ id: number; name: string; email: string; company?: string | null; phone?: string | null; createdAt: string; _count: { messages: number; documents: number } }>>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [msgs, setMsgs] = useState<Array<{ id: number; subject: string; content: string; sentAt: string }>>([])
+  const [docs, setDocs] = useState<Array<{ id: number; filename: string; storagePath: string; sizeBytes: number; uploadedAt: string }>>([])
+  const [msgCursor, setMsgCursor] = useState<number | null>(null)
+  const [docCursor, setDocCursor] = useState<number | null>(null)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/stakeholders')
+        if (!res.ok) throw new Error('Failed to load stakeholders')
+        const data = await res.json()
+        setItems(data.items || [])
+        if (data.items?.[0]) setSelectedId(data.items[0].id)
+        setLoading(false)
+      } catch (e: any) {
+        setErr(e?.message || 'error')
+        setLoading(false)
+      }
+    })()
+  }, [])
+
+  const loadDetails = async (id: number) => {
+    try {
+      const [m, d] = await Promise.all([
+        fetch(`/api/admin/stakeholders/${id}/messages?limit=10`),
+        fetch(`/api/admin/stakeholders/${id}/documents?limit=10`),
+      ])
+      if (m.ok) { const mj = await m.json(); setMsgs(mj.items || []); setMsgCursor(mj.nextCursor ?? null) }
+      if (d.ok) { const dj = await d.json(); setDocs(dj.items || []); setDocCursor(dj.nextCursor ?? null) }
+    } catch {}
+  }
+
+  useEffect(() => { if (selectedId) loadDetails(selectedId) }, [selectedId])
+
+  const loadMoreMsgs = async () => {
+    if (!selectedId || !msgCursor) return
+    const res = await fetch(`/api/admin/stakeholders/${selectedId}/messages?limit=10&cursor=${msgCursor}`)
+    if (res.ok) {
+      const data = await res.json();
+      setMsgs(prev => [...prev, ...(data.items || [])]);
+      setMsgCursor(data.nextCursor ?? null);
+    }
+  }
+  const loadMoreDocs = async () => {
+    if (!selectedId || !docCursor) return
+    const res = await fetch(`/api/admin/stakeholders/${selectedId}/documents?limit=10&cursor=${docCursor}`)
+    if (res.ok) {
+      const data = await res.json();
+      setDocs(prev => [...prev, ...(data.items || [])]);
+      setDocCursor(data.nextCursor ?? null);
+    }
+  }
+
+  return (
+    <div className="p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {err && <div className="mb-4 text-sm text-red-600">{err}</div>}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:col-span-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Stakeholders</h2>
+            {loading && <div className="text-sm text-gray-500">Loading...</div>}
+            <ul className="divide-y divide-gray-100 max-h-[600px] overflow-auto">
+              {items.map(it => (
+                <li key={it.id}>
+                  <button className={`w-full text-left p-3 hover:bg-gray-50 ${selectedId===it.id ? 'bg-gray-50' : ''}`} onClick={() => setSelectedId(it.id)}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{it.name}</p>
+                        <p className="text-xs text-gray-500">{it.email}</p>
+                      </div>
+                      <div className="text-right text-xs text-gray-500">
+                        <div>{it._count.messages} msgs</div>
+                        <div>{it._count.documents} docs</div>
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              ))}
+              {!loading && items.length === 0 && (
+                <li className="p-3 text-sm text-gray-500">No stakeholders found.</li>
+              )}
+            </ul>
+          </div>
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-md font-semibold text-gray-900 mb-3">Messages</h3>
+              {msgs.length === 0 ? (
+                <p className="text-sm text-gray-500">No messages.</p>
+              ) : (
+                <ul className="space-y-3 max-h-72 overflow-auto pr-1">
+                  {msgs.map(m => (
+                    <li key={m.id} className="border border-gray-200 rounded-md p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-gray-900 text-sm">{m.subject}</p>
+                        <span className="text-xs text-gray-500">{new Date(m.sentAt).toLocaleString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{m.content}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {msgCursor && (
+                <div className="mt-3">
+                  <button onClick={loadMoreMsgs} className="text-sm text-emerald-700 hover:underline">Load more</button>
+                </div>
+              )}
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-md font-semibold text-gray-900 mb-3">Documents</h3>
+              {docs.length === 0 ? (
+                <p className="text-sm text-gray-500">No documents.</p>
+              ) : (
+                <ul className="space-y-3 max-h-72 overflow-auto pr-1">
+                  {docs.map(d => (
+                    <li key={d.id} className="border border-gray-200 rounded-md p-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{d.filename}</p>
+                        <p className="text-xs text-gray-500">{(d.sizeBytes / 1024).toFixed(1)} KB • {new Date(d.uploadedAt).toLocaleString()}</p>
+                      </div>
+                      <a href={d.storagePath} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-700 hover:underline">Download</a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {docCursor && (
+                <div className="mt-3">
+                  <button onClick={loadMoreDocs} className="text-sm text-emerald-700 hover:underline">Load more</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Simple inline chart component for daily series
+function TrafficChart({ series }: { series: { date: string; pageviews: number; visitors: number }[] }) {
+  const w = 700, h = 180, pad = 20
+  const n = series.length || 1
+  const maxV = Math.max(1, ...series.map(s => Math.max(s.pageviews, s.visitors)))
+  const x = (i: number) => pad + (i * (w - 2*pad)) / Math.max(1, n - 1)
+  const y = (v: number) => h - pad - (v * (h - 2*pad)) / maxV
+  const pvPts = series.map((s, i) => `${x(i)},${y(s.pageviews)}`).join(' ')
+  const visPts = series.map((s, i) => `${x(i)},${y(s.visitors)}`).join(' ')
+  return (
+    <svg width="100%" viewBox={`0 0 ${w} ${h}`} className="rounded-lg border border-gray-100 bg-gray-50">
+      <polyline points={pvPts} fill="none" stroke="#6366f1" strokeWidth="2" />
+      <polyline points={visPts} fill="none" stroke="#14b8a6" strokeWidth="2" />
+      <text x={pad} y={12} fontSize="10" fill="#6366f1">Pageviews</text>
+      <text x={pad+80} y={12} fontSize="10" fill="#14b8a6">Visitors</text>
+    </svg>
+  )
+}
+
+// Page data
+const pageData: Record<string, PageData> = {
+  dashboard: {
+    title: 'Dashboard',
+    description: 'Welcome to the TGDC Admin Panel. Manage your geothermal projects and website content.',
+  },
+  analytics: {
+    title: 'Analytics',
+    description: 'Live counts for content and stakeholders. Trends coming soon.',
+  },
+  stakeholders: {
+    title: 'Stakeholders',
+    description: 'Browse stakeholder accounts, messages, and documents.',
+  },
+  header: {
+    title: 'Header Settings',
+    description: 'Manage website header, navigation menu, and branding elements.',
+  },
+  hero: {
+    title: 'Hero Section',
+    description: 'Edit the main hero section content, images, and call-to-action buttons.',
+  },
+  information: { title: 'Information Center', description: 'Manage photos, videos, newsletters, and press releases.' },
+
+    title: 'Stats ',
+    description: 'Manage the about us section content, team information, and company details.',
+  },
+  sustainability: {
+    title: 'Sustainability',
+    description: 'Manage sustainability projects (ESIA) and partner stakeholders.',
+  },
+  services: {
+    title: 'Services',
+    description: 'Edit services offered, descriptions, and service-related content.',
+  },
+  portfolio: {
+    title: 'Projects Portfolio',
+    description: 'Manage project portfolio, case studies, and project galleries.',
+  },
+  news: {
+    title: 'News & Updates',
+    description: 'Create and manage news articles, press releases, and company updates.',
+  },
+  contact: {
+    title: 'Contact Information',
+    description: 'Update contact details, office locations, and contact forms.',
+  },
+  footer: {
+    title: 'Footer Settings',
+    description: 'Manage footer content, links, social media, and legal information.',
+  },
+  projects: {
+    title: 'Projects Management',
+    description: 'Create, edit, and manage geothermal projects and their details.',
+  },
+  tenders: {
+    title: 'Tenders Management',
+    description: 'Manage tender documents, applications, and procurement processes.',
+  },
+  media: {
+    title: 'Media Gallery',
+    description: 'Upload and organize photos, videos, and other media files.',
+  },
+  settings: {
+    title: 'System Settings',
+    description: 'Configure system preferences, user accounts, and security settings.',
+  },
+};

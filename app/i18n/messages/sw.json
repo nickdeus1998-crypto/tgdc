@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "home": "Nyumbani",
+    "about": "Kuhusu Sisi",
+    "services": "Huduma",
+    "resources": "Rasilimali",
+    "geothermalSites": "Maeneo ya Jotoardhi",
+    "sustainability": "Uendelevu",
+    "informationCenter": "Kituo cha Taarifa",
+    "procurement": "Manunuzi",
+    "news": "Habari",
+    "getStarted": "Anza",
+    "stakeholders": "Wadau"
+  },
+  "common": {
+    "loading": "Inapakia...",
+    "errorLoading": "Imeshindwa kupakia taarifa za sehemu."
+  },
+  "services": {
+    "ourExpertise": "Utaalamu Wetu",
+    "ctaTitle": "Uko Tayari Kuanza Mradi wa Jotoardhi?",
+    "ctaSubtitle": "Wataalamu wetu wako tayari kukusaidia kunufaika na nishati ya jotoardhi. Wasiliana nasi leo kwa ushauri na ujue jinsi tunavyoweza kuleta nishati endelevu kwenye jamii yako.",
+    "ctaPrimary": "Pata Ushauri Bila Malipo",
+    "ctaSecondary": "Pakua Mwongozo wa Huduma",
+    "fallbackHeaderOne": "Kamilifu",
+    "fallbackHeaderTwo": "Huduma za Jotoardhi",
+    "fallbackSubheader": "Kuanzia tathmini ya awali ya eneo hadi uendeshaji wa mitambo, tunatoa suluhu za jotoardhi kutoka mwanzo hadi mwisho kulingana na mahitaji yako."
+  }
+}
