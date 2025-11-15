@@ -472,12 +472,18 @@ const GeothermalSection: NextPage = () => {
                 clean, reliable energy for millions while supporting sustainable economic growth.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
+                <a
+                  href="/geothermal-sites"
+                  className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 text-center"
+                >
                   Explore Investment Opportunities
-                </button>
-                <button className="bg-white text-[#326101] border-2 border-[#326101] px-8 py-4 rounded-full font-semibold hover:bg-[#326101] hover:text-white transition-all duration-300">
+                </a>
+                <a
+                  href="/information-center"
+                  className="bg-white text-[#326101] border-2 border-[#326101] px-8 py-4 rounded-full font-semibold hover:bg-[#326101] hover:text-white transition-all duration-300 text-center"
+                >
                   Download Tanzania Report
-                </button>
+                </a>
               </div>
             </div>
           </div>

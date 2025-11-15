@@ -121,7 +121,7 @@ export default function Home() {
               services={servicesData?.services || defaultServicesData.services}
             />
             <NewsSection />
-            <InformationCenterSection />
+            {/* <InformationCenterSection /> */}
             <AnnouncementSection />
             <GeothermalSitesSection />
             <ProjectSection />

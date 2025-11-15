@@ -89,12 +89,18 @@ const ServiceSection: React.FC<ServicesSectionProps> = ({
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('services.ctaTitle')}</h3>
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto">{t('services.ctaSubtitle')}</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
+                  <a
+                    href="/about-us"
+                    className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 text-center"
+                  >
                     {t('services.ctaPrimary')}
-                  </button>
-                  <button className="border-2 border-[#326101] text-[#326101] px-8 py-3 rounded-full font-semibold hover:bg-[#326101] hover:text-white transition-all duration-300">
+                  </a>
+                  <a
+                    href="/information-center"
+                    className="border-2 border-[#326101] text-[#326101] px-8 py-3 rounded-full font-semibold hover:bg-[#326101] hover:text-white transition-all duration-300 text-center"
+                  >
                     {t('services.ctaSecondary')}
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface NewsArticle {
   id: string;
@@ -272,9 +273,12 @@ const NewSection: NextPage = () => {
 
             {/* View All News Button */}
             <div className="text-center">
-              <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
+              <Link
+                href="/news"
+                className="inline-block bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+              >
                 View All News & Updates
-              </button>
+              </Link>
             </div>
 
             {/* Newsletter Signup */}
@@ -287,7 +291,7 @@ const NewSection: NextPage = () => {
                 <input
                   type="email"
                   placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                  className="flex-1 px-4 py-3 rounded-full border border-[#326101] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                 />
                 <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 whitespace-nowrap">
                   Subscribe Now
