@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface HeroSectionProps {
   badge: string;
@@ -83,12 +84,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <button className="bg-gradient-to-r from-green-500 to-green-700 text-white px-8 py-4 rounded-full font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <Link
+              href="/about-us"
+              className="bg-gradient-to-r from-green-500 to-green-700 text-white px-8 py-4 rounded-full font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 text-center"
+            >
               Start Your Project
-            </button>
-            <button className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-full font-semibold hover:border-green-700 hover:text-green-700 transition-all duration-300">
+            </Link>
+            <Link
+              href="/about-us"
+              className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-full font-semibold hover:border-green-700 hover:text-green-700 transition-all duration-300 text-center"
+            >
               View Case Studies
-            </button>
+            </Link>
           </div>
         </div>
 
