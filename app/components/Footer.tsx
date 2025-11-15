@@ -1,8 +1,7 @@
-'use client'
+﻿'use client'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-// Define interfaces for component props
 interface ContactInfoProps {
   address: string;
   phoneNumbers: string[];
@@ -41,7 +40,6 @@ interface FooterBottomProps {
   copyrightText: string;
 }
 
-// Contact Information Component
 const ContactInfo: React.FC<ContactInfoProps> = ({ address, phoneNumbers, email }) => (
   <div className="lg:col-span-1">
     <h3 className="text-xl font-bold mb-6 text-white">Contact Us</h3>
@@ -77,7 +75,6 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ address, phoneNumbers, email 
   </div>
 );
 
-// Links Section Component (for Related Links and Quick Links)
 const LinksSection: React.FC<LinksSectionProps> = ({ title, links }) => (
   <div>
     <h3 className="text-xl font-bold mb-6 text-white">{title}</h3>
@@ -94,7 +91,6 @@ const LinksSection: React.FC<LinksSectionProps> = ({ title, links }) => (
   </div>
 );
 
-// Visitor Counter Component
 const VisitorCounter: React.FC<VisitorCounterProps> = ({ visitors }) => {
   useEffect(() => {
     const animateCounter = (elementId: string, targetValue: number, duration: number = 2000) => {
@@ -128,37 +124,25 @@ const VisitorCounter: React.FC<VisitorCounterProps> = ({ visitors }) => {
 
   return (
     <div>
-      <h3 className="text-xl font-bold mb-6 text-white">Website Visitors</h3>
-      <div className="visitor-counter rounded-xl p-6 bg-white/10 backdrop-blur-md border border-white/20">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">Today:</span>
-            <span className="text-emerald-500 font-semibold" id="todayVisitors">0</span>
+      <h3 className="text-xl font-bold mb-6 text-white">Visitor Counter</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {[
+          { id: 'todayVisitors', label: 'Today' },
+          { id: 'yesterdayVisitors', label: 'Yesterday' },
+          { id: 'weekVisitors', label: 'Last 7 Days' },
+          { id: 'monthVisitors', label: 'This Month' },
+          { id: 'totalVisitors', label: 'Total' },
+        ].map((item) => (
+          <div key={item.id} className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
+            <p className="text-gray-400 text-sm mb-1">{item.label}</p>
+            <p id={item.id} className="text-white text-xl font-bold">0</p>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">Yesterday:</span>
-            <span className="text-emerald-500 font-semibold" id="yesterdayVisitors">0</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">This Week:</span>
-            <span className="text-emerald-500 font-semibold" id="weekVisitors">0</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">This Month:</span>
-            <span className="text-emerald-500 font-semibold" id="monthVisitors">0</span>
-          </div>
-          <hr className="border-gray-600 my-3" />
-          <div className="flex justify-between items-center">
-            <span className="text-white font-medium text-sm">Total:</span>
-            <span className="text-white font-bold text-lg" id="totalVisitors">0</span>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 };
 
-// Footer Bottom Section Component
 const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copyrightText }) => (
   <div className="border-t border-gray-700 mt-12 pt-8">
     <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
@@ -194,9 +178,7 @@ const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copy
   </div>
 );
 
-// Main Footer Component
 const Footer: React.FC = () => {
-  // Defaults (placeholders)
   const defaultContactInfo: ContactInfoProps = {
     address: `Nyumba Na. 25 Ursino
 Barabara ya Mwai Kibaki
@@ -274,18 +256,18 @@ Barabara ya Mwai Kibaki
     { name: 'Copyright Statement', href: '#' },
   ];
 
-  // State loaded from API or default placeholders
   const [contactInfo, setContactInfo] = useState<ContactInfoProps>(defaultContactInfo);
   const [quickLinks, setQuickLinks] = useState<LinkItem[]>(defaultQuickLinks);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
-  const [copyrightText, setCopyrightText] = useState<string>('Copyright © 2019-2025 TGDC. All Rights Reserved.');
+  const [copyrightText, setCopyrightText] = useState<string>('Copyright (c) 2019-2025 TGDC. All Rights Reserved.');
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch('/api/footer');
-        if (!res.ok) return; // keep defaults silently
+        if (!res.ok) return;
         const data = await res.json();
+
         const address = data.address || defaultContactInfo.address;
         const email = data.email || defaultContactInfo.email;
         const phone = data.phone || defaultContactInfo.phoneNumbers[0];
@@ -293,9 +275,7 @@ Barabara ya Mwai Kibaki
 
         const ql = Array.isArray(data.quickLinks) ? data.quickLinks : [];
         setQuickLinks(
-          ql.length
-            ? ql.map((l: any) => ({ name: l.label ?? l.name ?? 'Link', href: l.url ?? l.href ?? '#' }))
-            : defaultQuickLinks
+          ql.length ? ql.map((l: any) => ({ name: l.label ?? l.name ?? 'Link', href: l.url ?? l.href ?? '#' })) : defaultQuickLinks
         );
 
         const sl = Array.isArray(data.socialLinks) ? data.socialLinks : [];
@@ -317,7 +297,6 @@ Barabara ya Mwai Kibaki
           data.copyright || `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`
         );
       } catch (e) {
-        // keep defaults on failure
         console.error('Footer load error', e);
       }
     };
@@ -340,10 +319,3 @@ Barabara ya Mwai Kibaki
 };
 
 export default Footer;
-
-
-
-
-
-
-
