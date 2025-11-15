@@ -76,14 +76,6 @@ export default function ImpactHighlights() {
                 <p className="mt-2 text-sm md:text-base text-white/90 max-w-2xl">
                   {it.text}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <a href={it.primaryHref} className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#326101] to-[#639427] shadow hover:shadow-lg transition-all">
-                    View Project
-                  </a>
-                  <a href={it.secondaryHref} className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-white/15 border border-white/30 backdrop-blur-sm hover:bg-white/25 transition-colors">
-                    Learn More
-                  </a>
-                </div>
               </div>
 
               {/* Bottom caption (subtle) */}
