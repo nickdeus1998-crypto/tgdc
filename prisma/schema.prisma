@@ -282,3 +282,16 @@ model ImpactHighlight {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model OrgLeader {
+  id          Int      @id @default(autoincrement())
+  levelLabel  String   // e.g., "Executive Leadership"
+  levelOrder  Int      @default(0)
+  columnOrder Int      @default(0)
+  name        String
+  role        String
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

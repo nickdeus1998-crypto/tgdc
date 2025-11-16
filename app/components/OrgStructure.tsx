@@ -1,117 +1,108 @@
-'use client'
+"use client";
+
+import { useEffect, useState } from 'react';
+
+interface Leader {
+  id: number;
+  name: string;
+  role: string;
+  imageUrl?: string | null;
+}
+
+interface LevelGroup {
+  order: number;
+  label: string;
+  members: Leader[];
+}
+
+const LeaderCard = ({ leader }: { leader: Leader }) => (
+  <div className="col-span-1 text-center p-4">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 h-full flex flex-col items-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={leader.imageUrl || '/geothermal.jpg'} alt={leader.name} className="w-full h-48 object-cover rounded-xl mb-3" />
+      <p className="text-sm font-semibold text-gray-900 leading-tight">{leader.name}</p>
+      <p className="text-xs text-gray-600 mt-1 uppercase">{leader.role}</p>
+    </div>
+  </div>
+);
 
 export default function OrgStructure() {
-  const departments = [
-    {
-      title: 'Exploration & Resource Assessment',
-      points: ['Geology & geophysics', 'Reservoir modeling', 'Surface exploration'],
-    },
-    {
-      title: 'Drilling & Well Services',
-      points: ['Well design & HSE', 'Rig supervision', 'Testing & stimulation'],
-    },
-    {
-      title: 'Plant Engineering & EPC',
-      points: ['Process design', 'Procurement & delivery', 'Commissioning'],
-    },
-    {
-      title: 'Operations & Maintenance',
-      points: ['Monitoring & SCADA', 'Predictive maintenance', 'Performance tuning'],
-    },
-    {
-      title: 'Finance & Administration',
-      points: ['Budgeting & control', 'Procurement & assets', 'People & culture'],
-    },
-    {
-      title: 'Sustainability & Community',
-      points: ['ESG & compliance', 'Stakeholder engagement', 'Environmental stewardship'],
-    },
-    {
-      title: 'Legal & Compliance',
-      points: ['Regulatory affairs', 'Contracts & IP', 'Risk management'],
-    },
-    {
-      title: 'IT & Data',
-      points: ['Infrastructure & security', 'Data platforms', 'Analytics'],
-    },
-  ]
+  const [levels, setLevels] = useState<LevelGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStructure = async () => {
+      try {
+        const res = await fetch('/api/org-structure');
+        if (!res.ok) throw new Error('Failed to load org structure');
+        const data = await res.json();
+        setLevels(Array.isArray(data?.levels) ? data.levels : []);
+      } catch (error) {
+        console.error('OrgStructure fetch error', error);
+        setLevels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStructure();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="org-structure" className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+          Loading organization chart...
+        </div>
+      </section>
+    );
+  }
+
+  if (!levels.length) {
+    return (
+      <section id="org-structure" className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+          Organization structure will be published soon.
+        </div>
+      </section>
+    );
+  }
+
+  const topLevel = levels[0];
+  const otherLevels = levels.slice(1);
 
   return (
-    <section id="org-structure" className="py-20 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center px-4 py-2 bg-green-50 rounded-full mb-4">
-            <span className="text-[#326101] text-sm font-medium">Our Organization</span>
-          </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-3">Organizational Structure</h2>
-          <p className="text-gray-600 max-w-3xl mx-auto">
-            Governance, leadership, and specialist teams working together to deliver reliable geothermal projects.
-          </p>
-        </div>
-
-        {/* Board */}
-        <div className="max-w-3xl mx-auto mb-8">
-          <div className="rounded-2xl overflow-hidden shadow bg-white border border-gray-100">
-            <div className="h-2 bg-gradient-to-r from-[#326101] to-[#639427]" />
-            <div className="p-6 text-center">
-              <h3 className="text-xl font-bold text-gray-900">Board of Directors</h3>
-              <p className="text-gray-600 mt-1">Strategic oversight and governance</p>
+    <section id="org-structure" className="py-20 bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-3xl shadow border border-gray-100 p-6 sm:p-10">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center px-4 py-2 bg-green-50 rounded-full mb-4">
+              <span className="text-[#326101] text-sm font-medium">Organizational Structure</span>
             </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Leadership Snapshot</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              A simple view of TGDC leadership with each management tier in a single row.
+            </p>
           </div>
-        </div>
 
-        {/* Connector: Board -> MD (desktop/tablet) */}
-        <div className="hidden sm:flex justify-center items-center -mt-2 mb-2">
-          <div className="w-0.5 h-8 bg-[#CFE6C7]" />
-        </div>
-
-        {/* Managing Director */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="rounded-2xl overflow-hidden shadow bg-white border border-gray-100">
-            <div className="h-2 bg-gradient-to-r from-[#326101] to-[#639427]" />
-            <div className="p-6 text-center">
-              <h3 className="text-xl font-bold text-gray-900">Managing Director</h3>
-              <p className="text-gray-600 mt-1">Execution, coordination, and stakeholder leadership</p>
-            </div>
+          <div className="flex flex-col items-center mb-12">
+            {topLevel.members.map((leader) => (
+              <LeaderCard key={leader.id} leader={leader} />
+            ))}
+            <p className="text-sm text-gray-500 mt-2">{topLevel.label}</p>
           </div>
-        </div>
 
-        {/* Connector: MD -> Departments fan-out (desktop/tablet) */}
-        <div className="hidden sm:block mb-4">
-          <div className="relative">
-            {/* Horizontal line spanning across columns */}
-            <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-[#CFE6C7]" />
-            {/* Stub lines aligned to department columns */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {departments.map((dept) => (
-                <div key={dept.title} className="flex justify-center">
-                  <div className="w-0.5 h-6 bg-[#CFE6C7]" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Departments */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:mt-2">
-          {departments.map((dept) => (
-            <div key={dept.title} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#326101] to-[#639427]" />
-                <h4 className="text-lg font-semibold text-gray-900">{dept.title}</h4>
-              </div>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                {dept.points.map((p) => (
-                  <li key={p} className="flex items-center">
-                    <span className="w-1.5 h-1.5 bg-[#639427] rounded-full mr-2" />
-                    {p}
-                  </li>
+          {otherLevels.map((level) => (
+            <div key={level.order} className="border-t border-gray-100 py-6">
+              <h3 className="text-sm font-semibold text-gray-500 mb-4">{level.label}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {level.members.map((leader) => (
+                  <LeaderCard key={leader.id} leader={leader} />
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }
