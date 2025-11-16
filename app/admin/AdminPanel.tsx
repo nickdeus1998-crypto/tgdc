@@ -1111,8 +1111,11 @@ const AdminPanel: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState('dashboard');
 
+  const getPageMeta = (page: string) => pageData[page] ?? pageData.dashboard;
+
   const updateBreadcrumb = (page: string) => {
-    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'news', 'contact', 'footer'].includes(page);
+    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'projectHighlights', 'news', 'contact', 'footer'].includes(page);
+    const meta = getPageMeta(page);
     return (
       <div className="hidden md:flex items-center text-sm text-gray-500 mb-2">
         <span>Dashboard</span>
@@ -1127,7 +1130,7 @@ const AdminPanel: React.FC = () => {
             </svg>
           </>
         )}
-        <span className="text-[#326101] font-medium">{pageData[page].title}</span>
+        <span className="text-[#326101] font-medium">{meta.title}</span>
       </div>
     );
   };
@@ -1238,8 +1241,8 @@ const AdminPanel: React.FC = () => {
         <div className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{pageData[activePage].title}</h1>
-              <p className="text-gray-600">{pageData[activePage].description}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageMeta(activePage).title}</h1>
+              <p className="text-gray-600">{getPageMeta(activePage).description}</p>
             </div>
             <PageComponent />
           </div>

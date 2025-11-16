@@ -77,6 +77,7 @@ const ProjectSection: NextPage = () => {
   const [filter, setFilter] = useState<string>('all');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [visibleCount, setVisibleCount] = useState(6);
   const [loadingProjects, setLoadingProjects] = useState<boolean>(true);
   const [projectError, setProjectError] = useState<string | null>(null);
 
@@ -122,6 +123,10 @@ const ProjectSection: NextPage = () => {
   }, []);
 
   useEffect(() => {
+    setVisibleCount(6);
+  }, [filter, projects.length]);
+
+  useEffect(() => {
     const animateCounter = (elementId: string, targetValue: number, suffix: string = '') => {
       const element = document.getElementById(elementId);
       if (!element) return;
@@ -155,9 +160,9 @@ const ProjectSection: NextPage = () => {
   }, []);
 
   const filteredProjects = useMemo(() => {
-    if (filter === 'all') return projects;
-    return projects.filter((project) => project.category === filter);
-  }, [projects, filter]);
+    const list = filter === 'all' ? projects : projects.filter((project) => project.category === filter);
+    return list.slice(0, visibleCount);
+  }, [projects, filter, visibleCount]);
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) || null,
@@ -256,11 +261,11 @@ const ProjectSection: NextPage = () => {
                         <span className="backdrop-blur-md bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium">
                           {getStatusLabel(project.status)}
                         </span>
-                        <span className="text-white text-2xl font-bold">{project.capacity}</span>
+                        <span className="text-emerald-200 text-2xl font-bold">{project.capacity}</span>
                       </div>
                       <div className="text-white">
                         <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                        <p className="text-white/80 text-sm">{project.location}</p>
+                        <p className="text-emerald-100 text-sm">{project.location}</p>
                       </div>
                     </div>
                   </div>
@@ -295,11 +300,16 @@ const ProjectSection: NextPage = () => {
               ))}
             </div>
 
-            <div className="text-center mt-12">
-              <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300">
-                Load More Projects
-              </button>
-            </div>
+            {visibleCount < (filter === 'all' ? projects.length : projects.filter((p) => p.category === filter).length) && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 6)}
+                  className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  Load More Projects
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -326,9 +336,9 @@ const ProjectSection: NextPage = () => {
                   className="rounded-2xl overflow-hidden mb-6 h-64 bg-cover bg-center"
                   style={{ backgroundImage: `url(${getProjectImage(selectedProject)})` }}
                 >
-                  <div className="h-full w-full bg-gradient-to-br from-black/30 to-black/10 p-6 flex flex-col justify-end text-white">
+                  <div className="h-full w-full bg-gradient-to-br from-black/80 via-black/60 to-black/40 p-6 flex flex-col justify-end text-white">
                     <h3 className="text-2xl font-bold mb-2">{selectedProject.title}</h3>
-                    <p className="text-white/80">
+                    <p className="text-emerald-100">
                       {selectedProject.location} • {selectedProject.capacity}
                     </p>
                   </div>
@@ -338,15 +348,15 @@ const ProjectSection: NextPage = () => {
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div className="bg-green-50 p-4 rounded-xl">
                         <p className="text-sm text-gray-500 mb-1">Location</p>
-                        <span className="font-semibold">{selectedProject.location}</span>
+                        <span className="font-semibold text-[#326101]">{selectedProject.location}</span>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-xl">
                         <p className="text-sm text-gray-500 mb-1">Capacity</p>
-                        <span className="font-semibold">{selectedProject.capacity}</span>
+                        <span className="font-semibold text-[#326101]">{selectedProject.capacity}</span>
                       </div>
                       <div className="bg-purple-50 p-4 rounded-xl">
                         <p className="text-sm text-gray-500 mb-1">Investment</p>
-                        <span className="font-semibold">{selectedProject.investment}</span>
+                        <span className="font-semibold text-[#326101]">{selectedProject.investment}</span>
                       </div>
                       <div className="bg-yellow-50 p-4 rounded-xl">
                         <p className="text-sm text-gray-500 mb-1">Status</p>

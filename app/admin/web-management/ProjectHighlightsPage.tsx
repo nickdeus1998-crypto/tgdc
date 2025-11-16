@@ -227,7 +227,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   value={form.slug}
                   onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
               <div>
@@ -237,7 +237,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   value={form.title}
                   onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
               <div>
@@ -247,7 +247,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   value={form.location}
                   onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
               <div>
@@ -255,7 +255,7 @@ const ProjectHighlightsPage: React.FC = () => {
                 <select
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101]"
                 >
                   <option value="operational">Operational</option>
                   <option value="construction">Construction</option>
@@ -270,7 +270,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   value={form.status}
                   onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
               <div>
@@ -281,7 +281,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   max={100}
                   value={form.progress}
                   onChange={(e) => setForm((prev) => ({ ...prev, progress: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
             </div>
@@ -292,7 +292,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   type="text"
                   value={form.capacity}
                   onChange={(e) => setForm((prev) => ({ ...prev, capacity: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
               <div>
@@ -301,7 +301,7 @@ const ProjectHighlightsPage: React.FC = () => {
                   type="text"
                   value={form.investment}
                   onChange={(e) => setForm((prev) => ({ ...prev, investment: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ const ProjectHighlightsPage: React.FC = () => {
                 type="text"
                 value={form.imageUrl || ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -321,7 +321,7 @@ const ProjectHighlightsPage: React.FC = () => {
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
               />
             </div>
             <div>
@@ -330,7 +330,7 @@ const ProjectHighlightsPage: React.FC = () => {
                 value={form.keyFeatures.join('\n')}
                 onChange={(e) => setFeatureText(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
               />
             </div>
             <div>
@@ -352,14 +352,14 @@ const ProjectHighlightsPage: React.FC = () => {
                       placeholder="Phase"
                       value={entry.phase}
                       onChange={(e) => updateTimelineEntry(index, 'phase', e.target.value)}
-                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                     />
                     <input
                       type="text"
                       placeholder="Status"
                       value={entry.status}
                       onChange={(e) => updateTimelineEntry(index, 'status', e.target.value)}
-                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                     />
                     <div className="flex gap-2">
                       <input
@@ -367,7 +367,7 @@ const ProjectHighlightsPage: React.FC = () => {
                         placeholder="Date"
                         value={entry.date}
                         onChange={(e) => updateTimelineEntry(index, 'date', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
                       />
                       <button
                         type="button"
@@ -387,15 +387,15 @@ const ProjectHighlightsPage: React.FC = () => {
               <div className="grid md:grid-cols-2 gap-3">
                 {impactFields.map(({ key, label }) => (
                   <div key={key}>
-                    <input
-                      type="text"
-                      placeholder={label}
-                      value={form.impact[key]}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, impact: { ...prev.impact, [key]: e.target.value } }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101]"
-                    />
+                      <input
+                        type="text"
+                        placeholder={label}
+                        value={form.impact[key]}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, impact: { ...prev.impact, [key]: e.target.value } }))
+                        }
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
+                      />
                   </div>
                 ))}
               </div>

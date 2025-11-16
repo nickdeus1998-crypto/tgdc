@@ -18,16 +18,6 @@ interface LinksSectionProps {
   links: LinkItem[];
 }
 
-interface VisitorCounterProps {
-  visitors: {
-    today: number;
-    yesterday: number;
-    week: number;
-    month: number;
-    total: number;
-  };
-}
-
 interface SocialLink {
   name: string;
   href: string;
@@ -91,58 +81,6 @@ const LinksSection: React.FC<LinksSectionProps> = ({ title, links }) => (
   </div>
 );
 
-const VisitorCounter: React.FC<VisitorCounterProps> = ({ visitors }) => {
-  useEffect(() => {
-    const animateCounter = (elementId: string, targetValue: number, duration: number = 2000) => {
-      const element = document.getElementById(elementId);
-      if (!element) return;
-      const startValue = 0;
-      const startTime = performance.now();
-
-      const updateCounter = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-        const currentValue = Math.floor(startValue + (targetValue - startValue) * easeOutQuart);
-        element.textContent = currentValue.toLocaleString();
-        if (progress < 1) {
-          requestAnimationFrame(updateCounter);
-        }
-      };
-
-      requestAnimationFrame(updateCounter);
-    };
-
-    setTimeout(() => {
-      animateCounter('todayVisitors', visitors.today, 1000);
-      animateCounter('yesterdayVisitors', visitors.yesterday, 1200);
-      animateCounter('weekVisitors', visitors.week, 1400);
-      animateCounter('monthVisitors', visitors.month, 1600);
-      animateCounter('totalVisitors', visitors.total, 2000);
-    }, 500);
-  }, [visitors]);
-
-  return (
-    <div>
-      <h3 className="text-xl font-bold mb-6 text-white">Visitor Counter</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {[
-          { id: 'todayVisitors', label: 'Today' },
-          { id: 'yesterdayVisitors', label: 'Yesterday' },
-          { id: 'weekVisitors', label: 'Last 7 Days' },
-          { id: 'monthVisitors', label: 'This Month' },
-          { id: 'totalVisitors', label: 'Total' },
-        ].map((item) => (
-          <div key={item.id} className="bg-gray-800/40 p-4 rounded-lg border border-gray-700">
-            <p className="text-gray-400 text-sm mb-1">{item.label}</p>
-            <p id={item.id} className="text-white text-xl font-bold">0</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copyrightText }) => (
   <div className="border-t border-gray-700 mt-12 pt-8">
     <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
@@ -172,7 +110,7 @@ const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copy
     <div className="text-center mt-8 pt-6 border-t border-gray-700">
       <p className="text-gray-400 text-sm mb-2">{copyrightText}</p>
       <p className="text-gray-500 text-xs leading-relaxed">
-        The website is Designed, Developed And Maintained by e-Government Agency. Content Maintained by TGDC
+        The website is Designed, Developed And Maintained by TGDC. Content Maintained by TGDC.
       </p>
     </div>
   </div>
@@ -201,14 +139,6 @@ Barabara ya Mwai Kibaki
     { name: 'Photo Gallery', href: '#' },
     { name: 'Social Media', href: '#' },
   ];
-
-  const visitors: VisitorCounterProps['visitors'] = {
-    today: 11,
-    yesterday: 20,
-    week: 43,
-    month: 720,
-    total: 14017,
-  };
 
   const defaultSocialLinks: SocialLink[] = [
     {
@@ -306,11 +236,10 @@ Barabara ya Mwai Kibaki
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
           <ContactInfo {...contactInfo} />
           <LinksSection title="Related Links" links={relatedLinks} />
           <LinksSection title="Quick Links" links={quickLinks} />
-          <VisitorCounter visitors={visitors} />
         </div>
         <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} copyrightText={copyrightText} />
       </div>

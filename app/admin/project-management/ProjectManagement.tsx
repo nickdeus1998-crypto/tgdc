@@ -749,7 +749,7 @@ const ProjectManagement: React.FC = () => {
                     type="text"
                     name="projectName"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                     placeholder="e.g., Tagalala Site Survey"
                   />
                 </div>
@@ -758,7 +758,7 @@ const ProjectManagement: React.FC = () => {
                   <select
                     name="zone"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   >
                     <option value="">Select Zone</option>
                     <option value="eastern">Eastern Zone</option>
@@ -775,7 +775,7 @@ const ProjectManagement: React.FC = () => {
                   <select
                     name="projectType"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   >
                     <option value="">Select Type</option>
                     <option value="exploration">Exploration</option>
@@ -790,7 +790,7 @@ const ProjectManagement: React.FC = () => {
                   <select
                     name="priority"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   >
                     <option value="">Select Priority</option>
                     <option value="high">High</option>
@@ -806,7 +806,7 @@ const ProjectManagement: React.FC = () => {
                     type="date"
                     name="startDate"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -815,7 +815,7 @@ const ProjectManagement: React.FC = () => {
                     type="date"
                     name="dueDate"
                     required
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -825,7 +825,7 @@ const ProjectManagement: React.FC = () => {
                   type="number"
                   name="budget"
                   required
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   placeholder="e.g., 150000"
                 />
               </div>
@@ -835,7 +835,7 @@ const ProjectManagement: React.FC = () => {
                   name="description"
                   required
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   placeholder="Describe the project objectives and scope..."
                 ></textarea>
               </div>
