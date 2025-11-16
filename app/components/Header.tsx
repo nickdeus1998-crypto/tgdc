@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "./I18nProvider";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Header() {
   const { t } = useI18n();
@@ -85,8 +86,9 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* CTA */}
-          <div className="hidden md:flex items-center">
+          {/* CTA + language */}
+          <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
             <Link
               href="/stakeholder/login"
               className="bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-2 rounded-full font-medium text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
@@ -148,8 +150,8 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* CTA */}
-            <div className="flex items-center">
+            <div className="flex flex-col gap-4 items-center">
+              <LanguageSwitcher />
               <Link
                 href="/stakeholder/login"
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-3 rounded-full font-medium text-base hover:shadow-lg transition-all duration-300 text-center"

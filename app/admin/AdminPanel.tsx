@@ -1305,7 +1305,9 @@ const AdminPanel: React.FC = () => {
           transition: max-height 0.3s ease-out;
         }
         .submenu.open {
-          max-height: 500px;
+          max-height: 1000px;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
       `}</style>
       <header className="admin-header fixed top-0 left-0 right-0 z-50 h-16">

@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import I18nProvider from "./components/I18nProvider";
 import { Poppins } from "next/font/google";
+import WeglotLoader from "./components/WeglotLoader";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
         />
       </head>
       <body className={poppins.className}>
+          <WeglotLoader />
           <ThemeProvider attribute="class" enableSystem={true} defaultTheme="system">
             <I18nProvider>
               <SiteChrome>
