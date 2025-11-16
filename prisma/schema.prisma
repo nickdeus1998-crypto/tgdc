@@ -157,6 +157,7 @@ model StakeholderMessage {
   stakeholderId Int
   subject       String
   content       String
+  senderRole    String   @default("stakeholder")
   sentAt        DateTime @default(now())
 
   stakeholder Stakeholder @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)

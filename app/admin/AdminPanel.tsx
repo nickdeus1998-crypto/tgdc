@@ -45,10 +45,14 @@ const StakeholdersPage: React.FC = () => {
   const [err, setErr] = useState<string | null>(null)
   const [items, setItems] = useState<Array<{ id: number; name: string; email: string; company?: string | null; phone?: string | null; createdAt: string; _count: { messages: number; documents: number } }>>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [msgs, setMsgs] = useState<Array<{ id: number; subject: string; content: string; sentAt: string }>>([])
+  const [msgs, setMsgs] = useState<Array<{ id: number; subject: string; content: string; sentAt: string; senderRole: 'admin' | 'stakeholder' }>>([])
   const [docs, setDocs] = useState<Array<{ id: number; filename: string; storagePath: string; sizeBytes: number; uploadedAt: string }>>([])
   const [msgCursor, setMsgCursor] = useState<number | null>(null)
   const [docCursor, setDocCursor] = useState<number | null>(null)
+  const [replySubject, setReplySubject] = useState('')
+  const [replyContent, setReplyContent] = useState('')
+  const [sendingReply, setSendingReply] = useState(false)
+  const [sendStatus, setSendStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -79,6 +83,12 @@ const StakeholdersPage: React.FC = () => {
 
   useEffect(() => { if (selectedId) loadDetails(selectedId) }, [selectedId])
 
+  useEffect(() => {
+    setReplySubject('')
+    setReplyContent('')
+    setSendStatus(null)
+  }, [selectedId])
+
   const loadMoreMsgs = async () => {
     if (!selectedId || !msgCursor) return
     const res = await fetch(`/api/admin/stakeholders/${selectedId}/messages?limit=10&cursor=${msgCursor}`)
@@ -97,6 +107,38 @@ const StakeholdersPage: React.FC = () => {
       setDocCursor(data.nextCursor ?? null);
     }
   }
+
+  const sendReply = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!selectedId || !replySubject.trim() || !replyContent.trim()) {
+      setSendStatus({ type: 'error', message: 'Subject and message are required.' })
+      return
+    }
+    setSendingReply(true)
+    setSendStatus(null)
+    try {
+      const res = await fetch(`/api/admin/stakeholders/${selectedId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: replySubject.trim(), content: replyContent.trim() }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setSendStatus({ type: 'error', message: data?.error || 'Failed to send reply.' })
+        return
+      }
+      setReplySubject('')
+      setReplyContent('')
+      setSendStatus({ type: 'success', message: 'Reply sent successfully.' })
+      await loadDetails(selectedId)
+    } catch {
+      setSendStatus({ type: 'error', message: 'Failed to send reply.' })
+    } finally {
+      setSendingReply(false)
+    }
+  }
+
+  const canSendReply = Boolean(selectedId && replySubject.trim() && replyContent.trim())
 
   return (
     <div className="p-6 lg:p-8">
@@ -135,15 +177,26 @@ const StakeholdersPage: React.FC = () => {
                 <p className="text-sm text-gray-500">No messages.</p>
               ) : (
                 <ul className="space-y-3 max-h-72 overflow-auto pr-1">
-                  {msgs.map(m => (
-                    <li key={m.id} className="border border-gray-200 rounded-md p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900 text-sm">{m.subject}</p>
-                        <span className="text-xs text-gray-500">{new Date(m.sentAt).toLocaleString()}</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{m.content}</p>
-                    </li>
-                  ))}
+                  {msgs.map(m => {
+                    const isAdminMessage = m.senderRole === 'admin'
+                    return (
+                      <li
+                        key={m.id}
+                        className={`rounded-md p-3 border ${isAdminMessage ? 'border-emerald-200 bg-emerald-50/70' : 'border-gray-200 bg-white'}`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isAdminMessage ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'}`}>
+                              {isAdminMessage ? 'TGDC' : 'Stakeholder'}
+                            </span>
+                            <p className="font-medium text-gray-900 text-sm break-words">{m.subject}</p>
+                          </div>
+                          <span className="text-xs text-gray-500">{new Date(m.sentAt).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{m.content}</p>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               {msgCursor && (
@@ -151,6 +204,49 @@ const StakeholdersPage: React.FC = () => {
                   <button onClick={loadMoreMsgs} className="text-sm text-emerald-700 hover:underline">Load more</button>
                 </div>
               )}
+              <form onSubmit={sendReply} className="mt-6 border-t border-gray-100 pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-gray-900">Reply to stakeholder</h4>
+                  {sendStatus && (
+                    <span className={`text-xs ${sendStatus.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {sendStatus.message}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  value={replySubject}
+                  onChange={e => setReplySubject(e.target.value)}
+                  disabled={!selectedId || sendingReply}
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                />
+                <textarea
+                  placeholder="Write your reply"
+                  value={replyContent}
+                  onChange={e => setReplyContent(e.target.value)}
+                  disabled={!selectedId || sendingReply}
+                  rows={4}
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-400 disabled:bg-gray-50"
+                />
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setReplySubject(''); setReplyContent(''); setSendStatus(null) }}
+                    disabled={sendingReply || (!replySubject && !replyContent)}
+                    className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!canSendReply || sendingReply}
+                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-emerald-700 disabled:opacity-50"
+                  >
+                    {sendingReply ? 'Sending…' : 'Send reply'}
+                  </button>
+                </div>
+              </form>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-md font-semibold text-gray-900 mb-3">Documents</h3>

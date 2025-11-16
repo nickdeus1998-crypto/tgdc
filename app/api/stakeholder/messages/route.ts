@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       take: limit,
       cursor: cursor ? { id: Number(cursor) } : undefined,
       skip: cursor ? 1 : 0,
-      select: { id: true, subject: true, content: true, sentAt: true },
+      select: { id: true, subject: true, content: true, sentAt: true, senderRole: true },
     })
 
     const nextCursor = items.length === limit ? items[items.length - 1].id : null

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (!subject || !content) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
     const msg = await prisma.stakeholderMessage.create({
-      data: { stakeholderId: Number(payload.sid), subject, content },
+      data: { stakeholderId: Number(payload.sid), subject, content, senderRole: 'stakeholder' },
     })
 
     await sendMail({
@@ -34,4 +34,3 @@ export async function POST(request: Request) {
     await prisma.$disconnect()
   }
 }
-

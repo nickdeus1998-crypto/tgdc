@@ -9,7 +9,7 @@ export default function StakeholderDashboard() {
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [status, setStatus] = useState<string | null>(null);
-  const [msgHistory, setMsgHistory] = useState<Array<{ id: number; subject: string; content: string; sentAt: string }>>([]);
+  const [msgHistory, setMsgHistory] = useState<Array<{ id: number; subject: string; content: string; sentAt: string; senderRole: 'admin' | 'stakeholder' }>>([]);
   const [msgCursor, setMsgCursor] = useState<number | null>(null);
   const [docs, setDocs] = useState<Array<{ id: number; filename: string; storagePath: string; sizeBytes: number; uploadedAt: string }>>([]);
   const [docCursor, setDocCursor] = useState<number | null>(null);
@@ -163,15 +163,26 @@ export default function StakeholderDashboard() {
                 <p className="text-sm text-gray-600">No messages yet.</p>
               ) : (
                 <ul className="space-y-3 max-h-80 overflow-auto pr-1">
-                  {msgHistory.map(m => (
-                    <li key={m.id} className="border border-gray-200 rounded-md p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900 text-sm">{m.subject}</p>
-                        <span className="text-xs text-gray-500">{new Date(m.sentAt).toLocaleString()}</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{m.content}</p>
-                    </li>
-                  ))}
+                  {msgHistory.map(m => {
+                    const isAdmin = m.senderRole === 'admin';
+                    return (
+                      <li
+                        key={m.id}
+                        className={`border rounded-md p-3 ${isAdmin ? 'border-emerald-200 bg-emerald-50/70' : 'border-gray-200 bg-white'}`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isAdmin ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'}`}>
+                              {isAdmin ? 'TGDC' : 'You'}
+                            </span>
+                            <p className="font-medium text-gray-900 text-sm break-words">{m.subject}</p>
+                          </div>
+                          <span className="text-xs text-gray-500">{new Date(m.sentAt).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{m.content}</p>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
               {msgCursor && (
