@@ -16,6 +16,7 @@ import GeothermalSitesPage from './web-management/GeothermalSitesPage';
 import FooterSettingsPage from './web-management/FooterSettingsPage';
 import AboutUsPage from './web-management/AboutUsPage';
 import ProjectHighlightsPage from './web-management/ProjectHighlightsPage';
+import ImpactHighlightsAdminPage from './web-management/ImpactHighlightsPage';
 // TypeScript interfaces
 interface PageData {
   title: string;
@@ -242,6 +243,10 @@ sustainability: {
   portfolio: {
     title: 'Projects Portfolio',
     description: 'Manage project portfolio, case studies, and project galleries.',
+  },
+  impactHighlights: {
+    title: 'Impact Highlights',
+    description: 'Manage carousel entries for homepage impact highlights.',
   },
   projectHighlights: {
     title: 'Project Highlights',
@@ -806,6 +811,7 @@ const pageComponents: Record<string, ComponentType> = {
   about: AboutUsPage,
   services: ServicesSectionPage,
   portfolio: PortfolioPage,
+  impactHighlights: ImpactHighlightsAdminPage,
   projectHighlights: ProjectHighlightsPage,
   news: NewsPage,
   contact: ContactPage,
@@ -1000,6 +1006,7 @@ const Sidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void; activePage
         { page: 'stats', text: 'Stats ', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
         { page: 'services', text: 'Services', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
         { page: 'portfolio', text: 'Projects Portfolio', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
+        { page: 'impactHighlights', text: 'Impact Highlights', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /> },
         { page: 'projectHighlights', text: 'Project Highlights', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.157c.969 0 1.371 1.24.588 1.81l-3.364 2.446a1 1 0 00-.364 1.118l1.286 3.955c.3.921-.755 1.688-1.538 1.118l-3.364-2.446a1 1 0 00-1.176 0l-3.364 2.446c-.783.57-1.838-.197-1.538-1.118l1.286-3.955a1 1 0 00-.364-1.118L2.018 9.382c-.783-.57-.38-1.81.588-1.81h4.157a1 1 0 00.95-.69l1.286-3.955z" /> },
         { page: 'news', text: 'News & Updates', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /> },
         { page: 'contact', text: 'Contact Information', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
@@ -1114,7 +1121,7 @@ const AdminPanel: React.FC = () => {
   const getPageMeta = (page: string) => pageData[page] ?? pageData.dashboard;
 
   const updateBreadcrumb = (page: string) => {
-    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'projectHighlights', 'news', 'contact', 'footer'].includes(page);
+    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'impactHighlights', 'projectHighlights', 'news', 'contact', 'footer'].includes(page);
     const meta = getPageMeta(page);
     return (
       <div className="hidden md:flex items-center text-sm text-gray-500 mb-2">

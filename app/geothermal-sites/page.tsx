@@ -32,6 +32,16 @@ const GeothermalSites: NextPage = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const zones = ["Eastern Zone", "Lake Zone", "Southern Zone", "Northern Zone", "Central Zone", "All"];
+  const getZoneButtonClass = (zone: string) =>
+    `px-3 py-1.5 rounded-full border text-sm transition-all duration-200 ${
+      currentZone === zone
+        ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white border-transparent'
+        : 'text-gray-700 border-green-200 hover:bg-green-50'
+    }`;
+  const getZonePolygonClass = (zone: string) =>
+    `cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
+      currentZone === zone ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
+    }`;
 
   const updateStats = () => {
     const easternCount = sites.filter((s) => s.zone === 'Eastern Zone').length;
@@ -205,13 +215,7 @@ const GeothermalSites: NextPage = () => {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex flex-wrap gap-2">
                   {zones.map((zone) => (
-                    <button
-                      key={zone}
-                      className={`px-3 py-1.5 rounded-full border text-sm text-gray-700 hover:bg-green-50 border-green-200 transition-all duration-200 ${
-                        currentZone === zone ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white' : ''
-                      }`}
-                      onClick={() => handleZoneClick(zone)}
-                    >
+                    <button key={zone} className={getZoneButtonClass(zone)} onClick={() => handleZoneClick(zone)}>
                       {zone}
                     </button>
                   ))}
@@ -256,48 +260,23 @@ const GeothermalSites: NextPage = () => {
               </div>
               <div className="w-full mb-5">
                 <svg viewBox="0 0 900 520" className="w-full h-auto">
-                  <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'Eastern Zone' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
-                    onClick={() => handleZoneClick('Eastern Zone')}
-                  >
+                  <g className={getZonePolygonClass('Eastern Zone')} onClick={() => handleZoneClick('Eastern Zone')}>
                     <polygon points="150,140 210,105 270,140 270,210 210,245 150,210" fill="#10b981" fillOpacity="0.9" />
                     <text x="210" y="178" textAnchor="middle" fill="white" fontSize="16" fontWeight="700">Eastern</text>
                   </g>
-                  <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'Lake Zone' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
-                    onClick={() => handleZoneClick('Lake Zone')}
-                  >
+                  <g className={getZonePolygonClass('Lake Zone')} onClick={() => handleZoneClick('Lake Zone')}>
                     <polygon points="370,70 430,35 490,70 490,140 430,175 370,140" fill="#d1d5db" fillOpacity="0.9" />
                     <text x="430" y="108" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Lake</text>
                   </g>
-                  <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'Southern Zone' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
-                    onClick={() => handleZoneClick('Southern Zone')}
-                  >
+                  <g className={getZonePolygonClass('Southern Zone')} onClick={() => handleZoneClick('Southern Zone')}>
                     <polygon points="370,220 430,185 490,220 490,290 430,325 370,290" fill="#d1d5db" fillOpacity="0.9" />
                     <text x="430" y="258" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Southern</text>
                   </g>
-                  <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'Northern Zone' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
-                    onClick={() => handleZoneClick('Northern Zone')}
-                  >
+                  <g className={getZonePolygonClass('Northern Zone')} onClick={() => handleZoneClick('Northern Zone')}>
                     <polygon points="590,140 650,105 710,140 710,210 650,245 590,210" fill="#d1d5db" fillOpacity="0.9" />
                     <text x="650" y="178" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Northern</text>
                   </g>
-                  <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'Central Zone' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
-                    onClick={() => handleZoneClick('Central Zone')}
-                  >
+                  <g className={getZonePolygonClass('Central Zone')} onClick={() => handleZoneClick('Central Zone')}>
                     <polygon points="480,360 540,325 600,360 600,430 540,465 480,430" fill="#d1d5db" fillOpacity="0.9" />
                     <text x="540" y="398" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Central</text>
                   </g>
