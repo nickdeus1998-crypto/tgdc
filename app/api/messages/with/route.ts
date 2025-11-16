@@ -26,11 +26,14 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: 'asc' },
     })
-    return NextResponse.json({ messages: rows })
+    const formatted = rows.map(row => ({
+      ...row,
+      attachments: Array.isArray(row.attachments) ? row.attachments : [],
+    }))
+    return NextResponse.json({ messages: formatted })
   } catch (e) {
     return NextResponse.json({ messages: [] }, { status: 200 })
   } finally {
     await prisma.$disconnect()
   }
 }
-

@@ -11,12 +11,20 @@ import { Line } from 'react-chartjs-2';
 // const Line = dynamic(() => import('react-chartjs').then((mod) => mod.Line), { ssr: false });
 
 // Types
+interface MessageAttachment {
+  name: string;
+  url: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
 interface Message {
   id: number;
   sender: string;
   text: string;
   time: string;
   sent: boolean;
+  attachments: MessageAttachment[];
 }
 
 interface Conversation {
@@ -45,10 +53,10 @@ const initialConversations: Record<number, Conversation> = {
     color: 'bg-blue-500',
     status: 'Online',
     messages: [
-      { id: 1, sender: 'Sarah Editor', text: "Hi! I've updated the homepage content as requested. Could you please review it?", time: '10:30 AM', sent: false },
-      { id: 2, sender: 'You', text: "Thanks Sarah! I'll take a look and get back to you shortly.", time: '10:35 AM', sent: true },
-      { id: 3, sender: 'Sarah Editor', text: 'Perfect! I also added some new images to the hero section. Let me know if you need any adjustments.', time: '10:45 AM', sent: false },
-      { id: 4, sender: 'You', text: 'The images look great! Can you also update the project timeline section?', time: '11:00 AM', sent: true }
+      { id: 1, sender: 'Sarah Editor', text: "Hi! I've updated the homepage content as requested. Could you please review it?", time: '10:30 AM', sent: false, attachments: [] },
+      { id: 2, sender: 'You', text: "Thanks Sarah! I'll take a look and get back to you shortly.", time: '10:35 AM', sent: true, attachments: [] },
+      { id: 3, sender: 'Sarah Editor', text: 'Perfect! I also added some new images to the hero section. Let me know if you need any adjustments.', time: '10:45 AM', sent: false, attachments: [] },
+      { id: 4, sender: 'You', text: 'The images look great! Can you also update the project timeline section?', time: '11:00 AM', sent: true, attachments: [] }
     ]
   },
   2: {
@@ -57,9 +65,9 @@ const initialConversations: Record<number, Conversation> = {
     color: 'bg-purple-500',
     status: 'Offline',
     messages: [
-      { id: 1, sender: 'Mike Writer', text: "I've finished the blog post about the Kisaki project. It's ready for your approval.", time: 'Yesterday 3:20 PM', sent: false },
-      { id: 2, sender: 'You', text: 'Great work Mike! I\'ll review it today and let you know if any changes are needed.', time: 'Yesterday 3:25 PM', sent: true },
-      { id: 3, sender: 'Mike Writer', text: 'Thanks! I\'ve also prepared some social media posts to go along with it.', time: 'Yesterday 3:30 PM', sent: false }
+      { id: 1, sender: 'Mike Writer', text: "I've finished the blog post about the Kisaki project. It's ready for your approval.", time: 'Yesterday 3:20 PM', sent: false, attachments: [] },
+      { id: 2, sender: 'You', text: 'Great work Mike! I\'ll review it today and let you know if any changes are needed.', time: 'Yesterday 3:25 PM', sent: true, attachments: [] },
+      { id: 3, sender: 'Mike Writer', text: 'Thanks! I\'ve also prepared some social media posts to go along with it.', time: 'Yesterday 3:30 PM', sent: false, attachments: [] }
     ]
   },
   3: {
@@ -68,9 +76,9 @@ const initialConversations: Record<number, Conversation> = {
     color: 'bg-green-500',
     status: 'Group',
     messages: [
-      { id: 1, sender: 'John Admin', text: 'Weekly team meeting scheduled for Friday at 2 PM. Please confirm your attendance.', time: '3 days ago', sent: true },
-      { id: 2, sender: 'Sarah Editor', text: "I'll be there! Should I prepare the content update report?", time: '3 days ago', sent: false },
-      { id: 3, sender: 'Mike Writer', text: 'Confirmed. I\'ll bring the latest blog analytics.', time: '3 days ago', sent: false }
+      { id: 1, sender: 'John Admin', text: 'Weekly team meeting scheduled for Friday at 2 PM. Please confirm your attendance.', time: '3 days ago', sent: true, attachments: [] },
+      { id: 2, sender: 'Sarah Editor', text: "I'll be there! Should I prepare the content update report?", time: '3 days ago', sent: false, attachments: [] },
+      { id: 3, sender: 'Mike Writer', text: 'Confirmed. I\'ll bring the latest blog analytics.', time: '3 days ago', sent: false, attachments: [] }
     ]
   }
 };
@@ -282,6 +290,9 @@ export default function Home() {
   const [conversations, setConversations] = useState<Record<number, Conversation>>({});
   const [currentConversation, setCurrentConversation] = useState<number>(0);
   const [messageText, setMessageText] = useState('');
+  const [messageAttachments, setMessageAttachments] = useState<MessageAttachment[]>([]);
+  const [chatAttachmentError, setChatAttachmentError] = useState<string | null>(null);
+  const [uploadingChatAttachment, setUploadingChatAttachment] = useState(false);
   const [meId, setMeId] = useState<number | null>(null);
   const [newsArticles] = useState<Record<number, NewsArticle>>(initialNewsArticles);
   const [currentNewsView, setCurrentNewsView] = useState<'list' | 'single' | 'editor'>('list');
@@ -321,6 +332,7 @@ export default function Home() {
     </ul>
   `);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const composerFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const getInitials = (s: string) => s.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const pickColor = (id: number) => {
@@ -351,6 +363,12 @@ export default function Home() {
     }
   }, [currentConversation, conversations]);
 
+  useEffect(() => {
+    setMessageAttachments([]);
+    setChatAttachmentError(null);
+    setMessageText('');
+  }, [currentConversation]);
+
   const switchTab = (tabName: typeof currentTab) => {
     setCurrentTab(tabName);
   };
@@ -368,6 +386,7 @@ export default function Home() {
         text: m.content,
         time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         sent: m.senderId === mine,
+        attachments: Array.isArray(m.attachments) ? m.attachments : [],
       }));
       setConversations(prev => ({ ...prev, [conversationId]: { ...(prev[conversationId] || conv), messages: msgs } }));
     } catch { }
@@ -375,16 +394,34 @@ export default function Home() {
 
   const sendMessage = async () => {
     const text = messageText.trim();
-    if (!text || !currentConversation) return;
+    if (!currentConversation || uploadingChatAttachment) return;
+    if (!text && messageAttachments.length === 0) return;
     try {
-      const res = await fetch('/api/messages/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toUserId: currentConversation, content: text }) });
-      if (!res.ok) throw new Error('send failed');
-      const now = new Date();
-      const msg: Message = { id: Date.now(), sender: 'You', text, time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), sent: true };
+      const res = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toUserId: currentConversation, content: text, attachments: messageAttachments }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || 'send failed');
+      const saved = data?.message;
+      const createdAt = saved?.createdAt ? new Date(saved.createdAt) : new Date();
+      const msg: Message = {
+        id: saved?.id ?? Date.now(),
+        sender: 'You',
+        text: saved?.content ?? text,
+        time: createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sent: true,
+        attachments: Array.isArray(saved?.attachments) ? saved.attachments : messageAttachments,
+      };
       setConversations(prev => ({ ...prev, [currentConversation]: { ...prev[currentConversation], messages: [...(prev[currentConversation]?.messages || []), msg] } }));
       setMessageText('');
+      setMessageAttachments([]);
+      setChatAttachmentError(null);
       if (chatMessagesRef.current) chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    } catch { }
+    } catch (e: any) {
+      setChatAttachmentError(e?.message || 'Failed to send message.');
+    }
   };
   type AuthorKeys = 'Mike Writer' | 'Sarah Editor' | 'John Admin';
   const showNewsView = (view: typeof currentNewsView, newsId?: number) => {
@@ -425,6 +462,43 @@ export default function Home() {
       alert(`${files.length} file(s) selected for upload. In a real system, these would be uploaded to your media library.`);
       setShowUploadModal(false);
     }
+  };
+
+  const uploadAttachment = async (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/messages/attachment', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Failed to upload file.');
+    return data.attachment as MessageAttachment;
+  };
+
+  const handleAttachmentSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingChatAttachment(true);
+    setChatAttachmentError(null);
+    try {
+      const uploaded: MessageAttachment[] = [];
+      for (const file of Array.from(files)) {
+        uploaded.push(await uploadAttachment(file));
+      }
+      setMessageAttachments(prev => [...prev, ...uploaded]);
+    } catch (e: any) {
+      setChatAttachmentError(e?.message || 'Failed to upload file.');
+    } finally {
+      setUploadingChatAttachment(false);
+    }
+  };
+
+  const removeAttachment = (url: string) => {
+    setMessageAttachments(prev => prev.filter(att => att.url !== url));
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handlePreviewSite = () => {
@@ -491,7 +565,6 @@ export default function Home() {
     try {
       const res = await fetch('/api/messages/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toUserId: newMsgTo, content: newMsgBody }) });
       if (!res.ok) throw new Error('send failed');
-      // Ensure conversation exists
       if (!conversations[newMsgTo]) {
         const rec = recipients.find(r => r.id === newMsgTo);
         if (rec) {
@@ -501,8 +574,7 @@ export default function Home() {
       setShowNewMessageModal(false);
       setNewMsgBody('');
       setNewMsgTo('');
-      // Load thread and focus it
-      await loadConversation(Number(res && newMsgTo));
+      await loadConversation(Number(newMsgTo));
     } catch { }
   };
 
@@ -999,24 +1071,32 @@ https://.../image2.jpg" />
                 </div>
               </div>
               <div className="space-y-3">
-                {Object.entries(conversations).map(([id, conv]) => (
-                  <div key={id} className={`conversation-item p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer ${parseInt(id) === currentConversation ? 'active' : ''}`} onClick={() => loadConversation(parseInt(id))}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full ${conv.color} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>{conv.avatar}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <div className="font-semibold text-gray-900 text-sm">{conv.name}</div>
-                          <div className="text-xs text-gray-500">{conv.messages[conv.messages.length - 1]?.time || 'No messages'}</div>
-                        </div>
-                        <div className="text-sm text-gray-600 truncate mt-1">{conv.messages[conv.messages.length - 1]?.text?.substring(0, 30)}...</div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`w-2 h-2 ${conv.status === 'Online' ? 'bg-green-500' : 'bg-gray-400'} rounded-full`}></span>
-                          <span className="text-xs text-gray-500">{conv.status}</span>
+                {Object.entries(conversations).map(([id, conv]) => {
+                  const lastMessage = conv.messages[conv.messages.length - 1];
+                  const previewSource = lastMessage?.text?.trim()
+                    || (lastMessage?.attachments?.length ? `Attachment: ${lastMessage.attachments[0].name}` : '');
+                  const preview = previewSource
+                    ? previewSource.length > 40 ? `${previewSource.slice(0, 40)}...` : previewSource
+                    : 'No messages yet';
+                  return (
+                    <div key={id} className={`conversation-item p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer ${parseInt(id) === currentConversation ? 'active' : ''}`} onClick={() => loadConversation(parseInt(id))}>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-full ${conv.color} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}>{conv.avatar}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <div className="font-semibold text-gray-900 text-sm">{conv.name}</div>
+                            <div className="text-xs text-gray-500">{lastMessage?.time || 'No messages'}</div>
+                          </div>
+                          <div className="text-sm text-gray-600 truncate mt-1">{preview}</div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className={`w-2 h-2 ${conv.status === 'Online' ? 'bg-green-500' : 'bg-gray-400'} rounded-full`}></span>
+                            <span className="text-xs text-gray-500">{conv.status}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
             {/* Chat Area */}
@@ -1050,8 +1130,31 @@ https://.../image2.jpg" />
                     {conversations[currentConversation].messages.map((message) => (
                       <div key={message.id} className={`flex ${message.sent ? 'justify-end' : 'justify-start'}`}>
                         <div className={`message-${message.sent ? 'sent' : 'received'} px-4 py-2 rounded-lg`}>
-                          <div className="text-sm">{message.text}</div>
-                          <div className={`text-xs mt-1 ${message.sent ? 'text-green-100' : 'text-gray-500'}`}>{message.time}</div>
+                          {message.text && <div className="text-sm whitespace-pre-wrap">{message.text}</div>}
+                          {message.attachments?.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {message.attachments.map((att) => (
+                                <a
+                                  key={att.url}
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 rounded border px-3 py-2 text-sm hover:opacity-90 ${
+                                    message.sent ? 'border-white/30 bg-white/10 text-white' : 'border-gray-200 bg-white text-gray-900'
+                                  }`}
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                  </svg>
+                                  <div>
+                                    <p className="font-medium">{att.name}</p>
+                                    <p className="text-xs opacity-70">{formatBytes(att.sizeBytes)}</p>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          <div className={`text-xs mt-2 ${message.sent ? 'text-green-100' : 'text-gray-500'}`}>{message.time}</div>
                         </div>
                       </div>
                     ))}
@@ -1066,14 +1169,43 @@ https://.../image2.jpg" />
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                         />
+                        {messageAttachments.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {messageAttachments.map((att) => (
+                              <div key={att.url} className="flex items-center gap-2 rounded border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700">
+                                <span className="font-medium truncate max-w-[120px]">{att.name}</span>
+                                <span className="text-gray-500">{formatBytes(att.sizeBytes)}</span>
+                                <button type="button" onClick={() => removeAttachment(att.url)} className="text-gray-400 hover:text-gray-600">
+                                  &times;
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {uploadingChatAttachment && <p className="text-xs text-gray-500 mt-2">Uploading attachment…</p>}
+                        {chatAttachmentError && <p className="text-xs text-red-600 mt-1">{chatAttachmentError}</p>}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                        <input
+                          ref={composerFileInputRef}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            handleAttachmentSelect(e.target.files);
+                            if (composerFileInputRef.current) composerFileInputRef.current.value = '';
+                          }}
+                        />
+                        <button type="button" className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100" onClick={() => composerFileInputRef.current?.click()} disabled={uploadingChatAttachment}>
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                           </svg>
                         </button>
-                        <button onClick={sendMessage} className="bg-[#326101] text-white px-4 py-2 rounded-lg hover:bg-[#639427] flex items-center gap-2">
+                        <button
+                          onClick={sendMessage}
+                          disabled={uploadingChatAttachment || !currentConversation || (!messageText.trim() && messageAttachments.length === 0)}
+                          className="bg-[#326101] disabled:opacity-50 text-white px-4 py-2 rounded-lg hover:bg-[#639427] flex items-center gap-2"
+                        >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
