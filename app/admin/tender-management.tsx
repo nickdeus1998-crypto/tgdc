@@ -216,7 +216,7 @@ const Hero: React.FC = () => {
 
   return (
     <>
-      <section className="bg-[radial-gradient(900px_460px_at_10%_-10%,_rgba(99,148,39,0.18),_transparent_60%),_radial-gradient(800px_420px_at_110%_0%,_rgba(50,97,1,0.18),_transparent_60%),_linear-gradient(135deg,_#326101,_#639427)] text-white py-12 md:py-16">
+      <section className="bg-gradient-to-tr from-[#1f3f00]/80 via-[#326101]/60 to-transparent text-white py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
@@ -590,7 +590,7 @@ const NavigationTabs: React.FC<{ currentTab: string; switchTab: (tab: string) =>
   currentTab,
   switchTab,
 }) => {
-  const tabs = ['Dashboard', 'Manage', 'Active Tenders', 'Evaluation', 'Archive', 'Vendors', 'Reports'];
+  const tabs = [ 'Manage'];
 
   return (
     <section className="py-6">
@@ -1201,7 +1201,7 @@ const ReportsSection: React.FC = () => {
 
 // Main App Component
 const TenderManagement: NextPage = () => {
-  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [currentTab, setCurrentTab] = useState('manage');
 
   const switchTab = (tab: string) => {
     setCurrentTab(tab);

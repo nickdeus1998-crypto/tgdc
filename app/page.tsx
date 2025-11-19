@@ -122,7 +122,7 @@ export default function Home() {
             />
             <NewsSection />
             {/* <InformationCenterSection /> */}
-            <AnnouncementSection />
+            {/* <AnnouncementSection /> */}
             <GeothermalSitesSection />
             <ProjectSection />
             {/* <AdminPanel /> */}

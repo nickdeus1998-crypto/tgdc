@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, ComponentType } from 'react';
+import React, { useState, useEffect, ComponentType, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import ProjectManagement from './project-management/ProjectManagement';
 import TenderManagement from './tender-management';
@@ -860,25 +860,193 @@ const TendersPage: React.FC = () => (
   </div>
 );
 
-const MediaPage: React.FC = () => (
-  <div className="p-6 lg:p-8">
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Media Gallery</h2>
-        <p className="text-gray-600 mb-4">Upload and organize media files.</p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Upload Media</label>
-            <input
-              type="file"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
-            />
+type MediaFileItem = {
+  name: string
+  url: string
+  sizeBytes: number
+  uploadedAt: string
+}
+
+const MediaPage: React.FC = () => {
+  const [mediaItems, setMediaItems] = useState<MediaFileItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B'
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`
+  }
+
+  const loadMedia = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/media', { cache: 'no-store' })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Failed to load media files.')
+      setMediaItems(data?.items || [])
+      setStatus(prev => (prev?.type === 'error' ? null : prev))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load media files.'
+      setStatus({ type: 'error', message })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadMedia()
+  }, [loadMedia])
+
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files?.length) return
+    setUploading(true)
+    setStatus(null)
+    try {
+      const form = new FormData()
+      Array.from(files).forEach(file => form.append('files', file))
+      const res = await fetch('/api/admin/media', { method: 'POST', body: form })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Upload failed.')
+      const uploadedCount = data?.items?.length ?? 0
+      setStatus({
+        type: 'success',
+        message: `${uploadedCount} file${uploadedCount === 1 ? '' : 's'} uploaded successfully.`,
+      })
+      await loadMedia()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed.'
+      setStatus({ type: 'error', message })
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    uploadFiles(event.target.files)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault()
+    if (uploading) return
+    uploadFiles(event.dataTransfer.files)
+  }
+
+  return (
+    <div className="p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Media Gallery</h2>
+              <p className="text-gray-600 mt-1">
+                Upload JPG, PNG, GIF or WEBP images. Files are stored under <code>/public/uploads/media</code>.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadMedia()}
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-[#326101] hover:text-[#326101] transition-colors disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+
+          {status && (
+            <div
+              className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+                status.type === 'success'
+                  ? 'border-green-200 bg-green-50 text-green-700'
+                  : 'border-red-200 bg-red-50 text-red-700'
+              }`}
+            >
+              {status.message}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            id="mediaUploadInput"
+            type="file"
+            className="hidden"
+            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+            multiple
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+
+          <label
+            htmlFor="mediaUploadInput"
+            onDrop={handleDrop}
+            onDragOver={event => event.preventDefault()}
+            className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl px-6 py-10 text-center cursor-pointer transition ${
+              uploading ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#326101] hover:bg-green-50/40'
+            }`}
+          >
+            <svg className="w-10 h-10 text-[#326101] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <p className="text-base font-semibold text-gray-900">Drag & drop to upload</p>
+            <p className="text-sm text-gray-600 mt-1">or click to browse files from your device</p>
+            <p className="text-xs text-gray-500 mt-3">Max size 10MB per image. Supported: JPG, PNG, GIF, WEBP.</p>
+            {uploading && <p className="text-sm text-[#326101] mt-3">Uploading&hellip;</p>}
+          </label>
+
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Uploaded Files</h3>
+              <span className="text-sm text-gray-500">
+                {mediaItems.length} file{mediaItems.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-500">
+                Loading media library&hellip;
+              </div>
+            ) : mediaItems.length === 0 ? (
+              <div className="border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-500">
+                No media files yet. Upload images to populate your gallery.
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {mediaItems.map(item => (
+                  <div
+                    key={item.url}
+                    className="border border-gray-100 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    <div className="aspect-video bg-gray-100">
+                      <img src={item.url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                    <div className="p-4">
+                      <p className="font-medium text-gray-900 truncate" title={item.name}>
+                        {item.name}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {formatBytes(item.sizeBytes)} · {new Date(item.uploadedAt).toLocaleString()}
+                      </p>
+                      <div className="mt-3 flex items-center justify-between text-sm">
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-[#326101] font-medium">
+                          Open
+                        </a>
+                        <code className="text-gray-500 text-xs">/uploads/media/{item.name}</code>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  )
+}
 
 const SettingsPage: React.FC = () => (
   <div className="p-6 lg:p-8">

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import MediaPicker from '../components/MediaPicker';
 
 interface OrgLeader {
   id: number;
@@ -193,12 +194,12 @@ const OrgStructureAdminPage: React.FC = () => {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-              <input
-                type="text"
+              <MediaPicker
+                label="Image Source"
+                helperText="Pick from the media gallery (stored in /uploads/media) or supply a full URL."
                 value={form.imageUrl || ''}
-                onChange={(e) => updateForm('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101]"
+                onChange={(url) => updateForm('imageUrl', url)}
+                disabled={saving}
               />
             </div>
             <div className="flex items-center gap-2 mt-6">
