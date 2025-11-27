@@ -99,40 +99,48 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
 
-        {/* Right illustration (flipping card) - simplified, no outside card */}
-        <div className="relative flex items-center justify-end">
-          <div className="relative mx-auto md:ml-auto w-full max-w-lg" style={{ perspective: '1000px' }}>
-            {/* Aspect ratio box for stable layout */}
-            <div className="relative w-full pt-[75%]">
-              <div
-                className="absolute inset-0 rounded-2xl shadow-2xl overflow-hidden transition-transform duration-700"
-                style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
-              >
-                {/* Front side */}
-                <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
-                  <Image
-                    src={frontSrc}
-                    alt="Hero Illustration"
-                    fill
-                    className="object-cover rounded-2xl"
-                    priority
-                    onError={() => {
-                      if (frontSrc !== '/geothermal.jpg') setFrontSrc('/geothermal.jpg');
-                    }}
-                  />
-                </div>
-                {/* Back side */}
-                <div className="absolute inset-0" style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}>
-                  <Image
-                    src={backSrc}
-                    alt="Hero Illustration"
-                    fill
-                    className="object-cover rounded-2xl"
-                    priority
-                    onError={() => {
-                      if (backSrc !== '/geothermal.jpg') setBackSrc('/geothermal.jpg');
-                    }}
-                  />
+        {/* Right illustration (card stack with animated swap) */}
+        <div className="relative flex items-center justify-center lg:justify-end">
+          <div className="relative w-full max-w-lg">
+            {/* Back card */}
+            <div className="absolute inset-0 origin-center rotate-45 translate-x-6 translate-y-6 rounded-[36px] bg-gradient-to-br from-green-200 via-emerald-100 to-white opacity-80 shadow-[0_25px_80px_rgba(50,97,1,0.25)]" />
+
+            {/* Front card */}
+            <div className="relative rounded-[36px] bg-white/80 backdrop-blur-xl p-6 shadow-[0_35px_90px_rgba(15,23,42,0.25)] border border-white/40">
+              <div className="absolute inset-0 rounded-[36px] bg-gradient-to-br from-green-50/60 to-transparent pointer-events-none" />
+              <div className="relative" style={{ perspective: '1600px' }}>
+                <div className="relative w-full pt-[70%] rounded-[28px] bg-gray-900/5 border border-white/60 overflow-hidden">
+                  <div
+                    className="absolute inset-0 rounded-[28px] overflow-hidden transition-transform duration-700 shadow-2xl"
+                    style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+                  >
+                    {/* Front side */}
+                    <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+                      <Image
+                        src={frontSrc}
+                        alt="Hero Illustration"
+                        fill
+                        className="object-cover"
+                        priority
+                        onError={() => {
+                          if (frontSrc !== '/geothermal.jpg') setFrontSrc('/geothermal.jpg');
+                        }}
+                      />
+                    </div>
+                    {/* Back side */}
+                    <div className="absolute inset-0" style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}>
+                      <Image
+                        src={backSrc}
+                        alt="Hero Illustration"
+                        fill
+                        className="object-cover"
+                        priority
+                        onError={() => {
+                          if (backSrc !== '/geothermal.jpg') setBackSrc('/geothermal.jpg');
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

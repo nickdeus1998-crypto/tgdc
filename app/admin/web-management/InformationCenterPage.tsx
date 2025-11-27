@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import MediaPicker from '../components/MediaPicker';
 
 type Id = number | string;
 type Kind = 'photo' | 'video' | 'newsletter' | 'press';
@@ -148,6 +149,9 @@ const InformationCenterPage: React.FC = () => {
     </div>
   );
 
+  const isImageEntry = activeKind === 'photo';
+  const hasThumbnail = activeKind === 'photo' || activeKind === 'video';
+
   return (
     <div className="space-y-6">
       {err && (
@@ -214,25 +218,33 @@ const InformationCenterPage: React.FC = () => {
                   />
                 </Field>
               )}
-              <Field label={activeKind === 'newsletter' ? 'PDF URL' : activeKind === 'video' ? 'Video URL' : 'URL'}>
-                <input
+              {isImageEntry ? (
+                <MediaPicker
+                  label="Image URL"
+                  helperText="Select from the media gallery or paste any public image URL."
                   value={form.url}
-                  onChange={(e) => setForm((v) => ({ ...v, url: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg"
-                  style={{ color: TEXT_DARK }}
-                  placeholder="https://..."
+                  onChange={(url) => setForm((v) => ({ ...v, url }))}
+                  disabled={!!loading.save}
                 />
-              </Field>
-              {(activeKind === 'photo' || activeKind === 'video') && (
-                <Field label="Thumbnail URL (optional)">
+              ) : (
+                <Field label={activeKind === 'newsletter' ? 'PDF URL' : activeKind === 'video' ? 'Video URL' : 'URL'}>
                   <input
-                    value={form.thumbnail || ''}
-                    onChange={(e) => setForm((v) => ({ ...v, thumbnail: e.target.value }))}
+                    value={form.url}
+                    onChange={(e) => setForm((v) => ({ ...v, url: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg"
                     style={{ color: TEXT_DARK }}
                     placeholder="https://..."
                   />
                 </Field>
+              )}
+              {hasThumbnail && (
+                <MediaPicker
+                  label="Thumbnail Image (optional)"
+                  helperText="Used for previews. Pull from media gallery or paste a URL."
+                  value={form.thumbnail || ''}
+                  onChange={(url) => setForm((v) => ({ ...v, thumbnail: url }))}
+                  disabled={!!loading.save}
+                />
               )}
               <div className="flex items-center gap-2 pt-2">
                 <button
@@ -261,4 +273,3 @@ const InformationCenterPage: React.FC = () => {
 };
 
 export default InformationCenterPage;
-

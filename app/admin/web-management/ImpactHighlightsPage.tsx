@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import MediaPicker from '../components/MediaPicker';
 
 interface ImpactHighlight {
   id: number;
@@ -190,12 +191,12 @@ const ImpactHighlightsAdminPage: React.FC = () => {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-              <input
-                type="text"
+              <MediaPicker
+                label="Highlight Image"
+                helperText="Choose from media gallery or provide a direct image URL."
                 value={form.imageUrl}
-                onChange={(e) => onChange('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 focus:ring-2 focus:ring-[#326101]"
+                onChange={(url) => onChange('imageUrl', url)}
+                disabled={saving}
               />
             </div>
             <div className="flex items-center gap-2 mt-6">

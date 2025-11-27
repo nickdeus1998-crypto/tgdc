@@ -17,7 +17,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Registration failed')
-      if (data.role === 'admin') router.push('/admin'); else router.push('/');
+      if (data.role === 'admin') router.push('/admin'); else router.push('/admin');
     } catch (err: any) {
       setError(err.message)
     } finally { setLoading(false) }
@@ -48,4 +48,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-

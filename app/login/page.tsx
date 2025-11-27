@@ -22,7 +22,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed')
-      if (data.role === 'admin') router.push('/admin'); else router.push('/');
+      if (data.role === 'admin') router.push('/admin'); else router.push('/admin');
     } catch (err: any) {
       setError(err.message)
     } finally { setLoading(false) }
@@ -49,4 +49,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

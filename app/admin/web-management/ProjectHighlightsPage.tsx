@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import MediaPicker from '../components/MediaPicker';
 
 interface ProjectImpact {
   jobs: string;
@@ -306,13 +307,12 @@ const ProjectHighlightsPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-              <input
-                type="text"
+              <MediaPicker
+                label="Image"
+                helperText="Pick a project image from the media gallery or paste a URL."
                 value={form.imageUrl || ''}
-                onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#326101]"
-                placeholder="https://example.com/image.jpg"
+                onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
+                disabled={saving}
               />
             </div>
             <div>

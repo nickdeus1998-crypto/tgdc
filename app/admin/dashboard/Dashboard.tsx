@@ -285,8 +285,19 @@ function switchTab(tab: TabKey) {
   console.log("Switched to:", tab);
 }
 
-export default function Home() {
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'content' | 'media' | 'users' | 'analytics' | 'news' | 'messages' >('dashboard');
+type DashboardProps = {
+  allowedTabs?: TabKey[];
+  defaultTab?: TabKey;
+};
+
+export default function Dashboard({ allowedTabs, defaultTab }: DashboardProps) {
+  const filteredTabs = allowedTabs?.length ? tabs.filter(t => allowedTabs.includes(t.key)) : tabs;
+  const allowedKeys = filteredTabs.map(t => t.key);
+  const initialTab = allowedKeys.includes(defaultTab as TabKey)
+    ? (defaultTab as TabKey)
+    : (allowedKeys[0] || 'dashboard');
+
+  const [currentTab, setCurrentTab] = useState<TabKey>(initialTab);
   const [conversations, setConversations] = useState<Record<number, Conversation>>({});
   const [currentConversation, setCurrentConversation] = useState<number>(0);
   const [messageText, setMessageText] = useState('');
@@ -339,6 +350,15 @@ export default function Home() {
     const palette = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500'];
     return palette[id % palette.length];
   };
+
+  useEffect(() => {
+    const desired = allowedKeys.includes(defaultTab as TabKey)
+      ? (defaultTab as TabKey)
+      : (allowedKeys[0] || 'dashboard');
+    if (!allowedKeys.includes(currentTab) || currentTab !== desired) {
+      setCurrentTab(desired);
+    }
+  }, [allowedKeys.join('|'), defaultTab, currentTab]);
 
   useEffect(() => {
     if (currentTab !== 'messages') return;
@@ -594,18 +614,7 @@ export default function Home() {
     // No functionality in original
   };
 
-  const tabButtons = [
-    { key: 'dashboard', label: 'Dashboard' },
-
-    { key: 'content', label: 'Content Editor' },
-    { key: 'media', label: 'Media Library' },
-
-    { key: 'users', label: 'Users' },
-    { key: 'analytics', label: 'Analytics' },
-    { key: 'news', label: 'News' },
-    { key: 'messages', label: 'Messages' },
-
-  ];
+  const tabButtons = filteredTabs;
 
   return (
     <main className="bg-gradient-to-br from-blue-50 via-white to-green-50 text-gray-800 min-h-screen">

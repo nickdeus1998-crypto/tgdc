@@ -186,6 +186,12 @@ Barabara ya Mwai Kibaki
     { name: 'Copyright Statement', href: '#' },
   ];
 
+  const companyLinks: LinkItem[] = [
+    { name: 'About', href: '/about-us' },
+    { name: 'Projects', href: '/projects' },
+    { name: 'Contact', href: '/contact' },
+  ];
+
   const [contactInfo, setContactInfo] = useState<ContactInfoProps>(defaultContactInfo);
   const [quickLinks, setQuickLinks] = useState<LinkItem[]>(defaultQuickLinks);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
@@ -236,10 +242,11 @@ Barabara ya Mwai Kibaki
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
           <ContactInfo {...contactInfo} />
           <LinksSection title="Related Links" links={relatedLinks} />
           <LinksSection title="Quick Links" links={quickLinks} />
+          <LinksSection title="Company" links={companyLinks} />
         </div>
         <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} copyrightText={copyrightText} />
       </div>

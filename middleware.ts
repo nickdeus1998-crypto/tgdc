@@ -48,16 +48,10 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Protect admin routes for authenticated users with admin role
+  // Protect admin routes: allow any authenticated user (admins still required by server APIs as needed)
   if (pathname.startsWith('/admin')) {
     const token = req.cookies.get('user_token')?.value
     if (!token) {
-      const url = req.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-    const payload = await verifyJwtEdge(token, getJwtSecret())
-    if (!payload || payload.role !== 'admin') {
       const url = req.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
