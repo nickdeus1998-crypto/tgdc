@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 function getOrCreateSession(): string {
@@ -19,7 +19,7 @@ function getOrCreateSession(): string {
   }
 }
 
-export default function AnalyticsTracker() {
+function AnalyticsTrackerInner() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const lastSent = useRef<string | null>(null)
@@ -45,3 +45,10 @@ export default function AnalyticsTracker() {
   return null
 }
 
+export default function AnalyticsTracker() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsTrackerInner />
+    </Suspense>
+  )
+}
