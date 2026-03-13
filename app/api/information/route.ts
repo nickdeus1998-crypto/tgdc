@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Cast to any to avoid type errors before prisma generate
-const prisma: any = new PrismaClient()
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -17,10 +15,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(rows)
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to fetch information items' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to fetch information items' }, { status: 500 }) }
 }
 
 export async function POST(req: Request) {
@@ -42,8 +37,5 @@ export async function POST(req: Request) {
     })
     return NextResponse.json(created, { status: 201 })
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to create information item' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to create information item' }, { status: 500 }) }
 }

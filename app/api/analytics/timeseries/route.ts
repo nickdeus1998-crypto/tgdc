@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
+import prisma from '@/lib/prisma'
 function fmtDay(d: Date) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -17,7 +16,6 @@ function fmtYear(d: Date) {
 }
 
 export async function GET(req: NextRequest) {
-  const prisma = new PrismaClient()
   try {
     const { searchParams } = new URL(req.url)
     const grain = (searchParams.get('grain') || 'day').toLowerCase() as 'day'|'month'|'year'
@@ -79,8 +77,5 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ grain, from: start.toISOString(), to: end.toISOString(), series })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'timeseries_failed' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: e?.message || 'timeseries_failed' }, { status: 500 }) }
 }

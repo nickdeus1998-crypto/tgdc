@@ -3,10 +3,6 @@ export function SustainabilityHeroSection() {
   return (
     <section className="bg-[#8BC34A] text-white py-16 md:py-20">
       <div className="max-w-6xl mx-auto px-6">
-        <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-          <span className="w-2 h-2 rounded-full bg-white"></span>
-          Sustainability
-        </span>
         <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
           Environment and Stakeholders
         </h1>

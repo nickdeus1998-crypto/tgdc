@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma'
 import { getJwtSecret, hashPassword, verifyJwt } from '@/app/lib/auth';
-
-const prisma = new PrismaClient();
-
 function getAdminPayload(request: Request) {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -28,10 +25,7 @@ export async function GET(request: Request) {
     });
   } catch (e) {
     console.error('ADMIN users list error', e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }
 
 export async function POST(request: Request) {
@@ -60,8 +54,5 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email already exists' }, { status: 409 });
     }
     console.error('ADMIN users create error', e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }

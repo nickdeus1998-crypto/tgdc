@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { getJwtSecret, verifyJwt } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 export async function POST(request: Request) {
   try {
     const cookie = request.headers.get('cookie') || ''
@@ -42,8 +39,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: created }, { status: 201 })
   } catch (e) {
     console.error('USER MESSAGE send error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }

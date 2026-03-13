@@ -28,6 +28,7 @@ interface FooterBottomProps {
   navLinks: LinkItem[];
   socialLinks: SocialLink[];
   copyrightText: string;
+  designedByText: string;
 }
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ address, phoneNumbers, email }) => (
@@ -39,7 +40,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ address, phoneNumbers, email 
           <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
         </svg>
         <div>
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{address}</p>
+          <Link href="https://maps.app.goo.gl/iFMNi3utrnoANBbz7" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-emerald-500 transition-colors text-sm leading-relaxed whitespace-pre-line">{address}</Link>
         </div>
       </div>
       <div className="flex items-center">
@@ -81,7 +82,7 @@ const LinksSection: React.FC<LinksSectionProps> = ({ title, links }) => (
   </div>
 );
 
-const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copyrightText }) => (
+const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copyrightText, designedByText }) => (
   <div className="border-t border-gray-700 mt-12 pt-8">
     <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
       <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm">
@@ -110,7 +111,7 @@ const FooterBottom: React.FC<FooterBottomProps> = ({ navLinks, socialLinks, copy
     <div className="text-center mt-8 pt-6 border-t border-gray-700">
       <p className="text-gray-400 text-sm mb-2">{copyrightText}</p>
       <p className="text-gray-500 text-xs leading-relaxed">
-        The website is Designed, Developed And Maintained by TGDC. Content Maintained by TGDC.
+        {designedByText}
       </p>
     </div>
   </div>
@@ -125,19 +126,18 @@ Barabara ya Mwai Kibaki
     email: 'info@tgdc.go.tz',
   };
 
-  const relatedLinks: LinkItem[] = [
-    { name: 'TANESCO', href: '#' },
-    { name: 'EWURA', href: '#' },
-    { name: 'DIT', href: '#' },
-    { name: 'UDOM', href: '#' },
+  const defaultRelatedLinks: LinkItem[] = [
+    { name: 'TANESCO', href: 'https://www.tanesco.co.tz' },
+    { name: 'EWURA', href: 'https://www.ewura.go.tz' },
+    { name: 'DIT', href: 'https://www.dit.ac.tz' },
+    { name: 'UDOM', href: 'https://www.udom.ac.tz' },
     { name: 'GST', href: '#' },
   ];
 
   const defaultQuickLinks: LinkItem[] = [
-    { name: 'News', href: '#' },
-    { name: 'Video Gallery', href: '#' },
-    { name: 'Photo Gallery', href: '#' },
-    { name: 'Social Media', href: '#' },
+    { name: 'About', href: '/about-us' },
+    { name: 'Projects', href: '/projects' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   const defaultSocialLinks: SocialLink[] = [
@@ -179,23 +179,27 @@ Barabara ya Mwai Kibaki
     },
   ];
 
-  const footerNavLinks: LinkItem[] = [
-    { name: 'Sitemap', href: '#' },
-    { name: 'Privacy Policy', href: '#' },
-    { name: 'Terms and Conditions', href: '#' },
-    { name: 'Copyright Statement', href: '#' },
+  const defaultFooterNavLinks: LinkItem[] = [
+    { name: 'Sitemap', href: '/sitemap-page' },
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms and Conditions', href: '/terms' },
+    { name: 'Copyright Statement', href: '/copyright' },
   ];
 
-  const companyLinks: LinkItem[] = [
-    { name: 'About', href: '/about-us' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Contact', href: '/contact' },
+  const defaultStaffMailLinks: LinkItem[] = [
+    { name: 'TGDC Mail', href: 'https://mail.tgdc.go.tz' },
+    { name: 'TANESCO Mail', href: 'https://mail.tanesco.go.tz' },
   ];
 
   const [contactInfo, setContactInfo] = useState<ContactInfoProps>(defaultContactInfo);
   const [quickLinks, setQuickLinks] = useState<LinkItem[]>(defaultQuickLinks);
+  const [relatedLinks, setRelatedLinks] = useState<LinkItem[]>(defaultRelatedLinks);
+  const [staffMailLinks, setStaffMailLinks] = useState<LinkItem[]>(defaultStaffMailLinks);
+  const [footerNavLinks, setFooterNavLinks] = useState<LinkItem[]>(defaultFooterNavLinks);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
   const [copyrightText, setCopyrightText] = useState<string>('Copyright (c) 2019-2025 TGDC. All Rights Reserved.');
+  const [designedByText, setDesignedByText] = useState<string>('The website is Designed, Developed And Maintained by TGDC. Content Maintained by TGDC.');
+  const [stats, setStats] = useState<{ title: string; value: number }[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -209,29 +213,47 @@ Barabara ya Mwai Kibaki
         const phone = data.phone || defaultContactInfo.phoneNumbers[0];
         setContactInfo({ address, email, phoneNumbers: phone ? [phone] : defaultContactInfo.phoneNumbers });
 
-        const ql = Array.isArray(data.quickLinks) ? data.quickLinks : [];
-        setQuickLinks(
-          ql.length ? ql.map((l: any) => ({ name: l.label ?? l.name ?? 'Link', href: l.url ?? l.href ?? '#' })) : defaultQuickLinks
-        );
+        const mapLinks = (arr: any[], fallback: LinkItem[]) => {
+          if (!Array.isArray(arr) || !arr.length) return fallback;
+          return arr.map((l: any) => ({ name: l.label ?? l.name ?? 'Link', href: l.url ?? l.href ?? '#' }));
+        };
+
+        setQuickLinks(mapLinks(data.quickLinks, defaultQuickLinks));
+        setRelatedLinks(mapLinks(data.relatedLinks, defaultRelatedLinks));
+        setStaffMailLinks(mapLinks(data.staffMailLinks, defaultStaffMailLinks));
+        setFooterNavLinks(mapLinks(data.bottomNavLinks, defaultFooterNavLinks));
 
         const sl = Array.isArray(data.socialLinks) ? data.socialLinks : [];
         setSocialLinks(
           sl.length
             ? sl.map((s: any) => ({
-                name: s.name ?? 'Social',
-                href: s.url ?? '#',
-                icon: (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <g dangerouslySetInnerHTML={{ __html: s.icon || '' }} />
-                  </svg>
-                ),
-              }))
+              name: s.name ?? 'Social',
+              href: s.url ?? '#',
+              icon: (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <g dangerouslySetInnerHTML={{ __html: s.icon || '' }} />
+                </svg>
+              ),
+            }))
             : defaultSocialLinks
         );
 
         setCopyrightText(
           data.copyright || `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`
         );
+
+        if (data.designedByText) setDesignedByText(data.designedByText);
+
+        // Fetch monthly site visitors from analytics
+        const analyticsRes = await fetch('/api/analytics/summary');
+        if (analyticsRes.ok) {
+          const analyticsData = await analyticsRes.json();
+          setStats([
+            { title: 'Monthly Site Visitors', value: analyticsData.visitors30d || 0 },
+            { title: 'Total Documents', value: analyticsData.documents || 0 },
+            { title: 'Latest News Items', value: analyticsData.news || 0 },
+          ]);
+        }
       } catch (e) {
         console.error('Footer load error', e);
       }
@@ -242,13 +264,24 @@ Barabara ya Mwai Kibaki
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-8">
           <ContactInfo {...contactInfo} />
           <LinksSection title="Related Links" links={relatedLinks} />
           <LinksSection title="Quick Links" links={quickLinks} />
-          <LinksSection title="Company" links={companyLinks} />
+          <LinksSection title="Staff Mail" links={staffMailLinks} />
+          <div className="lg:col-span-1 flex flex-col items-center lg:items-end">
+            <h3 className="text-xl font-bold mb-6 text-white text-center lg:text-right">Site Activity</h3>
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-emerald-500/50 transition-all duration-300 group text-center w-full max-w-[200px]">
+              <div className="text-3xl font-black text-emerald-500 group-hover:scale-110 transition-transform mb-1">
+                {stats[0]?.value.toLocaleString() || '0'}
+              </div>
+              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest leading-tight">
+                Monthly Site Visitors
+              </div>
+            </div>
+          </div>
         </div>
-        <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} copyrightText={copyrightText} />
+        <FooterBottom navLinks={footerNavLinks} socialLinks={socialLinks} copyrightText={copyrightText} designedByText={designedByText} />
       </div>
     </footer>
   );

@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
-
+import prisma from '@/lib/prisma'
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const id = Number(params.id)
@@ -11,10 +8,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json(row)
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 }) }
 }
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
@@ -34,10 +28,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const updated = await prisma.news.update({ where: { id }, data })
     return NextResponse.json(updated)
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to update' }, { status: 500 }) }
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
@@ -47,8 +38,5 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     await prisma.news.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 }) }
 }

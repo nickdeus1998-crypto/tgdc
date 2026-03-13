@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth';
-
-const prisma = new PrismaClient();
-
 const isAdmin = (request: Request) => {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -65,6 +62,14 @@ const parsePayload = (body: any) => {
   data.timeline = normalizeTimeline(body?.timeline);
   data.impact = normalizeImpact(body?.impact || {});
   data.imageUrl = body?.imageUrl ? String(body.imageUrl).trim() : null;
+  data.resources = Array.isArray(body?.resources)
+    ? body.resources.map((r: any) => ({
+      type: r.type || 'image',
+      url: String(r.url || '').trim(),
+      title: String(r.title || '').trim(),
+      description: String(r.description || '').trim(),
+    }))
+    : [];
   return data;
 };
 
@@ -82,6 +87,7 @@ const mapAdminProject = (project: any) => ({
   keyFeatures: Array.isArray(project.keyFeatures) ? project.keyFeatures : [],
   timeline: Array.isArray(project.timeline) ? project.timeline : [],
   impact: project.impact ?? { jobs: '', co2: '', homes: '', investment: '' },
+  resources: Array.isArray(project.resources) ? project.resources : [],
   imageUrl: project.imageUrl,
 });
 
@@ -93,8 +99,6 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('ADMIN project highlights list error', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -109,7 +113,5 @@ export async function POST(request: Request) {
     console.error('ADMIN project highlights create error', error);
     const message = error?.message?.startsWith('Missing') ? error.message : 'Server error';
     return NextResponse.json({ error: message }, { status: 400 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

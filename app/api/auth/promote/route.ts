@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
-
+import prisma from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const { email, role, token } = await request.json()
@@ -13,9 +10,6 @@ export async function POST(request: Request) {
     const updated = await prisma.user.update({ where: { email }, data: { role } })
     return NextResponse.json({ id: updated.id, email: updated.email, role: updated.role }, { status: 200 })
   } catch (e) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 

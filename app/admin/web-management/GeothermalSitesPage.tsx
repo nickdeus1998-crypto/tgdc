@@ -23,6 +23,13 @@ const TEXT_DARK = '#111111';
 
 const ZONES = ['Eastern Zone', 'Lake Zone', 'Southern Zone', 'Northern Zone', 'Central Zone'];
 
+const DEFAULT_GEO_STATS: { label: string; value: string }[] = [
+  { label: 'Identified Sites', value: '4' },
+  { label: 'MW Potential', value: '800' },
+  { label: 'Active Regions', value: '1' },
+  { label: 'USD Investment', value: '2.5B' },
+];
+
 const API = {
   list: async () => fetch('/api/admin/geothermal-sites'),
   create: async (body: SiteItem) => fetch('/api/admin/geothermal-sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
@@ -45,6 +52,12 @@ const GeothermalSitesPage: React.FC = () => {
   const [editing, setEditing] = useState<Id | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState<{ list?: boolean; save?: boolean; del?: Id | null }>({ list: true });
+  const [geoStats, setGeoStats] = useState<{ label: string; value: string }[]>([]);
+  const [savingStats, setSavingStats] = useState(false);
+  const [featuredTitle, setFeaturedTitle] = useState('Featured Geothermal Projects');
+  const [geoSectionTitle, setGeoSectionTitle] = useState('Geothermal Sites in Tanzania');
+  const [geoSectionSubtitle, setGeoSectionSubtitle] = useState("Discover Tanzania's geothermal potential across the Rift Valley.");
+  const [savingTitle, setSavingTitle] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +78,34 @@ const GeothermalSitesPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Fetch stats — fall back to defaults when DB is empty
+    fetch('/api/geothermal-stats')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setGeoStats(data);
+        } else {
+          setGeoStats(DEFAULT_GEO_STATS);
+        }
+      })
+      .catch(() => { setGeoStats(DEFAULT_GEO_STATS); });
+
+    // Fetch section title
+    fetch('/api/site-settings?key=geothermal_featured_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setFeaturedTitle(data.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=geothermal_section_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setGeoSectionTitle(data.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=geothermal_section_subtitle')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setGeoSectionSubtitle(data.value); })
+      .catch(() => { });
+  }, []);
 
   // Initialize leaflet map for picking coordinates
   useEffect(() => {
@@ -75,6 +115,15 @@ const GeothermalSitesPage: React.FC = () => {
       Number.isFinite(form.lng) ? Number(form.lng) : 35.0,
     ];
     const map = L.map(mapContainerRef.current, { scrollWheelZoom: true, dragging: true }).setView(initial, 6);
+
+    // Fix for broken leaflet marker icons
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors',
@@ -183,6 +232,146 @@ const GeothermalSitesPage: React.FC = () => {
         <div className="text-sm" style={{ color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 12 }}>{err}</div>
       )}
 
+      {/* ─── Geothermal Stats Cards ─── */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h3 className="text-lg font-bold" style={{ color: TEXT_DARK }}>Geothermal Stats Cards</h3>
+            <p className="text-xs text-gray-400 mt-0.5">These stat cards appear at the top of the Geothermal Sites section on the homepage.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setGeoStats(DEFAULT_GEO_STATS)}
+              className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+              style={{ color: TEXT_DARK }}
+            >
+              Reset Defaults
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setSavingStats(true);
+                try {
+                  const res = await fetch('/api/geothermal-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geoStats),
+                  });
+                  if (!res.ok) throw new Error('Save failed');
+                  const data = await res.json();
+                  if (Array.isArray(data)) setGeoStats(data);
+                } catch (e: any) {
+                  setErr(e?.message || 'Failed to save stats');
+                } finally {
+                  setSavingStats(false);
+                }
+              }}
+              disabled={savingStats}
+              className="px-4 py-1.5 text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:bg-gray-400"
+              style={{ backgroundColor: TGREEN }}
+            >
+              {savingStats ? 'Saving...' : 'Save Stats'}
+            </button>
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 mt-4">
+          {geoStats.map((stat, i) => (
+            <div
+              key={i}
+              className="text-white rounded-xl p-4 text-center"
+              style={{ background: `linear-gradient(135deg, ${TGREEN}, #639427)` }}
+            >
+              <div className="text-xl font-bold mt-2">{stat.value || '—'}</div>
+              <div className="text-white/80 text-xs font-medium mt-1">{stat.label || 'Label'}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Edit rows */}
+        <div className="space-y-2">
+          {geoStats.map((stat, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <span className="text-gray-300 text-xs font-bold w-5 text-center">{i + 1}</span>
+              <input
+                value={stat.label}
+                onChange={(e) => { const copy = [...geoStats]; copy[i] = { ...copy[i], label: e.target.value }; setGeoStats(copy); }}
+                placeholder="Label (e.g., MW Potential)"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900"
+              />
+              <input
+                value={stat.value}
+                onChange={(e) => { const copy = [...geoStats]; copy[i] = { ...copy[i], value: e.target.value }; setGeoStats(copy); }}
+                placeholder="Value (e.g., 5,000)"
+                className="w-32 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900"
+              />
+              <button
+                type="button"
+                onClick={() => setGeoStats(geoStats.filter((_, j) => j !== i))}
+                className="text-red-500 hover:text-red-700 text-sm font-bold"
+              >✕</button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setGeoStats([...geoStats, { label: '', value: '' }])}
+          className="mt-3 text-sm underline hover:no-underline"
+          style={{ color: TGREEN }}
+        >+ Add Stat Card</button>
+      </div>
+
+      {/* ─── Section Titles ─── */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5" style={{ color: TEXT_DARK }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold" style={{ color: TEXT_DARK }}>Section Titles</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Headings on the public Geothermal Sites page.</p>
+          </div>
+          <button
+            type="button"
+            disabled={savingTitle}
+            onClick={async () => {
+              setSavingTitle(true);
+              try {
+                await Promise.all([
+                  fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'geothermal_featured_title', value: featuredTitle }) }),
+                  fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'geothermal_section_title', value: geoSectionTitle }) }),
+                  fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'geothermal_section_subtitle', value: geoSectionSubtitle }) }),
+                ]);
+                alert('Section titles saved!');
+              } catch (e: any) {
+                setErr(e?.message || 'Failed to save titles');
+              } finally {
+                setSavingTitle(false);
+              }
+            }}
+            className="px-4 py-1.5 text-white rounded-lg text-sm font-bold hover:opacity-90 disabled:bg-gray-400"
+            style={{ backgroundColor: TGREEN }}
+          >
+            {savingTitle ? 'Saving...' : 'Save All'}
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 font-medium mb-1">Page Heading</p>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Title</label>
+            <input type="text" value={geoSectionTitle} onChange={(e) => setGeoSectionTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" style={{ color: TEXT_DARK }} placeholder="Geothermal Sites in Tanzania" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Subtitle</label>
+            <input type="text" value={geoSectionSubtitle} onChange={(e) => setGeoSectionSubtitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" style={{ color: TEXT_DARK }} placeholder="Discover Tanzania's geothermal potential..." />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 font-medium mb-1">Featured Projects Heading</p>
+        <input type="text" value={featuredTitle} onChange={(e) => setFeaturedTitle(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" style={{ color: TEXT_DARK }} placeholder="Featured Geothermal Projects" />
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold" style={{ color: TEXT_DARK }}>Geothermal Sites</h3>
@@ -230,7 +419,7 @@ const GeothermalSitesPage: React.FC = () => {
                 <textarea value={form.summary} onChange={(e) => setForm((v) => ({ ...v, summary: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-lg" style={{ color: TEXT_DARK }} rows={3} />
               </Field>
               <Field label="Details (one per line)">
-                <textarea value={detailsText} onChange={(e) => setForm((v) => ({ ...v, details: e.target.value.split(/\r?\n/).filter(Boolean) }))} className="w-full px-3 py-2 border border-gray-200 rounded-lg" style={{ color: TEXT_DARK }} rows={4} />
+                <textarea value={detailsText} onChange={(e) => setForm((v) => ({ ...v, details: e.target.value.split(/\r?\n/) }))} className="w-full px-3 py-2 border border-gray-200 rounded-lg" style={{ color: TEXT_DARK }} rows={4} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Tag (optional)">

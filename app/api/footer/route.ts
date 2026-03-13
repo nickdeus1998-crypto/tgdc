@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 function parseJSON<T>(value: any, fallback: T): T {
   if (value == null) return fallback;
   if (typeof value !== 'string') return value as T;
@@ -46,10 +43,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (error) {
     console.error('GET /api/footer error:', error);
-    return NextResponse.json({ error: 'Failed to fetch footer settings' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Failed to fetch footer settings' }, { status: 500 }); }
 }
 
 export async function POST(request: NextRequest) {
@@ -105,9 +99,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('POST /api/footer error:', error);
-    return NextResponse.json({ error: 'Failed to save footer settings' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Failed to save footer settings' }, { status: 500 }); }
 }
 

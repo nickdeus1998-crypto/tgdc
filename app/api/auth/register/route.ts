@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { hashPassword, signJwt, getJwtSecret, stakeholderCookieOptions } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 export async function POST(request: Request) {
   try {
     const { email, name, password } = await request.json()
@@ -24,9 +21,6 @@ export async function POST(request: Request) {
     return res
   } catch (e) {
     console.error('AUTH REGISTER error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 

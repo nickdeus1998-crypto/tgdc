@@ -16,24 +16,37 @@ import ContactModal from './components/ContactModal';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import GeothermalSitesSection from './components/GeothermalSiteSection';
 import PortfolioPage from './components/PortfolioPage';
-import AdminPanel from './admin/AdminPanel';
 import ProjectSection from './components/ProjectSection';
 import InformationCenterSection from './components/InformationCenterSection';
+import FAQSection from './components/FAQSection';
+import FloatingAnnouncement from './components/FloatingAnnouncement';
+
 
 interface HeroData {
   title: string;
   subheading: string;
   highlight?: string;
   imageUrl?: string;
+  images?: string[];
+  buttons?: { label: string; href: string; visible: boolean }[];
 }
 interface ServicesData {
   headerOne: string;
   headerTwo: string;
   subheader?: string;
+  mandate?: string;
+  mandateTitle?: string;
+  mandateVisibleOnHomepage?: boolean;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaPrimaryLabel?: string;
+  ctaPrimaryHref?: string;
+  ctaSecondaryLabel?: string;
+  ctaSecondaryHref?: string;
   services: Array<{
     id: number;
     icon: string;
-    title: string; 
+    title: string;
     content: string;
     features: string[];
   }>;
@@ -84,6 +97,8 @@ export default function Home() {
   const title = heroData && titleWords.length > 1 ? titleWords.slice(0, -1).join(' ') : heroData?.title || 'Discover Geothermal';
   const description = heroData?.subheading || 'Leading sustainable energy solutions.';
   const imageSrc = heroData?.imageUrl || '/geothermal.jpeg';
+  const heroImages = Array.isArray(heroData?.images) ? heroData.images : undefined;
+  const heroButtons = Array.isArray(heroData?.buttons) ? heroData.buttons : undefined;
 
   // Fallback for services if fetch fails
   const defaultServicesData: ServicesData = {
@@ -95,7 +110,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <Header /> */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isLoading && (
           <div className="py-20 text-center">
@@ -111,21 +125,57 @@ export default function Home() {
               highlight={highlight}
               description={description}
               imageSrc={imageSrc}
+              images={heroImages}
+              buttons={heroButtons}
             />
             <StatSection />
             <ImpactHighlights />
+
+            {/* ─── Mandate Section (standalone) ─── */}
+            {servicesData?.mandateVisibleOnHomepage && servicesData?.mandate && (
+              <section className="py-16 bg-white">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">
+                      {servicesData?.mandateTitle || 'Our Mandate'}
+                    </h2>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-50 to-[#326101]/[0.03] border border-[#326101]/10 rounded-2xl p-8 md:p-10">
+                    <div className="flex gap-5 items-start">
+                      <div className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-xl bg-[#326101]/10 items-center justify-center mt-1">
+                        <svg className="w-6 h-6 text-[#326101]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-700 text-lg leading-relaxed">{servicesData.mandate}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             <ServicesSection
               headerOne={servicesData?.headerOne || defaultServicesData.headerOne}
               headerTwo={servicesData?.headerTwo || defaultServicesData.headerTwo}
               subheader={servicesData?.subheader || defaultServicesData.subheader}
               services={servicesData?.services || defaultServicesData.services}
+              maxItems={6}
+              ctaTitle={servicesData?.ctaTitle}
+              ctaSubtitle={servicesData?.ctaSubtitle}
+              ctaPrimaryLabel={servicesData?.ctaPrimaryLabel}
+              ctaPrimaryHref={servicesData?.ctaPrimaryHref}
+              ctaSecondaryLabel={servicesData?.ctaSecondaryLabel}
+              ctaSecondaryHref={servicesData?.ctaSecondaryHref}
             />
-            <NewsSection />
+
             {/* <InformationCenterSection /> */}
             {/* <AnnouncementSection /> */}
-            <GeothermalSitesSection />
             <ProjectSection />
-            {/* <AdminPanel /> */}
+            <GeothermalSitesSection />
+            <NewsSection />
+            <FAQSection />
+            <FloatingAnnouncement />
+
           </>
         )}
       </main>

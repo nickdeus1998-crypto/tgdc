@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
+import prisma from '@/lib/prisma'
 export async function GET(req: NextRequest) {
-  const prisma = new PrismaClient()
   try {
     const { searchParams } = new URL(req.url)
     const limit = Math.max(1, Math.min(50, Number(searchParams.get('limit') || '8')))
@@ -44,8 +42,5 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ from: start.toISOString(), to: end.toISOString(), list })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'top_pages_failed' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: e?.message || 'top_pages_failed' }, { status: 500 }) }
 }

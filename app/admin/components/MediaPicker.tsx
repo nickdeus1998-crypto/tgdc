@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 type MediaItem = {
   name: string
@@ -24,12 +24,19 @@ const formatSize = (bytes: number) => {
   return `${(bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 
+const isImage = (url: string) => {
+  const ext = url.split('.').pop()?.toLowerCase() || ''
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
+}
+
 const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onChange, disabled }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasFetched, setHasFetched] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const closeModal = () => {
     setIsModalOpen(false)
@@ -67,6 +74,25 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
     closeModal()
   }
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files?.length) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      for (let i = 0; i < files.length; i++) formData.append('files', files[i])
+      const res = await fetch('/api/admin/media', { method: 'POST', body: formData })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Upload failed')
+      if (data?.items?.[0]?.url) onChange(data.items[0].url)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className="space-y-2">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
@@ -94,17 +120,38 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
             type="button"
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 rounded-lg bg-[#326101] text-white text-sm font-semibold hover:bg-[#2a4e04] disabled:opacity-50"
-            disabled={disabled}
+            disabled={disabled || uploading}
           >
             Browse Media
           </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2 rounded-lg border border-[#326101] text-[#326101] text-sm font-semibold hover:bg-green-50 disabled:opacity-50"
+            disabled={disabled || uploading}
+          >
+            {uploading ? 'Uploading…' : 'Upload File'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx"
+            onChange={handleUpload}
+          />
         </div>
       </div>
       {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
       {value && (
         <div className="flex items-center gap-3 mt-1">
-          <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100">
-            <img src={value} alt="Selected" className="w-full h-full object-cover" />
+          <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+            {isImage(value) ? (
+              <img src={value} alt="Selected" className="w-full h-full object-cover" />
+            ) : (
+              <div className={`w-full h-full flex items-center justify-center text-white font-bold text-[10px] ${value.toLowerCase().endsWith('.pdf') ? 'bg-red-500' : 'bg-blue-600'}`}>
+                {value.split('.').pop()?.toUpperCase()}
+              </div>
+            )}
           </div>
           <a href={value} target="_blank" rel="noopener noreferrer" className="text-sm text-[#326101] underline">
             Preview
@@ -151,15 +198,21 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
                       onClick={() => handleSelect(item)}
                       className="border border-gray-200 rounded-xl overflow-hidden text-left hover:border-[#326101] hover:shadow-md transition"
                     >
-                      <div className="aspect-video bg-gray-100">
-                        <img src={item.url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                      <div className="aspect-video bg-gray-50 flex items-center justify-center">
+                        {isImage(item.url) ? (
+                          <img src={item.url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <div className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center text-white font-bold shadow-sm ${item.url.toLowerCase().endsWith('.pdf') ? 'bg-red-500' : 'bg-blue-600'}`}>
+                            <span className="text-lg">{item.url.split('.').pop()?.toUpperCase()}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {formatSize(item.sizeBytes)} • {new Date(item.uploadedAt).toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1 truncate">/uploads/media/{item.name}</p>
+                        <p className="text-xs text-gray-400 mt-1 truncate">{`/uploads/media/${item.name}`}</p>
                       </div>
                     </button>
                   ))}

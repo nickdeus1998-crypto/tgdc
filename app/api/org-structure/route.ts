@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 export async function GET() {
   try {
     const records = await prisma.orgLeader.findMany({
@@ -27,8 +24,5 @@ export async function GET() {
     return NextResponse.json({ levels });
   } catch (error) {
     console.error('GET /api/org-structure error', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }

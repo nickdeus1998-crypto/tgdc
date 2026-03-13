@@ -1,17 +1,11 @@
-import { PrismaClient } from "@prisma/client"
+import prisma from '@/lib/prisma'
 import { NextResponse } from "next/server"
-
-const prisma = new PrismaClient()
-
 export async function GET() {
   try {
     const rows = await prisma.tender.findMany({ orderBy: [{ publish: 'desc' }] })
     return NextResponse.json(rows, { status: 200 })
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to fetch Tenders' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to fetch Tenders' }, { status: 500 }) }
 }
 
 export async function POST(request: Request) {
@@ -38,8 +32,5 @@ export async function POST(request: Request) {
     return NextResponse.json(created, { status: 201 })
   } catch (e) {
     console.error('POST /api/tender error', e)
-    return NextResponse.json({ error: 'Failed to create Tender' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Failed to create Tender' }, { status: 500 }) }
 }

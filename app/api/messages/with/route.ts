@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { getJwtSecret, verifyJwt } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -32,8 +29,5 @@ export async function GET(request: Request) {
     }))
     return NextResponse.json({ messages: formatted })
   } catch (e) {
-    return NextResponse.json({ messages: [] }, { status: 200 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ messages: [] }, { status: 200 }) }
 }

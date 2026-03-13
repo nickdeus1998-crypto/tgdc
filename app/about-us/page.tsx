@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OrgStructure from '../components/OrgStructure';
 
@@ -32,6 +32,11 @@ interface CoreValue {
   title: string;
   description: string;
   icon: string;
+}
+
+interface KeyAchievement {
+  label: string;
+  value: string;
 }
 
 // Defaults used before CMS data loads
@@ -153,22 +158,27 @@ const defaultCoreValues: CoreValue[] = [
   },
 ];
 
+const defaultKeyAchievements: KeyAchievement[] = [
+  { label: 'Geothermal Wells Drilled', value: '12+' },
+  { label: 'Prospects Identified', value: '15' },
+  { label: 'MW Confirmed Capacity', value: '100+' },
+  { label: 'International Partners', value: '8' },
+];
+
 const AboutUs: React.FC = () => {
   const [heroTitle, setHeroTitle] = useState<string>('About TGDC');
   const [heroSubtitle, setHeroSubtitle] = useState<string>(
     "Leading Tanzania's sustainable energy future through innovative geothermal development"
   );
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(defaultTimelineItems);
-  const [stats, setStats] = useState<Stat[]>(defaultStats);
+  const [stats, setStats] = useState<Stat[]>([]);
   const [backgroundItems, setBackgroundItems] = useState<BackgroundItem[]>(defaultBackgroundItems);
   const [missionVision, setMissionVision] = useState<MissionVisionItem[]>(defaultMissionVision);
   const [coreValues, setCoreValues] = useState<CoreValue[]>(defaultCoreValues);
-
-  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
-  const [counterValues, setCounterValues] = useState<{ [key: string]: number }>(
-    Object.fromEntries(defaultStats.map((stat) => [stat.label, 0]))
-  );
-  const statsSectionRef = useRef<HTMLElement>(null);
+  const [keyAchievements, setKeyAchievements] = useState<KeyAchievement[]>(defaultKeyAchievements);
+  const [historyTitle, setHistoryTitle] = useState('Our History');
+  const [historySubtitle, setHistorySubtitle] = useState('A journey of innovation and sustainable energy development in Tanzania');
+  const [backgroundTitle, setBackgroundTitle] = useState('Our Background');
 
   // Load About Us content from CMS API
   useEffect(() => {
@@ -176,7 +186,7 @@ const AboutUs: React.FC = () => {
     const load = async () => {
       try {
         const res = await fetch('/api/about');
-        if (!res.ok) return; // Keep defaults silently
+        if (!res.ok) return;
         const data = await res.json();
         setHeroTitle(data.heroTitle || 'About TGDC');
         setHeroSubtitle(
@@ -186,99 +196,32 @@ const AboutUs: React.FC = () => {
         setBackgroundItems(orDefaultArray<BackgroundItem>(data.background, defaultBackgroundItems));
         setMissionVision(orDefaultArray<MissionVisionItem>(data.missionVision, defaultMissionVision));
         setCoreValues(orDefaultArray<CoreValue>(data.coreValues, defaultCoreValues));
+        setKeyAchievements(orDefaultArray<KeyAchievement>(data.keyAchievements, defaultKeyAchievements));
         let incomingStats: Stat[] = Array.isArray(data.stats) ? data.stats : [];
-        // If About has no stats, fall back to global /api/stats (title/value)
-        if (!incomingStats.length) {
-          try {
-            const sRes = await fetch('/api/stats');
-            if (sRes.ok) {
-              const sData = await sRes.json();
-              if (Array.isArray(sData)) {
-                incomingStats = sData.map((s: any) => ({ label: s.title, target: Number(s.value) || 0 }));
-              }
-            }
-          } catch {}
-        }
-        if (!incomingStats.length) incomingStats = defaultStats;
-        setStats(incomingStats);
-        // Reset counters mapping for incoming labels
-        setCounterValues(Object.fromEntries(incomingStats.map((s) => [s.label, 0])));
+        // Only use stats that have actual non-zero values — treat empty / all-zero as "not configured"
+        const hasRealStats = incomingStats.some((s: any) => Number(s.target) > 0);
+        setStats(hasRealStats ? incomingStats : []);
       } catch (e) {
-        // Fail quietly and continue with defaults
         console.error('About page load error', e);
       }
     };
     load();
-  }, []);
-
-  // Keep a ref of latest stats to avoid stale closures in observers
-  const latestStatsRef = useRef<Stat[]>(stats);
-  useEffect(() => { latestStatsRef.current = stats; }, [stats]);
-
-  useEffect(() => {
-    // Fade-in animation observer
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px',
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setVisibleSections((prev) => new Set(prev).add(entry.target.getAttribute('data-section')!));
-        }
-      });
-    }, observerOptions);
-
-    document.querySelectorAll('.section-fade-in').forEach((el) => {
-      observer.observe(el);
-    });
-
-    // Stats counter animation
-    const animateCounter = (label: string, target: number, duration = 2000) => {
-      let start = 0;
-      const increment = target / (duration / 16);
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= target) {
-          setCounterValues((prev) => ({ ...prev, [label]: target }));
-          clearInterval(timer);
-        } else {
-          setCounterValues((prev) => ({ ...prev, [label]: Math.floor(start) }));
-        }
-      }, 16);
-    };
-
-    const hasAnimatedRef = { current: false } as { current: boolean };
-    const statsObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (!hasAnimatedRef.current) {
-              hasAnimatedRef.current = true;
-              const currentStats = latestStatsRef.current || [];
-              currentStats.forEach((stat) => animateCounter(stat.label, stat.target));
-            }
-            statsObserver.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    if (statsSectionRef.current) {
-      statsObserver.observe(statsSectionRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-      statsObserver.disconnect();
-    };
+    fetch('/api/site-settings?key=history_section_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.value) setHistoryTitle(d.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=history_section_subtitle')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.value) setHistorySubtitle(d.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=background_section_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.value) setBackgroundTitle(d.value); })
+      .catch(() => { });
   }, []);
 
   const handleSmoothScroll = (id: string) => {
-    // Validate that the id is not empty or '#'
     if (!id || id === '#') return;
-
     const target = document.querySelector(`#${id}`);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -290,11 +233,7 @@ const AboutUs: React.FC = () => {
       {/* Hero Section */}
       <section className="bg-[radial-gradient(900px_460px_at_10%_-10%,rgba(99,148,39,0.18),transparent_60%),radial-gradient(800px_420px_at_110%_0%,rgba(50,97,1,0.18),transparent_60%),linear-gradient(135deg,#326101,#639427)] text-white py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
-            About Us 
-          </span>
-          <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
             {heroTitle}
           </h1>
           <p className="text-white/90 text-lg md:text-xl mt-4 max-w-3xl">
@@ -303,67 +242,65 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* Quick Stats */}
-      <section id="stats" ref={statsSectionRef} className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className={`section-fade-in transition-all duration-800 ease-out ${visibleSections.has(stat.label) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
-                data-section={stat.label}
-              >
-                <div
-                  className="text-5xl font-extrabold bg-gradient-to-r from-[#326101] to-[#639427] bg-clip-text text-transparent"
-                  data-target={stat.target}
-                >
-                  {counterValues[stat.label]}
+      {/* Quick Stats – only show if configured */}
+      {stats.length > 0 && (
+        <section id="stats" className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-4 gap-8 text-center">
+              {stats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="text-5xl font-extrabold bg-gradient-to-r from-[#326101] to-[#639427] bg-clip-text text-transparent">
+                    {stat.target}
+                  </div>
+                  <p className="text-gray-600 font-medium mt-2">{stat.label}</p>
                 </div>
-                <p className="text-gray-600 font-medium mt-2">{stat.label}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
 
       {/* History Section */}
       <section id="history" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className={`section-fade-in text-center mb-16 transition-all duration-800 ease-out ${visibleSections.has('history') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
-            data-section="history"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Our History</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              A journey of innovation and sustainable energy development in Tanzania
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{historyTitle}</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {historySubtitle}
             </p>
           </div>
+
           <div className="relative">
-            <div className="space-y-12">
-              {timelineItems.map((item, index) => (
-                <div
-                  key={item.year}
-                  className={`relative flex items-start space-x-8 section-fade-in transition-all duration-800 ease-out ${visibleSections.has(item.year) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
-                  data-section={item.year}
-                >
-                  <div
-                    className="absolute left-3 top-[45px] w-[18px] h-[18px] bg-[#326101] border-3 border-white rounded-full shadow-[0_0_0_3px_#326101]"
-                    style={{ zIndex: 10 }}
-                  ></div>
-                  {index < timelineItems.length - 1 && (
-                    <div
-                      className="absolute left-5 top-[60px] bottom-[-20px] w-[2px] bg-gradient-to-b from-[#326101] to-[#639427]"
-                    ></div>
-                  )}
-                  <div className="flex-1 bg-[#E8F5E8] p-8 rounded-xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                      <h3 className="text-2xl font-bold text-[#326101]">{item.year} - {item.title}</h3>
-                      <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full">{item.timeAgo}</span>
+            {/* Center line */}
+            <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#326101] via-[#639427] to-[#326101]/30 md:-translate-x-px" />
+
+            <div className="space-y-8 md:space-y-12">
+              {timelineItems.map((item, index) => {
+                const isLeft = index % 2 === 0;
+                return (
+                  <div key={item.year} className="relative flex items-start">
+                    {/* Year badge on the center line */}
+                    <div className="absolute left-4 md:left-1/2 -translate-x-1/2 z-10 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#326101] to-[#639427] flex items-center justify-center shadow-lg shadow-[#326101]/20 ring-4 ring-white">
+                        <span className="text-white font-bold text-[11px] text-center leading-tight px-1">{item.year}</span>
+                      </div>
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{item.description}</p>
+
+                    {/* Card — alternates left/right on desktop, always right on mobile */}
+                    <div className={`ml-20 md:ml-0 md:w-[calc(50%-3.5rem)] ${isLeft ? 'md:mr-auto md:pr-4' : 'md:ml-auto md:pl-4'}`}>
+                      <div className="group bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-[#326101]/20 transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#326101] transition-colors">{item.title}</h3>
+                          <span className="text-xs text-[#326101] bg-[#E8F5E8] px-3 py-1 rounded-full font-medium whitespace-nowrap ml-3">{item.timeAgo}</span>
+                        </div>
+                        <p className="text-gray-600 leading-relaxed text-sm">{item.description}</p>
+                        <div className="mt-4 h-1 w-12 bg-gradient-to-r from-[#326101] to-[#639427] rounded-full group-hover:w-20 transition-all duration-300" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -374,10 +311,10 @@ const AboutUs: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div
-              className={`section-fade-in transition-all duration-800 ease-out ${visibleSections.has('background-left') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
+              className={""}
               data-section="background-left"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-8">Our Background</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-8">{backgroundTitle}</h2>
               <div className="space-y-6">
                 {backgroundItems.map((item) => (
                   <div key={item.title} className="flex items-start space-x-4">
@@ -399,28 +336,18 @@ const AboutUs: React.FC = () => {
               </div>
             </div>
             <div
-              className={`section-fade-in transition-all duration-800 ease-out ${visibleSections.has('background-right') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
+              className={""}
               data-section="background-right"
             >
               <div className="bg-white p-8 rounded-2xl shadow-lg">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">Key Achievements</h3>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-[#E8F5E8] rounded-lg">
-                    <span className="font-medium text-gray-900">Geothermal Wells Drilled</span>
-                    <span className="text-2xl font-bold text-[#326101]">12+</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#E8F5E8] rounded-lg">
-                    <span className="font-medium text-gray-900">Prospects Identified</span>
-                    <span className="text-2xl font-bold text-[#326101]">15</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#E8F5E8] rounded-lg">
-                    <span className="font-medium text-gray-900">MW Confirmed Capacity</span>
-                    <span className="text-2xl font-bold text-[#326101]">100+</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-[#E8F5E8] rounded-lg">
-                    <span className="font-medium text-gray-900">International Partners</span>
-                    <span className="text-2xl font-bold text-[#326101]">8</span>
-                  </div>
+                <div className="space-y-4">
+                  {keyAchievements.map((item) => (
+                    <div key={item.label} className="flex items-center justify-between p-4 bg-[#E8F5E8] rounded-lg">
+                      <span className="font-medium text-gray-900">{item.label}</span>
+                      <span className="text-2xl font-bold text-[#326101]">{item.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -431,62 +358,74 @@ const AboutUs: React.FC = () => {
       {/* Mission & Vision Section */}
       <section id="mission-vision" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className={`section-fade-in text-center mb-16 transition-all duration-800 ease-out ${visibleSections.has('mission-vision') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
-            data-section="mission-vision"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Mission & Vision</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Driving Tanzania&apos;s sustainable energy future through innovative geothermal solutions
-            </p>
-          </div>
           <div className="grid lg:grid-cols-2 gap-12">
-            {missionVision.map((item) => (
-              <div
-                key={item.title}
-                className={`section-fade-in p-8 rounded-2xl transition-all duration-300 bg-[linear-gradient(135deg,rgba(50,97,1,0.05),rgba(99,148,39,0.05))] border border-[rgba(50,97,1,0.1)] hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(50,97,1,0.1)]`}
-                data-section={item.title}
-              >
-                <div className="flex items-center mb-6">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center mr-4`}>
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <g dangerouslySetInnerHTML={{ __html: item.icon }} />
-                    </svg>
-                  </div>
-                  <h3 className={`text-3xl font-bold ${item.title === 'Our Mission' ? 'text-[#326101]' : 'text-[#639427]'}`}>
-                    {item.title}
-                  </h3>
-                </div>
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">{item.description}</p>
-                <div className="space-y-3">
-                  {item.points.map((point) => (
-                    <div key={point} className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${item.title === 'Our Mission' ? 'bg-[#326101]' : 'bg-[#639427]'}`}></div>
-                      <span className="text-gray-600">{point}</span>
+            {missionVision.map((item, idx) => {
+              const gradient = item.gradient || (idx === 0 ? 'from-[#326101] to-[#639427]' : 'from-[#639427] to-[#8BC34A]');
+              const icon = item.icon || (idx === 0
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />');
+              const isMission = idx === 0;
+              return (
+                <div
+                  key={item.title}
+                  className="p-8 rounded-2xl transition-all duration-300 bg-[linear-gradient(135deg,rgba(50,97,1,0.05),rgba(99,148,39,0.05))] border border-[rgba(50,97,1,0.1)] hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(50,97,1,0.1)]"
+                  data-section={item.title}
+                >
+                  <div className="flex items-center mb-6">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center mr-4`}>
+                      {icon.startsWith('fas ') ? (
+                        <i className={`${icon} text-white text-2xl`} />
+                      ) : (
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <g dangerouslySetInnerHTML={{ __html: icon }} />
+                        </svg>
+                      )}
                     </div>
-                  ))}
+                    <h3 className={`text-3xl font-bold ${isMission ? 'text-[#326101]' : 'text-[#639427]'}`}>
+                      {item.title}
+                    </h3>
+                  </div>
+                  <p className="text-gray-700 text-lg leading-relaxed mb-6">{item.description}</p>
+                  {item.points && item.points.length > 0 && (
+                    <div className="space-y-3">
+                      {item.points.map((point) => (
+                        <div key={point} className="flex items-center space-x-3">
+                          <div className={`w-2 h-2 rounded-full ${isMission ? 'bg-[#326101]' : 'bg-[#639427]'}`}></div>
+                          <span className="text-gray-600">{point}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {/* Core Values */}
           <div
-            className={`section-fade-in mt-16 transition-all duration-800 ease-out ${visibleSections.has('core-values') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
+            id="core-values"
+            className={"mt-16"}
             data-section="core-values"
           >
             <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">Our Core Values</h3>
             <div className="grid md:grid-cols-3 gap-8">
-              {coreValues.map((value) => (
-                <div key={value.title} className="text-center p-6 bg-[#E8F5E8] rounded-xl">
-                  <div className="w-16 h-16 bg-[#326101] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <g dangerouslySetInnerHTML={{ __html: value.icon }} />
-                    </svg>
+              {coreValues.map((value) => {
+                const cvIcon = value.icon || '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />';
+                return (
+                  <div key={value.title} className="text-center p-6 bg-[#E8F5E8] rounded-xl">
+                    <div className="w-16 h-16 bg-[#326101] rounded-full flex items-center justify-center mx-auto mb-4">
+                      {cvIcon.startsWith('fas ') ? (
+                        <i className={`${cvIcon} text-white text-2xl`} />
+                      ) : (
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <g dangerouslySetInnerHTML={{ __html: cvIcon }} />
+                        </svg>
+                      )}
+                    </div>
+                    <h4 className="text-xl font-bold text-[#326101] mb-3">{value.title}</h4>
+                    <p className="text-gray-600">{value.description}</p>
                   </div>
-                  <h4 className="text-xl font-bold text-[#326101] mb-3">{value.title}</h4>
-                  <p className="text-gray-600">{value.description}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -494,34 +433,6 @@ const AboutUs: React.FC = () => {
 
       <OrgStructure />
 
-      {/* Call to Action */}
-      <section id="cta" className="py-20 bg-gradient-to-r from-[#326101] to-[#639427] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div
-            className={`section-fade-in transition-all duration-800 ease-out ${visibleSections.has('cta') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}
-            data-section="cta"
-          >
-            <h2 className="text-4xl font-bold mb-6">Ready to Learn More?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Discover how TGDC is transforming Tanzania&apos;s energy landscape through sustainable geothermal development.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/projects"
-                className="bg-white text-[#326101] px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-              >
-                View Our Projects
-              </Link>
-              <Link
-                href="/contact"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-[#326101] transition-colors duration-200"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

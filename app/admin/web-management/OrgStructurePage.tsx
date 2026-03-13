@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import MediaPicker from '../components/MediaPicker';
+import ImageCropper from '../components/ImageCropper';
+import axios from 'axios';
 
 interface OrgLeader {
   id: number;
@@ -34,6 +36,11 @@ const OrgStructureAdminPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Cropper state
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -122,8 +129,57 @@ const OrgStructureAdminPage: React.FC = () => {
   const updateForm = (key: keyof FormState, value: string | number | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result as string || null);
+        setIsCropperOpen(true);
+      });
+      reader.readAsDataURL(file);
+      // Reset input value to allow re-selecting same file
+      e.target.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setIsCropperOpen(false);
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      const file = new File([croppedBlob], `cropped-leader-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      formData.append('files', file);
+
+      const response = await axios.post('/api/admin/media', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.data && response.data.items && response.data.items.length > 0) {
+        updateForm('imageUrl', response.data.items[0].url);
+        setSuccess('Image cropped and uploaded successfully.');
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      setError('Failed to upload cropped image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="p-6 lg:p-8 space-y-8">
+      {isCropperOpen && cropImageSrc && (
+        <ImageCropper
+          imageSrc={cropImageSrc}
+          aspectRatio={300 / 350} // 300x350 ratio
+          onCropComplete={handleCropComplete}
+          onCancel={() => setIsCropperOpen(false)}
+        />
+      )}
+
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm max-w-5xl mx-auto p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -194,13 +250,28 @@ const OrgStructureAdminPage: React.FC = () => {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
+              <div className="mb-2 flex items-end justify-between">
+                <label className="block text-sm font-medium text-gray-700">Image Source</label>
+                <span className="text-xs text-xs text-gray-400">Recommended: 300x350px</span>
+              </div>
+
               <MediaPicker
-                label="Image Source"
-                helperText="Pick from the media gallery (stored in /uploads/media) or supply a full URL."
                 value={form.imageUrl || ''}
                 onChange={(url) => updateForm('imageUrl', url)}
-                disabled={saving}
+                disabled={saving || isUploading}
               />
+
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-400 uppercase font-semibold">Or</span>
+                <label className="cursor-pointer inline-flex items-center px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 transition-colors">
+                  <svg className="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {isUploading ? 'Uploading...' : 'Upload & Crop'}
+                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={saving || isUploading} />
+                </label>
+              </div>
             </div>
             <div className="flex items-center gap-2 mt-6">
               <input

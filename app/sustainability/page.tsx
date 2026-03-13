@@ -70,6 +70,17 @@ const Sustainability: React.FC = () => {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(stakeholdersSeed);
   const [openProjects, setOpenProjects] = useState<{ [key: string]: boolean }>({});
   const [toast, setToast] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [tabContent, setTabContentData] = useState<{
+    envTitle: string; envHeading: string; envSubheading: string; envContent: string;
+    socialTitle: string;
+    safetyTitle: string; safetyHeading: string; safetySubheading: string; safetyIntro: string;
+    safetyItems: { title: string; description: string }[];
+  }>({
+    envTitle: 'Environment', envHeading: 'Environmental', envSubheading: '', envContent: '',
+    socialTitle: 'Social',
+    safetyTitle: 'Safety and Health', safetyHeading: 'Safety and Health', safetySubheading: '', safetyIntro: '',
+    safetyItems: [],
+  });
 
   const showToast = (message: string = 'Link copied to clipboard') => {
     setToast({ open: true, message });
@@ -112,32 +123,39 @@ const Sustainability: React.FC = () => {
         }))
         setProjects(mappedP)
         setStakeholders(mappedS)
+        // Fetch tab content
+        try {
+          const tcRes = await fetch('/api/sustainability/content');
+          if (tcRes.ok) {
+            const tc = await tcRes.json();
+            setTabContentData({
+              envTitle: tc.envTitle || 'Environment',
+              envHeading: tc.envHeading || 'Environmental',
+              envSubheading: tc.envSubheading || '',
+              envContent: tc.envContent || tc.envIntro || '',
+              socialTitle: tc.socialTitle || 'Social',
+              safetyTitle: tc.safetyTitle || 'Safety and Health',
+              safetyHeading: tc.safetyHeading || 'Safety and Health',
+              safetySubheading: tc.safetySubheading || '',
+              safetyIntro: tc.safetyIntro || '',
+              safetyItems: Array.isArray(tc.safetyItems) ? tc.safetyItems : [],
+            });
+          }
+        } catch { }
         setOpenProjects(Object.fromEntries(mappedP.map((p) => [p.name, p.isOpen ?? false])))
       } catch (e) { /* ignore for view */ }
     })()
   }, [])
 
-  const fundStakeholders = stakeholders.filter((s) => s.category === 'Fund support');
-  const technicalStakeholders = stakeholders.filter((s) => s.category === 'Technical support');
-  const capacityStakeholders = stakeholders.filter((s) => s.category === 'Capacity building');
+  // Group stakeholders by category dynamically
+  const groupedByCategory = stakeholders.reduce<Record<string, typeof stakeholders>>((acc, s) => {
+    if (!acc[s.category]) acc[s.category] = [];
+    acc[s.category].push(s);
+    return acc;
+  }, {});
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 text-gray-800 min-h-screen box-border">
-      {/* Hero */}
-      <section className="bg-[radial-gradient(900px_460px_at_10%_-10%,rgba(99,148,39,0.18),transparent_60%),radial-gradient(800px_420px_at_110%_0%,rgba(50,97,1,0.18),transparent_60%),linear-gradient(135deg,#326101,#639427)] text-white py-16 md:py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
-            Sustainability
-          </span>
-          <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
-            Environment and Stakeholders
-          </h1>
-          <p className="text-white/90 text-lg md:text-xl mt-4 max-w-3xl">
-            A simple overview of our environmental approach and the partners supporting geothermal development in Tanzania.
-          </p>
-        </div>
-      </section>
 
       {/* Tabs */}
       <section className="py-8">
@@ -147,15 +165,15 @@ const Sustainability: React.FC = () => {
               <button
                 onClick={() => setCurrentTab('env')}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-green-50 ${currentTab === 'env' ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white' : ''}`}
-              >
-                Environment
-              </button>
+              >{tabContent.envTitle}</button>
               <button
                 onClick={() => setCurrentTab('stk')}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-green-50 ${currentTab === 'stk' ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white' : ''}`}
-              >
-                Stakeholders
-              </button>
+              >{tabContent.socialTitle}</button>
+              <button
+                onClick={() => setCurrentTab('safety')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-green-50 ${currentTab === 'safety' ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white' : ''}`}
+              >{tabContent.safetyTitle}</button>
             </div>
           </div>
         </div>
@@ -168,14 +186,13 @@ const Sustainability: React.FC = () => {
           <div className="rounded-2xl border border-gray-100 bg-white p-6 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Environmental</h2>
-                <p className="text-sm text-gray-500 mt-1">Geothermal Sector Strategic Environment and Social Assessment</p>
+                <h2 className="text-2xl font-bold text-gray-900">{tabContent.envHeading}</h2>
+                {tabContent.envSubheading && <p className="text-sm text-gray-500 mt-1">{tabContent.envSubheading}</p>}
               </div>
               <span className="text-[11px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Overview</span>
             </div>
             <p className="text-gray-700 leading-relaxed mt-4">
-              TGDC gratefully acknowledges the support received from TANESCO. Timely availability of right amount of funds is critical for project implementation.
-              TGDC has continued pursuing grants/soft loans from development partners such as GRMF, SREP, ICEIDA, AfDB, and many more to assist in development of the geothermal energy in the country.
+              {tabContent.envContent}
             </p>
           </div>
           {/* ESIA by Project */}
@@ -200,154 +217,78 @@ const Sustainability: React.FC = () => {
         </div>
       </section>
 
-      {/* Stakeholders */}
+      {/* Social / Stakeholders */}
       <section className={`${currentTab === 'stk' ? 'block' : 'hidden'} pb-16`}>
         <div className="max-w-6xl mx-auto px-6 space-y-8">
-          {/* Fund Support */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Stakeholders</h2>
-                <p className="text-sm text-gray-500 mt-1">Fund support</p>
-              </div>
-              <span className="text-[11px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Funding</span>
-            </div>
-            <ul className="mt-4 grid md:grid-cols-2 gap-3">
-              {fundStakeholders.map((stakeholder) => (
-                <li
-                  key={stakeholder.url}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-emerald-100 text-emerald-700 grid place-items-center font-bold">
-                      {stakeholder.initial}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{stakeholder.name}</div>
-                      <Link
-                        href={stakeholder.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:underline"
-                        style={{ color: '#326101' }}
-                      >
-                        {new URL(stakeholder.url).host}
-                      </Link>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(stakeholder.url);
-                        showToast();
-                      } catch {
-                        showToast('Copy failed. Please copy manually.');
-                      }
-                    }}
-                    className="text-xs px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-50"
+          {Object.entries(groupedByCategory).map(([category, members]) => (
+            <div key={category} className="rounded-2xl border border-gray-100 bg-white p-6 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{category}</h2>
+              <ul className="grid md:grid-cols-2 gap-3">
+                {members.map((stakeholder) => (
+                  <li
+                    key={stakeholder.url}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 p-3"
                   >
-                    Copy
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {/* Technical Support */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Technical support</p>
-              </div>
-              <span className="text-[11px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Technical</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-md bg-emerald-100 text-emerald-700 grid place-items-center font-bold">
+                        {stakeholder.initial}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{stakeholder.name}</div>
+                        <Link
+                          href={stakeholder.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm hover:underline"
+                          style={{ color: '#326101' }}
+                        >
+                          {(() => { try { return new URL(stakeholder.url).host; } catch { return stakeholder.url; } })()}
+                        </Link>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(stakeholder.url);
+                          showToast();
+                        } catch {
+                          showToast('Copy failed. Please copy manually.');
+                        }
+                      }}
+                      className="text-xs px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-50"
+                    >
+                      Copy
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="mt-4 grid md:grid-cols-2 gap-3">
-              {technicalStakeholders.map((stakeholder) => (
-                <li
-                  key={stakeholder.url}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-blue-100 text-blue-700 grid place-items-center font-bold">
-                      {stakeholder.initial}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{stakeholder.name}</div>
-                      <Link
-                        href={stakeholder.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:underline"
-                        style={{ color: '#326101' }}
-                      >
-                        {new URL(stakeholder.url).host}
-                      </Link>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(stakeholder.url);
-                        showToast();
-                      } catch {
-                        showToast('Copy failed. Please copy manually.');
-                      }
-                    }}
-                    className="text-xs px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-50"
-                  >
-                    Copy
-                  </button>
-                </li>
-              ))}
-            </ul>
+          ))}
+        </div>
+      </section>
+
+      {/* Safety and Health */}
+      <section className={`${currentTab === 'safety' ? 'block' : 'hidden'} pb-16`}>
+        <div className="max-w-6xl mx-auto px-6 space-y-8">
+          <div className="rounded-2xl border border-gray-100 bg-white p-6">
+            <h2 className="text-2xl font-bold text-gray-900">{tabContent.safetyHeading}</h2>
+            {tabContent.safetySubheading && <p className="text-sm text-gray-500 mt-1">{tabContent.safetySubheading}</p>}
+            {tabContent.safetyIntro && (
+              <p className="text-gray-700 leading-relaxed mt-4">{tabContent.safetyIntro}</p>
+            )}
           </div>
-          {/* Capacity Building */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Capacity building</p>
+          {tabContent.safetyItems.length > 0 && (
+            <div className="rounded-2xl border border-gray-100 bg-white p-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                {tabContent.safetyItems.filter(i => i.title).map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-lg border border-gray-100 bg-gray-50">
+                    <h4 className="font-semibold text-gray-900 mb-1">{item.title}</h4>
+                    <p className="text-sm text-gray-600">{item.description}</p>
+                  </div>
+                ))}
               </div>
-              <span className="text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Capacity</span>
             </div>
-            <ul className="mt-4 grid md:grid-cols-2 gap-3">
-              {capacityStakeholders.map((stakeholder) => (
-                <li
-                  key={stakeholder.url}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-amber-100 text-amber-700 grid place-items-center font-bold">
-                      {stakeholder.initial}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{stakeholder.name}</div>
-                      <Link
-                        href={stakeholder.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:underline"
-                        style={{ color: '#326101' }}
-                      >
-                        {new URL(stakeholder.url).host}
-                      </Link>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(stakeholder.url);
-                        showToast();
-                      } catch {
-                        showToast('Copy failed. Please copy manually.');
-                      }
-                    }}
-                    className="text-xs px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-50"
-                  >
-                    Copy
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
         </div>
       </section>
 

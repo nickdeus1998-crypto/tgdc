@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 const mapProject = (project: any) => ({
   id: project.slug,
   title: project.title,
@@ -35,8 +32,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items: projects.map(mapProject) });
   } catch (error) {
     console.error('GET /api/projects error:', error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Database error' }, { status: 500 }); }
 }

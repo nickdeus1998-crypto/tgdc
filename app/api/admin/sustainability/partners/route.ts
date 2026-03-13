@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 function isAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || ''
   const m = cookie.match(/(?:^|; )user_token=([^;]+)/)
@@ -19,10 +16,7 @@ export async function GET(request: Request) {
     return NextResponse.json(items)
   } catch (e) {
     console.error('ADMIN sustainability partners list error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 
 export async function POST(request: Request) {
@@ -41,9 +35,6 @@ export async function POST(request: Request) {
     return NextResponse.json(created)
   } catch (e) {
     console.error('ADMIN sustainability partner create error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 

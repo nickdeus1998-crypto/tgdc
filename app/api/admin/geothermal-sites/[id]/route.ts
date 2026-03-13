@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 function isAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || ''
   const m = cookie.match(/(?:^|; )user_token=([^;]+)/)
@@ -43,10 +40,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json(updated)
   } catch (e) {
     console.error('ADMIN geosites update error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
@@ -58,9 +52,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('ADMIN geosites delete error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 

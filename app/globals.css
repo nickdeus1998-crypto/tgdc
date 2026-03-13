@@ -16,14 +16,16 @@ body {
 }
 
 .hero-bg {
-  background: radial-gradient(900px 460px at 10% -10%, rgba(99,148,39,0.18), transparent 60%),
-              radial-gradient(800px 420px at 110% 0%, rgba(50,97,1,0.18), transparent 60%),
-              linear-gradient(135deg, #326101, #639427);
+  background: radial-gradient(circle at 10% -10%, rgba(99, 148, 39, 0.18), transparent 60%),
+    radial-gradient(circle at 110% 0%, rgba(50, 97, 1, 0.18), transparent 60%),
+    linear-gradient(135deg, #326101, #639427);
 }
 
 .tab-btn.active {
   background: linear-gradient(135deg, #326101, #639427);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(50, 97, 1, 0.2);
+  transform: translateY(-1px);
 }
 
 .card {
@@ -32,7 +34,7 @@ body {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 32px rgba(0,0,0,.06);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .06);
 }
 
 .fade-in {
@@ -40,12 +42,19 @@ body {
 }
 
 @keyframes fadeIn {
-  from {opacity: 0; transform: translateY(8px);}
-  to {opacity:1; transform:none;}
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .modal-backdrop {
-  background: rgba(0,0,0,.6);
+  background: rgba(0, 0, 0, .6);
   backdrop-filter: blur(4px);
 }
 
@@ -77,19 +86,19 @@ body {
   transform: scale(1.05);
 }
 
-.status-published { 
-  background: #dcfce7; 
-  color: #16a34a; 
+.status-published {
+  background: #dcfce7;
+  color: #16a34a;
 }
 
-.status-draft { 
-  background: #fef3c7; 
-  color: #d97706; 
+.status-draft {
+  background: #fef3c7;
+  color: #d97706;
 }
 
-.status-archived { 
-  background: #f3f4f6; 
-  color: #6b7280; 
+.status-archived {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .conversation-item.active {
@@ -111,28 +120,36 @@ body {
   max-width: 70%;
 }
 
-  @layer base {
-    :root {
-      --primary-green: #326101;
-      --secondary-green: #639427;
-    }
+@layer base {
+  :root {
+    --primary-green: #326101;
+    --secondary-green: #639427;
   }
-
-
-  .hero-bg {
-  background: radial-gradient(900px 460px at 10% -10%, rgba(99,148,39,0.18), transparent 60%),
-              radial-gradient(800px 420px at 110% 0%, rgba(50,97,1,0.18), transparent 60%),
-              linear-gradient(135deg, #326101, #639427);
 }
 
 
- @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: none; }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.4s ease both;
-        }
+.hero-bg {
+  background: radial-gradient(circle at 10% -10%, rgba(99, 148, 39, 0.18), transparent 60%),
+    radial-gradient(circle at 110% 0%, rgba(50, 97, 1, 0.18), transparent 60%),
+    linear-gradient(135deg, #326101, #639427);
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
 
 /* Logo gradient */
 .logo-gradient {
@@ -147,6 +164,7 @@ body {
   position: relative;
   transition: all 0.3s ease;
 }
+
 .nav-link::after {
   content: "";
   position: absolute;
@@ -158,6 +176,7 @@ body {
   transition: all 0.3s ease;
   transform: translateX(-50%);
 }
+
 .nav-link:hover::after {
   width: 100%;
 }
@@ -165,12 +184,15 @@ body {
 .news-card {
   transition: all 0.3s ease;
 }
+
 .news-card:hover {
   transform: translateY(-8px);
 }
+
 .read-more-btn {
   transition: all 0.3s ease;
 }
+
 .read-more-btn:hover {
   transform: translateX(4px);
 }
@@ -188,20 +210,25 @@ body {
   transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
   opacity: 0;
 }
+
 .announcement-banner.show {
   transform: translateX(0);
   opacity: 1;
 }
+
 .announcement-banner.hide {
   transform: translateX(120%) scale(0.8);
   opacity: 0;
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 30px rgba(50, 97, 1, 0.4), 0 0 60px rgba(50, 97, 1, 0.2);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(50, 97, 1, 0.6), 0 0 80px rgba(50, 97, 1, 0.3);
     transform: scale(1.02);
@@ -217,18 +244,22 @@ body {
     transform: scale(0.3) rotate(-15deg) translateY(-50px);
     opacity: 0;
   }
+
   30% {
     transform: scale(1.1) rotate(5deg) translateY(-10px);
     opacity: 0.8;
   }
+
   60% {
     transform: scale(0.95) rotate(-2deg) translateY(5px);
     opacity: 0.9;
   }
+
   80% {
     transform: scale(1.02) rotate(1deg) translateY(-2px);
     opacity: 1;
   }
+
   100% {
     transform: scale(1) rotate(0deg) translateY(0);
     opacity: 1;
@@ -240,8 +271,15 @@ body {
 }
 
 @keyframes slide-in-tab {
-  0% { transform: translateX(100%) scale(0.8); opacity: 0; }
-  100% { transform: translateX(0) scale(1); opacity: 1; }
+  0% {
+    transform: translateX(100%) scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
 }
 
 .slide-in-tab {
@@ -249,19 +287,31 @@ body {
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .float {
@@ -269,8 +319,16 @@ body {
 }
 
 @keyframes notification-ping {
-  0% { transform: scale(1); opacity: 1; }
-  75%, 100% { transform: scale(2); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
 .notification-ping::before {
@@ -299,8 +357,15 @@ body {
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .hover-lift {
@@ -316,6 +381,7 @@ body {
 .progress-dot {
   transition: all 0.3s ease;
 }
+
 .progress-dot.active {
   background: white;
   transform: scale(1.2);
@@ -325,16 +391,257 @@ body {
 .announcement-content {
   transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
 .announcement-content.slide-out {
   transform: translateX(-100%);
   opacity: 0;
 }
+
 .announcement-content.slide-in {
   transform: translateX(100%);
   opacity: 0;
 }
+
 .announcement-content.active {
   transform: translateX(0);
   opacity: 1;
 }
 
+/* Search modal animations */
+@keyframes search-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes search-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.search-backdrop {
+  animation: search-backdrop-in 0.2s ease-out both;
+}
+
+.search-modal {
+  animation: search-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.search-highlight {
+  background: transparent;
+  color: #326101;
+  font-weight: 600;
+}
+
+/* ── Rich text / static page content ── */
+.rich-content {
+  color: #374151;
+  font-size: 1.05rem;
+  line-height: 1.85;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.rich-content h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+  letter-spacing: -0.02em;
+}
+
+.rich-content h2 {
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
+  letter-spacing: -0.01em;
+}
+
+.rich-content h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-content h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-content p {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: #4b5563;
+}
+
+.rich-content ul,
+.rich-content ol {
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.75rem;
+}
+
+.rich-content ul {
+  list-style-type: disc;
+}
+
+.rich-content ol {
+  list-style-type: decimal;
+}
+
+.rich-content li {
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+  padding-left: 0.25rem;
+}
+
+.rich-content li::marker {
+  color: #326101;
+}
+
+.rich-content a {
+  color: #326101;
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.rich-content a:hover {
+  border-bottom-color: #326101;
+}
+
+.rich-content strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.rich-content em {
+  color: #6b7280;
+}
+
+.rich-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #326101;
+  background: #f0fdf4;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #374151;
+}
+
+.rich-content blockquote p {
+  margin-bottom: 0;
+}
+
+.rich-content hr {
+  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+}
+
+.rich-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.rich-content th {
+  background: #f9fafb;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.rich-content td {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.rich-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.rich-content>*:first-child {
+  margin-top: 0;
+}
+
+.rich-content>*:last-child {
+  margin-bottom: 0;
+}
+
+/* Quill editor overrides for admin */
+.ql-editor {
+  min-height: 350px;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #374151;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #111827;
+}
+
+.ql-editor p {
+  margin-bottom: 1rem;
+}
+
+/* Fix Quill toolbar color picker dropdowns */
+.ql-toolbar.ql-snow {
+  position: relative;
+  z-index: 10;
+}
+
+.ql-toolbar .ql-color-picker .ql-picker-options,
+.ql-toolbar .ql-background .ql-picker-options,
+.ql-toolbar .ql-picker .ql-picker-options {
+  z-index: 9999 !important;
+  position: absolute !important;
+  background: white !important;
+  border: 1px solid #ccc !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 4px !important;
+}
+
+.ql-toolbar .ql-picker.ql-expanded .ql-picker-options {
+  display: block !important;
+}
+
+.ql-container.ql-snow {
+  overflow: visible;
+}

@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
+import prisma from '@/lib/prisma'
 export async function GET() {
-  const prisma = new PrismaClient()
   try {
     const [news, users, stakeholders, userMsgs, shMsgs, docs, sections, services, stats] = await Promise.all([
       prisma.news.count(),
@@ -46,8 +44,5 @@ export async function GET() {
       visitors7d: vis7,
     })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'analytics_failed' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: e?.message || 'analytics_failed' }, { status: 500 }) }
 }

@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  // output   = "../lib/prisma.ts"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
@@ -38,22 +38,37 @@ model About {
   missionVision Json     // Array of { title, description, points: string[], icon, gradient }
   coreValues    Json     // Array of { title, description, icon }
   stats         Json?
+  keyAchievements Json?  // Array of { label, value }
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 // Footer settings (singleton)
 model Footer {
-  id           Int      @id @default(autoincrement())
-  aboutText    String?
-  address      String?
-  email        String?
-  phone        String?
-  quickLinks   Json     // Array<{ label: string; url: string }>
-  socialLinks  Json     // Array<{ name: string; url: string; icon?: string }>
-  copyright    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  aboutText       String?
+  address         String?
+  email           String?
+  phone           String?
+  quickLinks      Json     // Array<{ label: string; url: string }>
+  socialLinks     Json     // Array<{ name: string; url: string; icon?: string }>
+  relatedLinks    Json?    // Array<{ label: string; url: string }>
+  staffMailLinks  Json?    // Array<{ label: string; url: string }>
+  bottomNavLinks  Json?    // Array<{ label: string; url: string }>
+  designedByText  String?
+  copyright       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Editable static / legal pages (privacy-policy, terms, copyright, sitemap)
+model StaticPage {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique // e.g. "privacy-policy"
+  title     String
+  content   String   // Rich-text HTML
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Test {
@@ -68,6 +83,8 @@ model Hero {
   subheading String
   highlight  String? // New field
   imageUrl   String?
+  images     Json? // Array of image URLs for the hero slider
+  buttons    Json? // Array of CTA buttons [{label, href, visible}]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -75,7 +92,7 @@ model Hero {
 model Stat {
   id    Int    @id @default(autoincrement())
   title String // Label (e.g., "Users")
-  value Int // Numeric value (e.g., 1000)
+  value String // Display value (e.g., "1,000", "50+", "1.2 GW")
 
   @@map("stats")
 }
@@ -83,14 +100,43 @@ model Stat {
 model ServiceSection {
   id        Int      @id @default(autoincrement())
   headerOne String // e.g., main header text
-  headerTwo String // e.g., secondary header text
+  headerTwo String? // e.g., secondary header text (optional)
   subheader String? // optional subheader for additional description
+  mandate   String? // TGDC mandate text
+  mandateTitle String? // Mandate section heading
+  mandateVisibleOnHomepage Boolean @default(false) // toggle mandate on homepage
+  ctaTitle  String? // CTA section title
+  ctaSubtitle String? // CTA section subtitle
+  ctaPrimaryLabel String? // Primary button label
+  ctaPrimaryHref  String? // Primary button link
+  ctaSecondaryLabel String? // Secondary button label
+  ctaSecondaryHref  String? // Secondary button link
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   services Service[] // One-to-many relation to Service
 
   @@map("service_sections") // Optional: maps to a custom table name
+}
+
+model ProjectPortfolioStat {
+  id        Int      @id @default(autoincrement())
+  title     String   // e.g. "Total Projects"
+  value     String   // e.g. "24"
+  colorFrom String   @default("#326101") // gradient start color
+  colorTo   String   @default("#639427") // gradient end color
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GeothermalStat {
+  id        Int      @id @default(autoincrement())
+  label     String   // e.g. "Identified Sites"
+  value     String   // e.g. "14"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Service {
@@ -149,6 +195,7 @@ model News {
   images     Json? // array of string URLs
   videos     Json? // array of string URLs
   coverImage String? // primary image url for cards
+  expiresAt  DateTime? // optional expiration date for announcements
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -171,6 +218,7 @@ model StakeholderDocument {
   mimeType      String
   sizeBytes     Int
   storagePath   String // path or object key
+  senderRole    String   @default("stakeholder")
   uploadedAt    DateTime @default(now())
 
   stakeholder Stakeholder @relation(fields: [stakeholderId], references: [id], onDelete: Cascade)
@@ -229,12 +277,35 @@ model InformationItem {
   id          Int       @id @default(autoincrement())
   kind        String    // 'photo' | 'video' | 'newsletter' | 'press'
   title       String
+  subtitle    String?
   description String?
+  content     String?   // rich HTML body for blog-post-style items
   url         String    // media link or file URL
   thumbnail   String?   // optional thumbnail image
+  folderId    Int?      // optional folder for report-kind items
   date        DateTime  @default(now())
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// Publication folders for organising report-kind items
+model PublicationFolder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Media folders for organising photo/video items (supports nesting via parentId)
+model MediaFolder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  kind      String   // 'photo' | 'video'
+  parentId  Int?     // null = root level
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Geothermal sites
@@ -266,6 +337,7 @@ model ProjectHighlight {
   keyFeatures Json
   timeline    Json
   impact      Json
+  resources   Json?    // Array of { type: 'image' | 'video' | 'file', url: string, title?: string, description?: string }
   imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -274,13 +346,20 @@ model ProjectHighlight {
 model ImpactHighlight {
   id           Int      @id @default(autoincrement())
   title        String
-  catchy       String
-  description  String
+  catchy       String?
+  description  String?
   imageUrl     String
   primaryHref  String
-  secondaryHref String
+  secondaryHref String?
   tag          String?
   isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ImpactHighlightSettings {
+  id           Int      @id @default(autoincrement())
+  sectionTitle String   @default("Project Impact Highlights")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -296,4 +375,109 @@ model OrgLeader {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model DirectUsePage {
+  id                Int      @id @default(autoincrement())
+  heroTitle         String?
+  heroSubtitle      String?
+  introTitle        String?
+  introContent      String?
+  strategicProjects Json?    // Array of { name, details, content }
+  roadmap           Json?    // Array of { phase, title, description, status }
+  showUtilization   Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RepositoryItem {
+  id          Int      @id @default(autoincrement())
+  title       String
+  category    String   // e.g., 'Financial', 'Technical', 'Human Resources'
+  url         String   // link to the document
+  description String?
+  fileType    String?  // e.g., 'pdf', 'docx'
+  fileSize    String?  // e.g., '2.4 MB'
+  uploadedBy  String?  // name of person who uploaded
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Employee {
+  id          Int       @id @default(autoincrement())
+  name        String
+  designation String    // e.g., 'Management', 'Technical', 'Field Operations'
+  position    String    // e.g., 'CEO', 'Principal Geologist'
+  department  String?
+  email       String?
+  phone       String?
+  location    String?
+  bio         String?
+  imageUrl    String?   // avatar or profile photo
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Announcement {
+  id            Int       @id @default(autoincrement())
+  title         String
+  content       String
+  type          String    @default("Office Update") // e.g., 'Meeting', 'Office Update', 'Event', 'Urgent'
+  priority      String    @default("Normal")        // e.g., 'Low', 'Normal', 'High'
+  scheduledDate DateTime?                           // Optional date for the event
+  isActive      Boolean   @default(true)
+  isPublic      Boolean   @default(false)           // If true, shows on public /information-center page
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model SiteSettings {
+  id                    Int       @id @default(autoincrement())
+  maintenanceEnabled    Boolean   @default(false)
+  maintenanceMessage    String?   @default("We're currently performing scheduled maintenance. We'll be back soon!")
+  maintenanceTitle      String?   @default("Site Under Maintenance")
+  maintenanceStartTime  DateTime?
+  maintenanceEndTime    DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model HeaderSettings {
+  id          Int      @id @default(autoincrement())
+  emblemUrl   String?
+  logoUrl     String?
+  topTitle    String   @default("United Republic of Tanzania")
+  mainTitle   String   @default("Tanzania Geothermal Development Company")
+  tanescoMail String   @default("https://mail.tanesco.go.tz")
+  tgdcMail    String   @default("https://mail.tgdc.go.tz")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportChat {
+  id        Int       @id @default(autoincrement())
+  email     String
+  phone     String
+  name      String?
+  messages  Json      @default("[]")
+  closedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

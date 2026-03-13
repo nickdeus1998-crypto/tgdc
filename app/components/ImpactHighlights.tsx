@@ -16,6 +16,7 @@ interface HighlightItem {
 
 export default function ImpactHighlights() {
   const [items, setItems] = useState<HighlightItem[]>([]);
+  const [sectionTitle, setSectionTitle] = useState('Project Impact Highlights');
   const [idx, setIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,6 +28,7 @@ export default function ImpactHighlights() {
         if (!res.ok) throw new Error('Failed to load highlights');
         const data = await res.json();
         setItems(Array.isArray(data?.items) ? data.items : []);
+        if (data?.sectionTitle) setSectionTitle(data.sectionTitle);
       } catch (error) {
         console.error('ImpactHighlights fetch error', error);
         setItems([]);
@@ -50,15 +52,12 @@ export default function ImpactHighlights() {
 
   return (
     <section className="relative py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(800px_400px_at_20%_-10%,rgba(99,148,39,0.18),transparent_60%),radial-gradient(800px_400px_at_110%_0%,rgba(50,97,1,0.18),transparent_60%)] pointer-events-none" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <span className="inline-flex items-center px-4 py-1.5 bg-green-50 rounded-full text-[#326101] text-sm font-medium">Highlights</span>
-          <h2 className="mt-4 text-3xl md:text-4xl font-bold text-gray-900">Project Impact Highlights</h2>
-          <p className="mt-3 text-gray-600 max-w-2xl mx-auto">A rotating view of our current projects and milestones.</p>
+          <h2 className="text-2xl md:text-3xl font-semibold text-gray-900">{sectionTitle}</h2>
         </div>
 
-        <div className="relative h-80 md:h-[28rem] rounded-2xl overflow-hidden shadow-xl">
+        <div className="relative h-64 sm:h-80 md:h-[28rem] rounded-2xl overflow-hidden shadow-xl">
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-gray-500 text-sm">
               Loading highlights...
@@ -76,34 +75,21 @@ export default function ImpactHighlights() {
               style={{ opacity: i === idx ? 1 : 0, pointerEvents: i === idx ? 'auto' : 'none' }}
             >
               <Image src={it.image || '/geothermal.jpg'} alt={it.title} fill priority className="object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#1f3f00]/80 via-[#326101]/60 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
 
-              <div className="absolute top-5 left-5 right-5 md:top-8 md:left-8 md:right-auto md:max-w-xl">
-                {it.tag && (
-                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/15 border border-white/30 backdrop-blur-sm text-white text-xs font-medium">
-                    {it.tag}
-                  </div>
-                )}
-                <h3 className="mt-3 md:mt-4 text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-emerald-100 to-emerald-300">
-                    {it.catchy}
-                  </span>
-                </h3>
-                <p className="mt-2 text-sm md:text-base text-white/90 max-w-2xl">
-                  {it.text}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <a href={it.primaryHref || '#'} className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#326101] to-[#639427] shadow hover:shadow-lg transition-all">
-                    View Project
-                  </a>
-                </div>
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 text-white">
-                <div className="text-sm md:text-base opacity-90 max-w-2xl">
-                  <span className="font-semibold">{it.title}</span>
-                </div>
+              {/* Bottom bar with title (left) and link (right) */}
+              <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-5 md:p-6">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-[#326101] to-[#639427] text-white text-sm md:text-base font-semibold shadow-lg backdrop-blur-sm">
+                  {it.title}
+                </span>
+                <a
+                  href={it.primaryHref || '#'}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white bg-[#326101]/80 backdrop-blur-sm hover:bg-[#326101] transition-colors shadow"
+                >
+                  View Project
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
               </div>
             </div>
           ))}
@@ -129,9 +115,6 @@ export default function ImpactHighlights() {
           )}
         </div>
 
-        <div className="mt-10 flex items-center justify-center">
-          <a href="/resources" className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-3 rounded-lg font-semibold shadow hover:shadow-lg transition-all">Explore Resources</a>
-        </div>
       </div>
     </section>
   );

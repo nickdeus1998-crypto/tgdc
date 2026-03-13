@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Id = string | number;
 
@@ -136,16 +136,57 @@ const SustainabilityPage: React.FC = () => {
   const [sForm, setSForm] = useState<Stakeholder>(emptyStakeholder);
   const [sEditing, setSEditing] = useState<Id | null>(null);
 
+  // Tab content state
+  const [tabContent, setTabContent] = useState<{
+    envTitle: string;
+    envHeading: string;
+    envSubheading: string;
+    envContent: string;
+    socialTitle: string;
+    safetyTitle: string;
+    safetyHeading: string;
+    safetySubheading: string;
+    safetyIntro: string;
+    safetyItems: { title: string; description: string }[];
+  }>({
+    envTitle: 'Environment',
+    envHeading: 'Environmental',
+    envSubheading: 'Geothermal Sector Strategic Environment and Social Assessment',
+    envContent: '',
+    socialTitle: 'Social',
+    safetyTitle: 'Safety and Health',
+    safetyHeading: 'Safety and Health',
+    safetySubheading: 'Occupational Health and Safety standards across TGDC operations',
+    safetyIntro: '',
+    safetyItems: [{ title: '', description: '' }],
+  });
+  const [tabSaving, setTabSaving] = useState(false);
+
   const reload = async () => {
     setLoading((b) => ({ ...b, list: true }));
     setErr(null);
     try {
-      const [prj, stk] = await Promise.all([API.listProjects(), API.listPartners()]);
+      const [prj, stk, tcRes] = await Promise.all([API.listProjects(), API.listPartners(), fetch('/api/sustainability/content')]);
       if (!prj.ok || !stk.ok) throw new Error('Failed to load data');
       const prjJ = await prj.json();
       const stkJ = await stk.json();
       setProjects(Array.isArray(prjJ) ? prjJ : prjJ.items || []);
       setPartners(Array.isArray(stkJ) ? stkJ : stkJ.items || []);
+      if (tcRes.ok) {
+        const tc = await tcRes.json();
+        setTabContent({
+          envTitle: tc.envTitle || 'Environment',
+          envHeading: tc.envHeading || 'Environmental',
+          envSubheading: tc.envSubheading || '',
+          envContent: tc.envContent || tc.envIntro || '',
+          socialTitle: tc.socialTitle || 'Social',
+          safetyTitle: tc.safetyTitle || 'Safety and Health',
+          safetyHeading: tc.safetyHeading || tc.safetyTitle || 'Safety and Health',
+          safetySubheading: tc.safetySubheading || '',
+          safetyIntro: tc.safetyIntro || '',
+          safetyItems: Array.isArray(tc.safetyItems) && tc.safetyItems.length > 0 ? tc.safetyItems : [{ title: '', description: '' }],
+        });
+      }
     } catch (e: any) {
       setErr(e?.message || 'Failed to load');
     } finally {
@@ -156,6 +197,24 @@ const SustainabilityPage: React.FC = () => {
   useEffect(() => {
     reload();
   }, []);
+
+  const saveTabContent = async () => {
+    setTabSaving(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/sustainability/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tabContent),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      alert('Tab content saved!');
+    } catch (e: any) {
+      setErr(e?.message || 'Save failed');
+    } finally {
+      setTabSaving(false);
+    }
+  };
 
   const onSubmitProject = async () => {
     setLoading((b) => ({ ...b, save: true }));
@@ -227,10 +286,8 @@ const SustainabilityPage: React.FC = () => {
     }
   };
 
-  const categories = useMemo(
-    () => ['Fund support', 'Technical support', 'Capacity building'],
-    [],
-  );
+  const [categories, setCategories] = useState<string[]>(['Fund support', 'Technical support', 'Capacity building']);
+  const [newCategory, setNewCategory] = useState('');
 
   return (
     <div className="space-y-6">
@@ -238,10 +295,164 @@ const SustainabilityPage: React.FC = () => {
         <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{err}</div>
       )}
 
+      {/* Environment Tab Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
+        <SectionHeader title="Environment Tab" />
+        <div className="space-y-3 mt-4">
+          <Field label="Tab Name">
+            <input
+              value={tabContent.envTitle}
+              onChange={(e) => setTabContent((v) => ({ ...v, envTitle: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+            />
+          </Field>
+          <Field label="Heading">
+            <input
+              value={tabContent.envHeading}
+              onChange={(e) => setTabContent((v) => ({ ...v, envHeading: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              placeholder="e.g. Environmental"
+            />
+          </Field>
+          <Field label="Subheading">
+            <input
+              value={tabContent.envSubheading}
+              onChange={(e) => setTabContent((v) => ({ ...v, envSubheading: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              placeholder="e.g. Geothermal Sector Strategic Environment..."
+            />
+          </Field>
+          <Field label="Content">
+            <textarea
+              value={tabContent.envContent}
+              onChange={(e) => setTabContent((v) => ({ ...v, envContent: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              rows={4}
+              placeholder="Main paragraph for the environment section..."
+            />
+          </Field>
+        </div>
+      </div>
+
+      {/* Social Tab Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
+        <SectionHeader title="Social Tab" />
+        <div className="space-y-3 mt-4">
+          <Field label="Tab Name">
+            <input
+              value={tabContent.socialTitle}
+              onChange={(e) => setTabContent((v) => ({ ...v, socialTitle: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+            />
+          </Field>
+          <p className="text-xs text-gray-400">Social tab content is managed via the Stakeholders / Partners section below.</p>
+        </div>
+      </div>
+
+      {/* Safety & Health Tab Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
+        <SectionHeader title="Safety & Health Tab" />
+        <div className="space-y-3 mt-4">
+          <Field label="Tab Name">
+            <input
+              value={tabContent.safetyTitle}
+              onChange={(e) => setTabContent((v) => ({ ...v, safetyTitle: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+            />
+          </Field>
+          <Field label="Heading">
+            <input
+              value={tabContent.safetyHeading}
+              onChange={(e) => setTabContent((v) => ({ ...v, safetyHeading: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              placeholder="e.g. Safety and Health"
+            />
+          </Field>
+          <Field label="Subheading">
+            <input
+              value={tabContent.safetySubheading}
+              onChange={(e) => setTabContent((v) => ({ ...v, safetySubheading: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              placeholder="e.g. Occupational Health and Safety standards..."
+            />
+          </Field>
+          <Field label="Intro Text">
+            <textarea
+              value={tabContent.safetyIntro}
+              onChange={(e) => setTabContent((v) => ({ ...v, safetyIntro: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+              rows={3}
+              placeholder="Main intro paragraph..."
+            />
+          </Field>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="block text-sm font-medium text-gray-700">Safety Items</span>
+              <button
+                type="button"
+                className="text-sm underline"
+                style={{ color: TGREEN }}
+                onClick={() => setTabContent((v) => ({ ...v, safetyItems: [...v.safetyItems, { title: '', description: '' }] }))}
+              >
+                Add Item
+              </button>
+            </div>
+            <div className="space-y-2">
+              {tabContent.safetyItems.map((item, i) => (
+                <div key={i} className="grid md:grid-cols-[1fr_2fr_auto] gap-2 items-start">
+                  <input
+                    value={item.title}
+                    onChange={(e) => {
+                      const items = [...tabContent.safetyItems];
+                      items[i] = { ...items[i], title: e.target.value };
+                      setTabContent((v) => ({ ...v, safetyItems: items }));
+                    }}
+                    className="px-3 py-2 border border-gray-200 rounded-lg"
+                    placeholder="Title"
+                  />
+                  <input
+                    value={item.description}
+                    onChange={(e) => {
+                      const items = [...tabContent.safetyItems];
+                      items[i] = { ...items[i], description: e.target.value };
+                      setTabContent((v) => ({ ...v, safetyItems: items }));
+                    }}
+                    className="px-3 py-2 border border-gray-200 rounded-lg"
+                    placeholder="Description"
+                  />
+                  <button
+                    type="button"
+                    className="text-red-600 text-sm px-2 py-2"
+                    onClick={() => {
+                      const items = tabContent.safetyItems.filter((_, idx) => idx !== i);
+                      setTabContent((v) => ({ ...v, safetyItems: items.length > 0 ? items : [{ title: '', description: '' }] }));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save All Tab Content */}
+      <div className="flex justify-end">
+        <button
+          onClick={saveTabContent}
+          disabled={tabSaving}
+          className="text-white text-sm font-semibold rounded-md px-4 py-2"
+          style={{ backgroundColor: TGREEN }}
+        >
+          {tabSaving ? 'Saving...' : 'Save All Tab Content'}
+        </button>
+      </div>
+
       {/* Projects */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" style={{ color: TEXT_DARK }}>
         <SectionHeader
-          title="Projects (ESIA Status)"
+          title="Project Environmental and Social Impact Assessment"
           cta={
             <button
               onClick={() => { setPForm(emptyProject); setPEditing(null); }}
@@ -329,7 +540,7 @@ const SustainabilityPage: React.FC = () => {
                   rows={4}
                 />
               </Field>
-              <ColorRow value={pForm} onChange={(patch) => setPForm((v) => ({ ...v, ...patch }))} />
+
               <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
@@ -447,18 +658,44 @@ const SustainabilityPage: React.FC = () => {
                 </Field>
               </div>
               <Field label="Category">
-                <select
-                  value={sForm.category}
-                  onChange={(e) => setSForm((v) => ({ ...v, category: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white"
-                  style={{ color: TEXT_DARK }}
-                >
-                  {categories.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={sForm.category}
+                    onChange={(e) => setSForm((v) => ({ ...v, category: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-white"
+                    style={{ color: TEXT_DARK }}
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    placeholder="New category name..."
+                    style={{ color: TEXT_DARK }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmed = newCategory.trim();
+                      if (trimmed && !categories.includes(trimmed)) {
+                        setCategories((prev) => [...prev, trimmed]);
+                        setSForm((v) => ({ ...v, category: trimmed }));
+                        setNewCategory('');
+                      }
+                    }}
+                    className="text-sm px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                    style={{ color: TGREEN }}
+                  >
+                    Add Category
+                  </button>
+                </div>
               </Field>
-              <ColorRow value={sForm} onChange={(patch) => setSForm((v) => ({ ...v, ...patch }))} />
+
               <div className="flex items-center gap-2 pt-2">
                 <button
                   onClick={onSubmitStakeholder}

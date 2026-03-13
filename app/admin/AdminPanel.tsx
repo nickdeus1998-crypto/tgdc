@@ -2,23 +2,36 @@
 'use client';
 
 import React, { useState, useEffect, ComponentType, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { createRoot } from 'react-dom/client';
 import ProjectManagement from './project-management/ProjectManagement';
 import TenderManagement from './tender-management';
 import HeroPage from './web-management/HeroPage';
+import HeaderPage from './web-management/HeaderPage';
 import Dashboard from './dashboard/Dashboard';
 import StatsSectionPage from './web-management/StatsSectionPage';
 import { Stats } from 'fs';
 import ServicesSectionPage from './web-management/ServicesSectionPage';
 import SustainabilityPage from './web-management/SustainabilityPage';
 import InformationCenterPage from './web-management/InformationCenterPage';
-import GeothermalSitesPage from './web-management/GeothermalSitesPage';
+const GeothermalSitesPage = dynamic(() => import('./web-management/GeothermalSitesPage'), { ssr: false });
 import FooterSettingsPage from './web-management/FooterSettingsPage';
+import StaticPagesEditorPage from './web-management/StaticPagesEditorPage';
 import AboutUsPage from './web-management/AboutUsPage';
 import ProjectHighlightsPage from './web-management/ProjectHighlightsPage';
 import ImpactHighlightsAdminPage from './web-management/ImpactHighlightsPage';
 import OrgStructureAdminPage from './web-management/OrgStructurePage';
+import NewsManagementPage from './web-management/NewsManagementPage';
 import UsersPage from './user-management/UsersPage';
+import ProjectsPage from './web-management/ProjectsPage';
+import FAQAdminPage from './web-management/FAQPage';
+import RepositoryPage from './repository/RepositoryPage';
+import EmployeePage from './personnel/EmployeePage';
+import AnnouncementsPage from './notifications/AnnouncementsPage';
+import StakeholderDocumentsPage from './stakeholder-management/StakeholderDocumentsPage';
+import SupportChatPage from './support-chat/SupportChatPage';
+import ContactInfoPage from './web-management/ContactInfoPage';
+
 // TypeScript interfaces
 interface PageData {
   title: string;
@@ -79,7 +92,7 @@ const StakeholdersPage: React.FC = () => {
       ])
       if (m.ok) { const mj = await m.json(); setMsgs(mj.items || []); setMsgCursor(mj.nextCursor ?? null) }
       if (d.ok) { const dj = await d.json(); setDocs(dj.items || []); setDocCursor(dj.nextCursor ?? null) }
-    } catch {}
+    } catch { }
   }
 
   useEffect(() => { if (selectedId) loadDetails(selectedId) }, [selectedId])
@@ -152,7 +165,7 @@ const StakeholdersPage: React.FC = () => {
             <ul className="divide-y divide-gray-100 max-h-[600px] overflow-auto">
               {items.map(it => (
                 <li key={it.id}>
-                  <button className={`w-full text-left p-3 hover:bg-gray-50 ${selectedId===it.id ? 'bg-gray-50' : ''}`} onClick={() => setSelectedId(it.id)}>
+                  <button className={`w-full text-left p-3 hover:bg-gray-50 ${selectedId === it.id ? 'bg-gray-50' : ''}`} onClick={() => setSelectedId(it.id)}>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-900">{it.name}</p>
@@ -284,8 +297,8 @@ function TrafficChart({ series }: { series: { date: string; pageviews: number; v
   const w = 700, h = 180, pad = 20
   const n = series.length || 1
   const maxV = Math.max(1, ...series.map(s => Math.max(s.pageviews, s.visitors)))
-  const x = (i: number) => pad + (i * (w - 2*pad)) / Math.max(1, n - 1)
-  const y = (v: number) => h - pad - (v * (h - 2*pad)) / maxV
+  const x = (i: number) => pad + (i * (w - 2 * pad)) / Math.max(1, n - 1)
+  const y = (v: number) => h - pad - (v * (h - 2 * pad)) / maxV
   const pvPts = series.map((s, i) => `${x(i)},${y(s.pageviews)}`).join(' ')
   const visPts = series.map((s, i) => `${x(i)},${y(s.visitors)}`).join(' ')
   return (
@@ -293,7 +306,7 @@ function TrafficChart({ series }: { series: { date: string; pageviews: number; v
       <polyline points={pvPts} fill="none" stroke="#6366f1" strokeWidth="2" />
       <polyline points={visPts} fill="none" stroke="#14b8a6" strokeWidth="2" />
       <text x={pad} y={12} fontSize="10" fill="#6366f1">Pageviews</text>
-      <text x={pad+80} y={12} fontSize="10" fill="#14b8a6">Visitors</text>
+      <text x={pad + 80} y={12} fontSize="10" fill="#14b8a6">Visitors</text>
     </svg>
   )
 }
@@ -316,6 +329,10 @@ const pageData: Record<string, PageData> = {
     title: 'Admin Users',
     description: 'Create, edit, and disable CMS administrator accounts.',
   },
+  repository: {
+    title: 'Internal Repository',
+    description: 'Centralized storage for internal company documents and technical resources.',
+  },
   header: {
     title: 'Header Settings',
     description: 'Manage website header, navigation menu, and branding elements.',
@@ -332,9 +349,9 @@ const pageData: Record<string, PageData> = {
     title: 'Stats ',
     description: 'Manage the about us section content, team information, and company details.',
   },
-  
+
   geosites: { title: 'Geothermal Sites', description: 'Manage geothermal sites, zones, and map coordinates.' },
-sustainability: {
+  sustainability: {
     title: 'Sustainability',
     description: 'Manage sustainability projects (ESIA) and partner stakeholders.',
   },
@@ -342,10 +359,7 @@ sustainability: {
     title: 'Services',
     description: 'Edit services offered, descriptions, and service-related content.',
   },
-  portfolio: {
-    title: 'Projects Portfolio',
-    description: 'Manage project portfolio, case studies, and project galleries.',
-  },
+
   impactHighlights: {
     title: 'Impact Highlights',
     description: 'Manage carousel entries for homepage impact highlights.',
@@ -355,7 +369,7 @@ sustainability: {
     description: 'Manage leadership cards shown on the About Us page.',
   },
   projectHighlights: {
-    title: 'Project Highlights',
+    title: 'Projects',
     description: 'Create and edit the featured geothermal projects shown on the homepage.',
   },
   news: {
@@ -385,6 +399,26 @@ sustainability: {
   settings: {
     title: 'System Settings',
     description: 'Configure system preferences, user accounts, and security settings.',
+  },
+  projectsPage: {
+    title: 'Direct Use Projects',
+    description: 'Manage the content for the public /projects (Direct Use) page.',
+  },
+  faqs: {
+    title: 'FAQ Management',
+    description: 'Manage frequently asked questions and their answers.',
+  },
+  stakeholderDocs: {
+    title: "Stakeholder's Documents",
+    description: 'Manage and post documents for specific stakeholder portals.',
+  },
+  profile: {
+    title: 'Profile Settings',
+    description: 'Manage your account details and security settings.',
+  },
+  staticPages: {
+    title: 'Static Pages',
+    description: 'Edit Sitemap, Privacy Policy, Terms and Conditions, and Copyright Statement pages.',
   },
 };
 
@@ -498,7 +532,7 @@ const AnalyticsPage: React.FC = () => {
   const [top7, setTop7] = React.useState<{ path: string; pageviews: number; visitors: number }[] | null>(null);
   const [top30, setTop30] = React.useState<{ path: string; pageviews: number; visitors: number }[] | null>(null);
   const [range, setRange] = React.useState<7 | 30>(7);
-  const [grain, setGrain] = React.useState<'day'|'month'|'year'>('day');
+  const [grain, setGrain] = React.useState<'day' | 'month' | 'year'>('day');
   const [from, setFrom] = React.useState<string>('');
   const [to, setTo] = React.useState<string>('');
   const [useCustom, setUseCustom] = React.useState<boolean>(false);
@@ -545,7 +579,7 @@ const AnalyticsPage: React.FC = () => {
       if (to) params.set('to', to);
       const [ts, tp] = await Promise.all([
         fetch(`/api/analytics/timeseries?${params.toString()}`),
-        fetch(`/api/analytics/top-pages?${new URLSearchParams({ ...(from?{from}:{}), ...(to?{to}:{}) }).toString()}`),
+        fetch(`/api/analytics/top-pages?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString()}`),
       ]);
       if (!ts.ok || !tp.ok) throw new Error('Failed to apply filters');
       const tsj = await ts.json();
@@ -573,7 +607,7 @@ const AnalyticsPage: React.FC = () => {
     { title: 'Users (Admin)', value: String(data.users), subtext: 'Registered admins', gradient: 'from-blue-500 to-blue-600' },
     { title: 'Stakeholders', value: String(data.stakeholders), subtext: 'Portal accounts', gradient: 'from-purple-500 to-purple-600' },
     { title: 'Documents', value: String(data.documents), subtext: 'Uploaded by stakeholders', gradient: 'from-orange-500 to-red-500' },
-   ] : [
+  ] : [
     { title: 'Page Views (7d)', value: '�', subtext: loading ? 'Loading...' : 'Unavailable', gradient: 'from-indigo-500 to-indigo-600' },
     { title: 'Visitors (7d)', value: '�', subtext: loading ? 'Loading...' : 'Unavailable', gradient: 'from-teal-500 to-teal-600' },
     { title: 'News Articles', value: '-', subtext: loading ? 'Loading...' : 'Unavailable', gradient: 'from-[#326101] to-[#639427]' },
@@ -587,7 +621,7 @@ const AnalyticsPage: React.FC = () => {
     { label: 'Stakeholder messages', value: data.messages.stakeholder },
     { label: 'Service sections', value: data.services.sections },
     { label: 'Services', value: data.services.services },
-   ] : [
+  ] : [
     { title: 'Page Views (7d)', value: '�', subtext: loading ? 'Loading...' : 'Unavailable', gradient: 'from-indigo-500 to-indigo-600' },
     { title: 'Visitors (7d)', value: '�', subtext: loading ? 'Loading...' : 'Unavailable', gradient: 'from-teal-500 to-teal-600' },];
 
@@ -637,23 +671,23 @@ const AnalyticsPage: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-gray-900">Traffic Overview</h2>
               <div className="inline-flex rounded-md border border-gray-200 overflow-hidden">
-                <button onClick={() => { setRange(7); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range===7 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>7d</button>
-                <button onClick={() => { setRange(30); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range===30 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>30d</button>
+                <button onClick={() => { setRange(7); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range === 7 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>7d</button>
+                <button onClick={() => { setRange(30); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range === 30 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>30d</button>
               </div>
             </div>
             <p className="text-sm text-gray-500 mb-4">Pageviews and visitors ({useCustom ? grain : 'day'})</p>
-            <TrafficChart series={(useCustom ? (seriesCustom||[]) : (range===7 ? (series7||[]) : (series30||[])))} />
+            <TrafficChart series={(useCustom ? (seriesCustom || []) : (range === 7 ? (series7 || []) : (series30 || [])))} />
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-gray-900">Top Pages</h2>
               <div className="inline-flex rounded-md border border-gray-200 overflow-hidden">
-                <button onClick={() => { setRange(7); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range===7 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>7d</button>
-                <button onClick={() => { setRange(30); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range===30 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>30d</button>
+                <button onClick={() => { setRange(7); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range === 7 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>7d</button>
+                <button onClick={() => { setRange(30); setUseCustom(false); }} className={`px-3 py-1 text-sm ${!useCustom && range === 30 ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}>30d</button>
               </div>
             </div>
             <div className="space-y-2">
-              {(useCustom ? (topCustom||[]) : (range===7 ? (top7||[]) : (top30||[]))).slice(0,8).map((p) => (
+              {(useCustom ? (topCustom || []) : (range === 7 ? (top7 || []) : (top30 || []))).slice(0, 8).map((p) => (
                 <div key={`${p.path}`} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                   <div className="text-sm text-gray-700 truncate max-w-[60%]" title={p.path}>{p.path}</div>
                   <div className="text-xs text-gray-500 flex items-center gap-3">
@@ -662,7 +696,7 @@ const AnalyticsPage: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {((useCustom ? (topCustom||[]) : (range===7 ? (top7||[]) : (top30||[]))).length === 0) && (
+              {((useCustom ? (topCustom || []) : (range === 7 ? (top7 || []) : (top30 || []))).length === 0) && (
                 <div className="text-sm text-gray-500">{loading ? 'Loading...' : 'No data'}</div>
               )}
             </div>
@@ -672,36 +706,7 @@ const AnalyticsPage: React.FC = () => {
     </div>
   );
 };
-const HeaderPage: React.FC = () => (
-  <div className="p-6 lg:p-8">
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Header Settings</h2>
-        <p className="text-gray-600 mb-4">Configure navigation menu, logo, and branding elements.</p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Site Title</label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
-              placeholder="Enter site title"
-              defaultValue="TGDC Official Website"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Navigation Links</label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
-              rows={4}
-              placeholder="Enter navigation links (JSON format)"
-              defaultValue='["Home", "About", "Services", "Projects", "Contact"]'
-            ></textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 
 const AboutPage: React.FC = () => (
@@ -714,7 +719,7 @@ const AboutPage: React.FC = () => (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Company Mission</label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               rows={4}
               placeholder="Enter company mission"
               defaultValue="To harness geothermal energy for a sustainable future."
@@ -728,27 +733,7 @@ const AboutPage: React.FC = () => (
 
 
 
-const PortfolioPage: React.FC = () => (
-  <div className="p-6 lg:p-8">
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Projects Portfolio</h2>
-        <p className="text-gray-600 mb-4">Manage project case studies and galleries.</p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Featured Project</label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
-              placeholder="Enter featured project name"
-              defaultValue="Ngozi Geothermal Project"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 const NewsPage: React.FC = () => (
   <div className="p-6 lg:p-8">
@@ -761,7 +746,7 @@ const NewsPage: React.FC = () => (
             <label className="block text-sm font-medium text-gray-700 mb-2">Latest Article Title</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               placeholder="Enter article title"
               defaultValue="New Geothermal Site Discovered"
             />
@@ -783,7 +768,7 @@ const ContactPage: React.FC = () => (
             <label className="block text-sm font-medium text-gray-700 mb-2">Office Address</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               placeholder="Enter office address"
               defaultValue="123 Geothermal Ave, Dar es Salaam"
             />
@@ -804,7 +789,7 @@ const FooterPage: React.FC = () => (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Links</label>
             <textarea
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               rows={4}
               placeholder="Enter social media links (JSON format)"
               defaultValue='["Twitter", "LinkedIn", "Facebook"]'
@@ -827,7 +812,7 @@ const FooterPage: React.FC = () => (
 //             <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
 //             <input
 //               type="text"
-//               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+//               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
 //               placeholder="Enter project name"
 //               defaultValue="Kisaki Geothermal Survey"
 //             />
@@ -849,7 +834,7 @@ const TendersPage: React.FC = () => (
             <label className="block text-sm font-medium text-gray-700 mb-2">Tender Title</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               placeholder="Enter tender title"
               defaultValue="Equipment Procurement 2025"
             />
@@ -959,11 +944,10 @@ const MediaPage: React.FC = () => {
 
           {status && (
             <div
-              className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
-                status.type === 'success'
-                  ? 'border-green-200 bg-green-50 text-green-700'
-                  : 'border-red-200 bg-red-50 text-red-700'
-              }`}
+              className={`mb-4 rounded-lg border px-4 py-3 text-sm ${status.type === 'success'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : 'border-red-200 bg-red-50 text-red-700'
+                }`}
             >
               {status.message}
             </div>
@@ -984,9 +968,8 @@ const MediaPage: React.FC = () => {
             htmlFor="mediaUploadInput"
             onDrop={handleDrop}
             onDragOver={event => event.preventDefault()}
-            className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl px-6 py-10 text-center cursor-pointer transition ${
-              uploading ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#326101] hover:bg-green-50/40'
-            }`}
+            className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl px-6 py-10 text-center cursor-pointer transition ${uploading ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#326101] hover:bg-green-50/40'
+              }`}
           >
             <svg className="w-10 h-10 text-[#326101] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -1054,15 +1037,35 @@ const SettingsPage: React.FC = () => (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-6">System Settings</h2>
         <p className="text-gray-600 mb-4">Configure user accounts and security settings.</p>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Admin Email</label>
             <input
               type="email"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent text-gray-900"
               placeholder="Enter admin email"
               defaultValue="admin@tgdc.go.tz"
             />
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Site Operations</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a
+                href="/admin/settings/maintenance"
+                className="flex flex-col p-4 border border-gray-200 rounded-xl hover:border-[#326101] hover:bg-green-50 transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-[#326101] transition-colors">
+                    <svg className="w-5 h-5 text-amber-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <span className="font-semibold text-gray-900">Maintenance Mode</span>
+                </div>
+                <p className="text-sm text-gray-500">Enable/disable site-wide maintenance and customize messages.</p>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -1070,12 +1073,148 @@ const SettingsPage: React.FC = () => (
   </div>
 );
 
+const ProfileSettingsPage: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  useEffect(() => {
+    fetch('/api/auth/profile')
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setFormData(prev => ({ ...prev, name: data.name || '', email: data.email || '' }));
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+      setSuccess('Profile updated successfully!');
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading profile...</div>;
+
+  return (
+    <div className="max-w-2xl">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">{error}</div>}
+          {success && <div className="p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">{success}</div>}
+
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                placeholder="Your Name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                placeholder="admin@tgdc.go.tz"
+                required
+              />
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <h3 className="text-md font-semibold text-gray-900 mb-4">Change Password</h3>
+              <p className="text-xs text-gray-500 mb-4 italic">Leave blank to keep current password</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2 bg-[#326101] hover:bg-[#2a5200] text-white font-semibold rounded-lg shadow-md transition-all disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Page component mapping
-const pageComponents: Record<string, ComponentType> = {
+const pageComponents: Record<string, ComponentType<any>> = {
   dashboard: Dashboard,
   analytics: AnalyticsPage,
   stakeholders: StakeholdersPage,
   users: UsersPage,
+  repository: RepositoryPage,
+  personnel: EmployeePage,
+  announcements: AnnouncementsPage,
 
   header: HeaderPage,
   hero: HeroPage,
@@ -1085,17 +1224,24 @@ const pageComponents: Record<string, ComponentType> = {
   geosites: GeothermalSitesPage,
   about: AboutUsPage,
   services: ServicesSectionPage,
-  portfolio: PortfolioPage,
+
   impactHighlights: ImpactHighlightsAdminPage,
   orgStructure: OrgStructureAdminPage,
   projectHighlights: ProjectHighlightsPage,
-  news: NewsPage,
-  contact: ContactPage,
+  news: NewsManagementPage,
+  contact: ContactInfoPage,
   footer: FooterSettingsPage,
+  staticPages: StaticPagesEditorPage,
   projects: ProjectManagement,
   tenders: TenderManagement,
   media: MediaPage,
   settings: SettingsPage,
+  projectsPage: ProjectsPage,
+  faqs: FAQAdminPage,
+  knowledgeBase: () => <InformationCenterPage initialKind="knowledge-base" />,
+  stakeholderDocs: StakeholderDocumentsPage,
+  supportChat: SupportChatPage,
+  profile: ProfileSettingsPage,
 };
 
 // Components
@@ -1174,7 +1320,7 @@ const Notifications: React.FC = () => {
   );
 };
 
-const Profile: React.FC = () => {
+const Profile: React.FC<{ setActivePage: (page: string) => void }> = ({ setActivePage }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ name?: string | null; email: string; role?: string } | null>(null);
 
@@ -1230,19 +1376,17 @@ const Profile: React.FC = () => {
           </div>
         </div>
         <div className="py-2">
-          {[
-            { href: '#', text: 'Profile Settings', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
-            { href: '#', text: 'Account Settings', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /> },
-            { href: '#', text: 'Help & Support', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
-          ].map((item, index) => (
-            <a key={index} href={item.href} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-              <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {item.icon}
-              </svg>
-              {item.text}
-            </a>
-          ))}
+          <button
+            onClick={() => { setActivePage('profile'); setIsOpen(false); }}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Profile Settings
+          </button>
         </div>
+
         <div className="border-t border-gray-100 py-2">
           <button onClick={signOut} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
             <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1268,7 +1412,12 @@ const Sidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void; activePage
   const navItems = [
     { page: 'dashboard', text: 'Dashboard', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M8 5a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2H10a2 2 0 01-2-2V5z" /> },
     { page: 'analytics', text: 'Analytics', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
-    { page: 'stakeholders', text: 'Stakeholders', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a4 4 0 00-4-4h-1m-6 6H7v-2a4 4 0 014-4h0m0 0a4 4 0 110-8 4 4 0 010 8z" /> },
+    { page: 'stakeholders', text: 'Stakeholder Messages', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a4 4 0 00-4-4h-1m-6 6H7v-2a4 4 0 014-4h0m0 0a4 4 0 110-8 4 4 0 010 8z" /> },
+    { page: 'stakeholderDocs', text: "Stakeholder's Documents", icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+    { page: 'repository', text: 'Internal Repository', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+    { page: 'personnel', text: 'Employee Directory', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /> },
+    { page: 'announcements', text: 'Internal Announcements', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /> },
+    { page: 'supportChat', text: 'Support Chat', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /> },
     { page: 'users', text: 'Admin Users', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8a3 3 0 116 0 3 3 0 01-6 0zm8 0a3 3 0 116 0 3 3 0 01-6 0zM4 16a4 4 0 018 0v2H4v-2zm8 0a4 4 0 018 0v2h-8v-2z" /> },
     {
       page: 'web',
@@ -1283,22 +1432,30 @@ const Sidebar: React.FC<{ isOpen: boolean; toggleSidebar: () => void; activePage
         { page: 'sustainability', text: 'Sustainability', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 14a4 4 0 114-4H8a4 4 0 013 4z" /> },
         { page: 'stats', text: 'Stats ', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
         { page: 'services', text: 'Services', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
-        { page: 'portfolio', text: 'Projects Portfolio', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /> },
+
         { page: 'impactHighlights', text: 'Impact Highlights', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" /> },
         { page: 'orgStructure', text: 'Org Structure', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c1.657 0 3-1.343 3-3S13.657 2 12 2 9 3.343 9 5s1.343 3 3 3zm0 2c-2.21 0-4 1.79-4 4v5h8v-5c0-2.21-1.79-4-4-4z" /> },
-        { page: 'projectHighlights', text: 'Project Highlights', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.157c.969 0 1.371 1.24.588 1.81l-3.364 2.446a1 1 0 00-.364 1.118l1.286 3.955c.3.921-.755 1.688-1.538 1.118l-3.364-2.446a1 1 0 00-1.176 0l-3.364 2.446c-.783.57-1.838-.197-1.538-1.118l1.286-3.955a1 1 0 00-.364-1.118L2.018 9.382c-.783-.57-.38-1.81.588-1.81h4.157a1 1 0 00.95-.69l1.286-3.955z" /> },
+        { page: 'projectHighlights', text: 'Projects', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.157c.969 0 1.371 1.24.588 1.81l-3.364 2.446a1 1 0 00-.364 1.118l1.286 3.955c.3.921-.755 1.688-1.538 1.118l-3.364-2.446a1 1 0 00-1.176 0l-3.364 2.446c-.783.57-1.838-.197-1.538-1.118l1.286-3.955a1 1 0 00-.364-1.118L2.018 9.382c-.783-.57-.38-1.81.588-1.81h4.157a1 1 0 00.95-.69l1.286-3.955z" /> },
         { page: 'news', text: 'News & Updates', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /> },
         { page: 'contact', text: 'Contact Information', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
         { page: 'footer', text: 'Footer Settings', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
+        { page: 'staticPages', text: 'Static Pages', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+        { page: 'projectsPage', text: 'Direct Use Projects', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /> },
+        { page: 'faqs', text: 'FAQ Management', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> },
       ],
     },
-    { page: 'projects', text: 'Projects', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />, badge: { count: 24, color: 'bg-[#326101]' } },
+
     { page: 'tenders', text: 'Tenders', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />, badge: { count: 8, color: 'bg-blue-500' } },
     { page: 'media', text: 'Media Gallery', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />, badge: { count: 156, color: 'bg-purple-500' } },
     { page: 'settings', text: 'Settings', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /> },
   ];
   const isAdmin = userRole === 'admin';
-  const filteredNav = isAdmin ? navItems : navItems.filter(item => item.page === 'dashboard');
+  const isHR = userRole === 'hr';
+  const filteredNav = isAdmin
+    ? navItems
+    : isHR
+      ? navItems.filter(item => ['dashboard', 'repository', 'personnel', 'announcements'].includes(item.page))
+      : navItems.filter(item => ['dashboard', 'repository', 'announcements'].includes(item.page));
 
   return (
     <>
@@ -1403,7 +1560,7 @@ const AdminPanel: React.FC = () => {
   const getPageMeta = (page: string) => pageData[page] ?? pageData.dashboard;
 
   const updateBreadcrumb = (page: string) => {
-    const isSubpage = ['header', 'hero', 'about','stats', 'information', 'geosites', 'sustainability', 'services', 'portfolio', 'impactHighlights', 'orgStructure', 'projectHighlights', 'news', 'contact', 'footer'].includes(page);
+    const isSubpage = ['header', 'hero', 'about', 'stats', 'information', 'geosites', 'sustainability', 'services', 'impactHighlights', 'orgStructure', 'projectHighlights', 'news', 'contact', 'footer', 'projectsPage'].includes(page);
     const meta = getPageMeta(page);
     return (
       <div className="hidden md:flex items-center text-sm text-gray-500 mb-2">
@@ -1431,13 +1588,19 @@ const AdminPanel: React.FC = () => {
       .catch(() => setUser(null));
   }, []);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+  const isHR = (user?.role || '').toLowerCase() === 'hr';
+  const allowedPages = isAdmin
+    ? null // admin sees all
+    : isHR
+      ? ['dashboard', 'repository', 'personnel', 'announcements', 'stakeholderDocs']
+      : ['dashboard', 'repository', 'announcements', 'stakeholderDocs'];
 
   useEffect(() => {
-    if (!isAdmin && activePage !== 'dashboard') setActivePage('dashboard');
-  }, [isAdmin, activePage]);
+    if (allowedPages && !allowedPages.includes(activePage)) setActivePage('dashboard');
+  }, [isAdmin, isHR, activePage]);
 
-  const safePage = isAdmin ? activePage : 'dashboard';
+  const safePage = allowedPages ? (allowedPages.includes(activePage) ? activePage : 'dashboard') : activePage;
   const dashboardProps = isAdmin ? {} : { allowedTabs: ['messages' as const], defaultTab: 'messages' as const };
   const PageComponent = pageComponents[safePage] || DashboardPage;
 
@@ -1461,9 +1624,9 @@ const AdminPanel: React.FC = () => {
           50% { opacity: 0.7; }
         }
         .admin-header {
-          backdrop-filter: blur(10px);
-          background: rgba(255, 255, 255, 0.95);
+          background: #ffffff;
           border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          z-index: 40;
         }
         .user-avatar {
           background: linear-gradient(135deg, #326101, #639427);
@@ -1533,7 +1696,7 @@ const AdminPanel: React.FC = () => {
               ))}
             </div>
             <Notifications />
-            <Profile />
+            <Profile setActivePage={setActivePage} />
           </div>
         </div>
       </header>
@@ -1544,7 +1707,7 @@ const AdminPanel: React.FC = () => {
         setActivePage={setActivePage}
         userRole={user?.role || ''}
       />
-      <main className="pt-16 lg:ml-64 min-h-screen transition-all duration-300">
+      <main className="pt-16 lg:ml-64 min-h-screen">
         <div className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
@@ -1553,7 +1716,7 @@ const AdminPanel: React.FC = () => {
             </div>
             {safePage === 'dashboard'
               ? <Dashboard {...dashboardProps} />
-              : <PageComponent />}
+              : <PageComponent isAdmin={isAdmin || (isHR && ['personnel', 'announcements', 'repository'].includes(safePage))} />}
           </div>
         </div>
       </main>

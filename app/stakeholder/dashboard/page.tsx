@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function StakeholderDashboard() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function StakeholderDashboard() {
           setMsgHistory(m.items || []);
           setMsgCursor(m.nextCursor ?? null);
         }
-      } catch {}
+      } catch { }
     }
     else setStatus(data.error || 'Failed to send.');
   }
@@ -73,13 +74,14 @@ export default function StakeholderDashboard() {
     e.preventDefault();
     setUploadStatus(null);
     setUploading(true);
-    const form = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const form = new FormData(formElement);
     try {
       const res = await fetch('/api/stakeholder/document', { method: 'POST', body: form });
       const data = await res.json();
       if (res.ok) {
         setUploadStatus('Document uploaded successfully.');
-        e.currentTarget.reset();
+        formElement.reset();
         const dRes = await fetch('/api/stakeholder/documents?limit=10');
         if (dRes.ok) {
           const d = await dRes.json();
@@ -89,7 +91,8 @@ export default function StakeholderDashboard() {
       } else {
         setUploadStatus(data.error || 'Upload failed.');
       }
-    } catch {
+    } catch (err) {
+      console.error('Upload handling error:', err);
       setUploadStatus('Upload failed.');
     } finally {
       setUploading(false);
@@ -129,7 +132,15 @@ export default function StakeholderDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Welcome{me ? `, ${me.name}` : ''}</h1>
             <p className="text-gray-600 text-sm">Use this portal to send messages or documents to TGDC staff.</p>
           </div>
-          <button onClick={logout} className="text-sm text-red-600 underline">Sign out</button>
+          <div className="flex flex-col items-end gap-2">
+            <Link href="/stakeholder/dashboard/documents" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-semibold text-sm hover:bg-emerald-100 transition-colors border border-emerald-100 shadow-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Documents Portal
+            </Link>
+            <button onClick={logout} className="text-xs text-red-600 hover:text-red-700 underline">Sign out</button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">

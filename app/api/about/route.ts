@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 // Helpers to parse JSON columns safely
 function parseJSON<T>(value: any, fallback: T): T {
   if (value == null) return fallback;
@@ -42,10 +39,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (error) {
     console.error('GET /api/about error:', error);
-    return NextResponse.json({ error: 'Failed to fetch About data' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Failed to fetch About data' }, { status: 500 }); }
 }
 
 export async function POST(request: NextRequest) {
@@ -104,8 +98,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('POST /api/about error:', error);
-    return NextResponse.json({ error: 'Failed to save About data' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Failed to save About data' }, { status: 500 }); }
 }

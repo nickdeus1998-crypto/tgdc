@@ -3,14 +3,14 @@
     "home": "Home",
     "about": "About Us",
     "services": "Services",
-    "resources": "Resources",
+    "projects": "Projects",
     "geothermalSites": "Geothermal Sites",
     "sustainability": "Sustainability",
     "informationCenter": "Information Center",
     "procurement": "Procurement",
     "news": "News",
     "getStarted": "Get Started",
-    "stakeholders": "Stakeholders"
+    "stakeholders": "Stakeholders Portal"
   },
   "common": {
     "loading": "Loading...",

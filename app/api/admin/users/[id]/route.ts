@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma'
 import { getJwtSecret, hashPassword, verifyJwt } from '@/app/lib/auth';
-
-const prisma = new PrismaClient();
-
 function getAdminPayload(request: Request) {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -47,10 +44,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     console.error('ADMIN user update error', e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
@@ -72,8 +66,5 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     console.error('ADMIN user delete error', e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }

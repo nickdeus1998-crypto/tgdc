@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 function isAdmin(request: Request) {
   const cookie = request.headers.get('cookie') || ''
   const m = cookie.match(/(?:^|; )user_token=([^;]+)/)
@@ -34,9 +31,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ items, nextCursor })
   } catch (e) {
     console.error('ADMIN stakeholder documents error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 

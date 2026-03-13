@@ -503,7 +503,7 @@ const ProjectManagement: React.FC = () => {
                 <p className="text-gray-600">Drag and drop projects to update their status</p>
               </div>
               <div className="flex items-center gap-3">
-                <select className="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                <select className="text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900">
                   <option>All Zones</option>
                   <option>Eastern Zone</option>
                   <option>Lake Zone</option>
@@ -555,7 +555,7 @@ const ProjectManagement: React.FC = () => {
                     placeholder="Search projects..."
                     className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                   />
-                  <select className="text-sm border border-gray-200 rounded-lg px-3 py-2">
+                  <select className="text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900">
                     <option>All Status</option>
                     <option>Active</option>
                     <option>Planning</option>

@@ -1,7 +1,13 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+
+interface HeroButton {
+  label: string;
+  href: string;
+  visible: boolean;
+}
 
 interface HeroSectionProps {
   badge: string;
@@ -9,144 +15,190 @@ interface HeroSectionProps {
   highlight: string;
   description: string;
   imageSrc: string;
+  images?: string[];
+  buttons?: HeroButton[];
 }
 
+// Default buttons shown when no data from admin
+const defaultButtons: HeroButton[] = [
+  { label: 'Start Your Project', href: '/about-us', visible: true },
+  { label: 'View Case Studies', href: '/projects', visible: true },
+];
+
 const HeroSection: React.FC<HeroSectionProps> = ({
-  badge,
   title,
   highlight,
   description,
   imageSrc,
+  images,
+  buttons,
 }) => {
-  // Rotating list of images (hardcoded)
-  const candidates = ['/image1.jpeg', '/image2.jpeg', '/geothermal.jpg'] as const as string[];
+  // Use admin-configured buttons or fall back to defaults
+  const activeButtons = (buttons && buttons.length > 0 ? buttons : defaultButtons).filter((b) => b.visible);
 
-  const [frontSrc, setFrontSrc] = useState<string>(candidates[0] || '/geothermal.jpg');
-  const [backSrc, setBackSrc] = useState<string>(candidates[1] || candidates[0] || '/geothermal.jpg');
-  const [flipped, setFlipped] = useState(false);
+  // Rotating background images
+  const provided = Array.isArray(images) ? images.filter(Boolean) : [];
+  const fallbackImages = (provided.length ? provided : [imageSrc, '/geothermal.jpg', '/image2.jpeg']).filter(Boolean) as string[];
+  const [candidates, setCandidates] = useState<string[]>(fallbackImages);
+
+  // Dual-layer crossfade
+  const [layerA, setLayerA] = useState(candidates[0] || '/geothermal.jpg');
+  const [layerB, setLayerB] = useState(candidates[1] || candidates[0] || '/geothermal.jpg');
+  const [showB, setShowB] = useState(false);
   const idxRef = useRef(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize rotation sources on mount
   useEffect(() => {
-    const list = candidates;
+    const providedImages = Array.isArray(images) ? images.filter(Boolean) : [];
+    const next = (providedImages.length ? providedImages : [imageSrc, '/geothermal.jpg', '/image2.jpeg']).filter(Boolean) as string[];
+    setCandidates(next);
+    setLayerA(next[0] || '/geothermal.jpg');
+    setLayerB(next[1] || next[0] || '/geothermal.jpg');
     idxRef.current = 0;
-    setFrontSrc(list[0] || '/geothermal.jpg');
-    setBackSrc(list[1] || list[0] || '/geothermal.jpg');
-    setFlipped(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setShowB(false);
+  }, [images, imageSrc]);
 
-  // Auto-flip interval
+  const advance = useCallback(() => {
+    if (candidates.length <= 1) return;
+    const nextImageIdx = (idxRef.current + 1) % candidates.length;
+    const nextSrc = candidates[nextImageIdx];
+    idxRef.current = nextImageIdx;
+
+    if (showB) {
+      setLayerA(nextSrc);
+      requestAnimationFrame(() => setShowB(false));
+    } else {
+      setLayerB(nextSrc);
+      requestAnimationFrame(() => setShowB(true));
+    }
+  }, [candidates, showB]);
+
+  const jumpTo = useCallback((idx: number) => {
+    if (idx === idxRef.current) return;
+    const nextSrc = candidates[idx];
+    idxRef.current = idx;
+
+    if (showB) {
+      setLayerA(nextSrc);
+      requestAnimationFrame(() => setShowB(false));
+    } else {
+      setLayerB(nextSrc);
+      requestAnimationFrame(() => setShowB(true));
+    }
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(advance, 5000);
+  }, [candidates, showB, advance]);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Start flip
-      setFlipped(true);
-      // After flip animation completes, advance images and reset
-      const timeout = setTimeout(() => {
-        const list = candidates.length ? candidates : [frontSrc];
-        const nextIdx = (idxRef.current + 1) % list.length;
-        const nextFront = list[nextIdx];
-        const nextBack = list[(nextIdx + 1) % list.length];
-        idxRef.current = nextIdx;
-        setFrontSrc(nextFront);
-        setBackSrc(nextBack);
-        setFlipped(false);
-      }, 700); // match CSS transition duration
-      return () => clearTimeout(timeout);
-    }, 4000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candidates.join('|')]);
+    if (candidates.length <= 1) return;
+    timerRef.current = setInterval(advance, 5000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [candidates, advance]);
 
   return (
-    <section className="py-20 lg:py-32 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left content */}
-        <div className="space-y-8">
-          <div className="space-y-4">
-            {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-green-100 rounded-full">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-              <span className="text-green-700 text-sm font-medium">{badge}</span>
-            </div>
-
-            {/* Heading */}
-            <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-              {title}
-              <span className="block bg-gradient-to-r from-green-500 to-green-700 bg-clip-text text-transparent">
-                {highlight}
-              </span>
-            </h1>
-
-            {/* Paragraph */}
-            <p className="text-xl text-gray-600 leading-relaxed">{description}</p>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/about-us"
-              className="bg-gradient-to-r from-green-500 to-green-700 text-white px-8 py-4 rounded-full font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 text-center"
-            >
-              Start Your Project
-            </Link>
-            <Link
-              href="/about-us"
-              className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-full font-semibold hover:border-green-700 hover:text-green-700 transition-all duration-300 text-center"
-            >
-              View Case Studies
-            </Link>
-          </div>
+    <section className="relative w-screen -ml-[calc((100vw-100%)/2)] h-[60vh] sm:h-[75vh] md:h-[85vh] min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] max-h-[900px] overflow-hidden">
+      {/* Background images — dual-layer crossfade */}
+      <div className="absolute inset-0">
+        <div
+          className="absolute inset-0 transition-opacity duration-[1200ms] ease-in-out"
+          style={{ opacity: showB ? 0 : 1 }}
+        >
+          <Image
+            src={layerA}
+            alt="Hero background"
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+            onError={(e) => { e.currentTarget.src = '/geothermal.jpg'; }}
+          />
         </div>
-
-        {/* Right illustration (card stack with animated swap) */}
-        <div className="relative flex items-center justify-center lg:justify-end">
-          <div className="relative w-full max-w-lg">
-            {/* Back card */}
-            <div className="absolute inset-0 origin-center rotate-45 translate-x-6 translate-y-6 rounded-[36px] bg-gradient-to-br from-green-200 via-emerald-100 to-white opacity-80 shadow-[0_25px_80px_rgba(50,97,1,0.25)]" />
-
-            {/* Front card */}
-            <div className="relative rounded-[36px] bg-white/80 backdrop-blur-xl p-6 shadow-[0_35px_90px_rgba(15,23,42,0.25)] border border-white/40">
-              <div className="absolute inset-0 rounded-[36px] bg-gradient-to-br from-green-50/60 to-transparent pointer-events-none" />
-              <div className="relative" style={{ perspective: '1600px' }}>
-                <div className="relative w-full pt-[70%] rounded-[28px] bg-gray-900/5 border border-white/60 overflow-hidden">
-                  <div
-                    className="absolute inset-0 rounded-[28px] overflow-hidden transition-transform duration-700 shadow-2xl"
-                    style={{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
-                  >
-                    {/* Front side */}
-                    <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
-                      <Image
-                        src={frontSrc}
-                        alt="Hero Illustration"
-                        fill
-                        className="object-cover"
-                        priority
-                        onError={() => {
-                          if (frontSrc !== '/geothermal.jpg') setFrontSrc('/geothermal.jpg');
-                        }}
-                      />
-                    </div>
-                    {/* Back side */}
-                    <div className="absolute inset-0" style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}>
-                      <Image
-                        src={backSrc}
-                        alt="Hero Illustration"
-                        fill
-                        className="object-cover"
-                        priority
-                        onError={() => {
-                          if (backSrc !== '/geothermal.jpg') setBackSrc('/geothermal.jpg');
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div
+          className="absolute inset-0 transition-opacity duration-[1200ms] ease-in-out"
+          style={{ opacity: showB ? 1 : 0 }}
+        >
+          <Image
+            src={layerB}
+            alt="Hero background"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            onError={(e) => { e.currentTarget.src = '/geothermal.jpg'; }}
+          />
         </div>
       </div>
+
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/30" />
+
+      {/* Content */}
+      <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+        <div className="max-w-2xl space-y-6">
+          {/* Heading */}
+          <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-lg">
+            {title}
+            <span className="block bg-gradient-to-r from-[#639427] to-[#8ab542] bg-clip-text text-transparent">
+              {highlight}
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-lg lg:text-xl text-white/90 leading-relaxed max-w-xl drop-shadow">
+            {description}
+          </p>
+
+          {/* Dynamic Buttons */}
+          {activeButtons.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              {activeButtons.map((btn, i) => (
+                <Link
+                  key={i}
+                  href={btn.href}
+                  className={
+                    i === 0
+                      ? 'group relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold text-base overflow-hidden shadow-lg shadow-green-900/20 hover:shadow-xl hover:shadow-green-900/30 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300'
+                      : 'group relative inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white px-8 py-4 rounded-full font-semibold text-base backdrop-blur-sm hover:bg-white/10 hover:border-white/60 active:scale-[0.98] transition-all duration-300'
+                  }
+                >
+                  {/* Shine effect on primary button */}
+                  {i === 0 && (
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  )}
+                  <span className="relative">{btn.label}</span>
+                  <svg
+                    className={`relative w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 ${i === 0 ? 'text-white/80' : 'text-white/60'}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Image indicators */}
+      {candidates.length > 1 && (
+        <div className="absolute bottom-36 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {candidates.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => jumpTo(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${i === idxRef.current
+                ? 'bg-white w-6'
+                : 'bg-white/50 hover:bg-white/70 w-2'
+                }`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };

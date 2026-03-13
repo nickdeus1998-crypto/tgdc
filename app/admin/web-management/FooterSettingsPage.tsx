@@ -21,7 +21,11 @@ interface FooterForm {
   phone: string;
   quickLinks: LinkItem[];
   socialLinks: SocialItem[];
+  relatedLinks: LinkItem[];
+  staffMailLinks: LinkItem[];
+  bottomNavLinks: LinkItem[];
   copyright: string;
+  designedByText: string;
 }
 
 const defaults: FooterForm = {
@@ -37,13 +41,82 @@ const defaults: FooterForm = {
   socialLinks: [
     { name: 'Twitter', url: '#', icon: '<path d="M8 19c11 0 17-9 17-17..." />' },
   ],
+  relatedLinks: [
+    { label: 'TANESCO', url: 'https://www.tanesco.co.tz' },
+    { label: 'EWURA', url: 'https://www.ewura.go.tz' },
+    { label: 'DIT', url: 'https://www.dit.ac.tz' },
+    { label: 'UDOM', url: 'https://www.udom.ac.tz' },
+    { label: 'GST', url: '#' },
+  ],
+  staffMailLinks: [
+    { label: 'TGDC Mail', url: 'https://mail.tgdc.go.tz' },
+    { label: 'TANESCO Mail', url: 'https://mail.tanesco.go.tz' },
+  ],
+  bottomNavLinks: [
+    { label: 'Sitemap', url: '/sitemap-page' },
+    { label: 'Privacy Policy', url: '/privacy-policy' },
+    { label: 'Terms and Conditions', url: '/terms' },
+    { label: 'Copyright Statement', url: '/copyright' },
+  ],
   copyright: `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`,
+  designedByText: 'The website is Designed, Developed And Maintained by TGDC. Content Maintained by TGDC.',
 };
+
+function LinkArraySection({
+  title,
+  fields,
+  register,
+  append,
+  remove,
+  namePrefix,
+}: {
+  title: string;
+  fields: { id: string }[];
+  register: any;
+  append: (val: LinkItem) => void;
+  remove: (i: number) => void;
+  namePrefix: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <button type="button" onClick={() => append({ label: '', url: '' })} className="text-sm text-[#326101] hover:underline">
+          + Add Link
+        </button>
+      </div>
+      <div className="space-y-2">
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <span className="text-gray-300 text-xs font-bold w-5 text-center">{index + 1}</span>
+            <input
+              placeholder="Label"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm"
+              {...register(`${namePrefix}.${index}.label` as const)}
+            />
+            <input
+              placeholder="URL"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm"
+              {...register(`${namePrefix}.${index}.url` as const)}
+            />
+            <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => remove(index)}>
+              ✕
+            </button>
+          </div>
+        ))}
+        {fields.length === 0 && <p className="text-sm text-gray-400 italic">No links added yet.</p>}
+      </div>
+    </div>
+  );
+}
 
 const FooterSettingsPage: React.FC = () => {
   const { control, register, handleSubmit, reset } = useForm<FooterForm>({ defaultValues: defaults });
   const quickLinksArray = useFieldArray({ control, name: 'quickLinks' });
   const socialLinksArray = useFieldArray({ control, name: 'socialLinks' });
+  const relatedLinksArray = useFieldArray({ control, name: 'relatedLinks' });
+  const staffMailLinksArray = useFieldArray({ control, name: 'staffMailLinks' });
+  const bottomNavLinksArray = useFieldArray({ control, name: 'bottomNavLinks' });
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,7 +137,11 @@ const FooterSettingsPage: React.FC = () => {
           phone: data.phone ?? '',
           quickLinks: Array.isArray(data.quickLinks) && data.quickLinks.length ? data.quickLinks : defaults.quickLinks,
           socialLinks: Array.isArray(data.socialLinks) && data.socialLinks.length ? data.socialLinks : defaults.socialLinks,
+          relatedLinks: Array.isArray(data.relatedLinks) && data.relatedLinks.length ? data.relatedLinks : defaults.relatedLinks,
+          staffMailLinks: Array.isArray(data.staffMailLinks) && data.staffMailLinks.length ? data.staffMailLinks : defaults.staffMailLinks,
+          bottomNavLinks: Array.isArray(data.bottomNavLinks) && data.bottomNavLinks.length ? data.bottomNavLinks : defaults.bottomNavLinks,
           copyright: data.copyright ?? defaults.copyright,
+          designedByText: data.designedByText ?? defaults.designedByText,
         });
       } catch (e: any) {
         console.error(e);
@@ -101,16 +178,12 @@ const FooterSettingsPage: React.FC = () => {
     <div className="p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Footer Settings</h2>
           {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
           {loading ? (
             <p className="text-gray-600">Loading...</p>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">About Text</label>
-                <textarea rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register('aboutText')} />
-              </div>
+              <input type="hidden" {...register('aboutText')} />
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
@@ -127,52 +200,93 @@ const FooterSettingsPage: React.FC = () => {
                 </div>
               </div>
 
+              <hr className="border-gray-200" />
+
               {/* Quick Links */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Quick Links</h3>
-                  <button type="button" onClick={() => quickLinksArray.append({ label: '', url: '' })} className="text-[#326101] hover:underline">Add Link</button>
-                </div>
-                <div className="space-y-3">
-                  {quickLinksArray.fields.map((field, index) => (
-                    <div key={field.id} className="grid md:grid-cols-2 gap-3 p-3 border border-gray-200 rounded-lg">
-                      <input placeholder="Label" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`quickLinks.${index}.label` as const)} />
-                      <input placeholder="URL" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`quickLinks.${index}.url` as const)} />
-                      <div className="md:col-span-2 text-right">
-                        <button type="button" className="text-red-600" onClick={() => quickLinksArray.remove(index)}>Remove</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <LinkArraySection
+                title="Quick Links"
+                fields={quickLinksArray.fields}
+                register={register}
+                append={quickLinksArray.append}
+                remove={quickLinksArray.remove}
+                namePrefix="quickLinks"
+              />
+
+              <hr className="border-gray-200" />
+
+              {/* Related Links */}
+              <LinkArraySection
+                title="Related Links"
+                fields={relatedLinksArray.fields}
+                register={register}
+                append={relatedLinksArray.append}
+                remove={relatedLinksArray.remove}
+                namePrefix="relatedLinks"
+              />
+
+              <hr className="border-gray-200" />
+
+              {/* Staff Mail Links */}
+              <LinkArraySection
+                title="Staff Mail Links"
+                fields={staffMailLinksArray.fields}
+                register={register}
+                append={staffMailLinksArray.append}
+                remove={staffMailLinksArray.remove}
+                namePrefix="staffMailLinks"
+              />
+
+              <hr className="border-gray-200" />
+
+              {/* Bottom Nav Links */}
+              <LinkArraySection
+                title="Bottom Navigation Links"
+                fields={bottomNavLinksArray.fields}
+                register={register}
+                append={bottomNavLinksArray.append}
+                remove={bottomNavLinksArray.remove}
+                namePrefix="bottomNavLinks"
+              />
+
+              <hr className="border-gray-200" />
 
               {/* Social Links */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
-                  <button type="button" onClick={() => socialLinksArray.append({ name: '', url: '', icon: '' })} className="text-[#326101] hover:underline">Add Social</button>
+                  <button type="button" onClick={() => socialLinksArray.append({ name: '', url: '', icon: '' })} className="text-sm text-[#326101] hover:underline">
+                    + Add Social
+                  </button>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {socialLinksArray.fields.map((field, index) => (
-                    <div key={field.id} className="grid md:grid-cols-3 gap-3 p-3 border border-gray-200 rounded-lg">
-                      <input placeholder="Name" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`socialLinks.${index}.name` as const)} />
-                      <input placeholder="URL" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`socialLinks.${index}.url` as const)} />
-                      <input placeholder="SVG path (inner)" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`socialLinks.${index}.icon` as const)} />
-                      <div className="md:col-span-3 text-right">
-                        <button type="button" className="text-red-600" onClick={() => socialLinksArray.remove(index)}>Remove</button>
-                      </div>
+                    <div key={field.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="text-gray-300 text-xs font-bold w-5 text-center">{index + 1}</span>
+                      <input placeholder="Name" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm" {...register(`socialLinks.${index}.name` as const)} />
+                      <input placeholder="URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm" {...register(`socialLinks.${index}.url` as const)} />
+                      <input placeholder="SVG path" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm" {...register(`socialLinks.${index}.icon` as const)} />
+                      <button type="button" className="text-red-500 hover:text-red-700 text-sm" onClick={() => socialLinksArray.remove(index)}>
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
+
+              <hr className="border-gray-200" />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Copyright</label>
                 <input className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register('copyright')} />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Designed By Text</label>
+                <input className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register('designedByText')} />
+              </div>
+
               <div className="flex justify-end">
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#326101] text-white rounded-lg hover:bg-[#2a5101] disabled:bg-gray-400">
+                <button type="submit" disabled={saving} className="px-6 py-2.5 bg-[#326101] text-white rounded-lg hover:bg-[#2a5101] disabled:bg-gray-400 font-medium">
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -185,4 +299,3 @@ const FooterSettingsPage: React.FC = () => {
 };
 
 export default FooterSettingsPage;
-

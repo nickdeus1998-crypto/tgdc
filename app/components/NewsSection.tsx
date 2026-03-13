@@ -106,6 +106,14 @@ const newsArticles: NewsArticle[] = [
 ];
 
 // Attempt to fetch dynamic news from API and merge with UI
+function stripHtml(html: string): string {
+  if (typeof window !== 'undefined') {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '').replace(/\s+/g, ' ').trim();
+}
+
 function useNewsFromApi(staticItems: NewsArticle[]) {
   const [items, setItems] = useState<NewsArticle[]>(staticItems);
   useEffect(() => {
@@ -129,13 +137,16 @@ function useNewsFromApi(staticItems: NewsArticle[]) {
           date: r.date ? new Date(r.date).toLocaleDateString() : new Date().toLocaleDateString(),
           category: r.category || 'News',
           categoryColor: colorFor(r.category || ''),
-          excerpt: (r.content || '').replace(/\s+/g, ' ').slice(0, 140) + '…',
+          excerpt: (() => {
+            const plain = stripHtml(r.content || '');
+            return plain.slice(0, 140) + (plain.length > 140 ? '…' : '');
+          })(),
           imageUrl: r.coverImage || 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=60',
           imageAlt: r.title || 'News image',
           content: r.content || '',
         }));
         if (mapped.length) setItems(mapped);
-      } catch {}
+      } catch { }
     })();
   }, []);
   return items;
@@ -155,7 +166,7 @@ const Modal: React.FC<{ article: NewsArticle; onClose: () => void }> = ({ articl
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">
@@ -164,7 +175,7 @@ const Modal: React.FC<{ article: NewsArticle; onClose: () => void }> = ({ articl
             alt={article.imageAlt}
             width={2070}
             height={1380}
-            className="w-full h-64 object-cover rounded-t-2xl"
+            className="w-full h-80 object-cover rounded-t-2xl"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         </div>
@@ -180,11 +191,8 @@ const Modal: React.FC<{ article: NewsArticle; onClose: () => void }> = ({ articl
               {article.category}
             </span>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 leading-tight">{article.title}</h2>
-          <div className="prose prose-lg text-gray-700 mb-6">
-            <p>{article.content}</p>
-            <p>{article.excerpt}</p>
-          </div>
+          <h2 className="text-3xl font-semibold text-gray-900 mb-6 leading-tight">{article.title}</h2>
+          <div className="prose prose-lg text-gray-700 mb-6 max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
           <button
             onClick={onClose}
             className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"
@@ -200,29 +208,32 @@ const Modal: React.FC<{ article: NewsArticle; onClose: () => void }> = ({ articl
 const NewSection: NextPage = () => {
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const articles = useNewsFromApi(newsArticles);
+  const [newsTitle, setNewsTitle] = useState('News');
+  const [newsSubtitle, setNewsSubtitle] = useState('Stay informed with the latest developments in geothermal energy, project updates, and industry innovations from our expert team.');
+
+  useEffect(() => {
+    fetch('/api/site-settings?key=news_section_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setNewsTitle(data.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=news_section_subtitle')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setNewsSubtitle(data.value); })
+      .catch(() => { });
+  }, []);
 
   return (
     <>
-      <Head>
-        <title>News Section</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head>
       <div className="min-h-screen bg-gray-50">
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Section Header */}
             <div className="text-center mb-16">
-              <div className="inline-flex items-center px-4 py-2 bg-green-50 rounded-full mb-4">
-                <span className="text-[#326101] text-sm font-medium">📰 Latest Updates</span>
-              </div>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                Industry
-                <span className="block bg-gradient-to-r from-[#326101] to-[#639427] bg-clip-text text-transparent">
-                  News & Insights
-                </span>
+              <h2 className="text-3xl lg:text-4xl font-semibold text-gray-900 mb-4">
+                {newsTitle}
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Stay informed with the latest developments in geothermal energy, project updates, and industry innovations from our expert team.
+                {newsSubtitle}
               </p>
             </div>
 
@@ -255,17 +266,17 @@ const NewSection: NextPage = () => {
                         {article.category}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">{article.title}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-tight">{article.title}</h3>
                     <p className="text-gray-600 mb-4 leading-relaxed">{article.excerpt}</p>
-                    <button
-                      onClick={() => setSelectedArticle(article)}
+                    <Link
+                      href={`/news/${article.id}`}
                       className="inline-flex items-center text-[#326101] font-semibold hover:text-[#639427] transition-all duration-300 hover:translate-x-1"
                     >
                       Read More
                       <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
-                    </button>
+                    </Link>
                   </div>
                 </article>
               ))}
@@ -281,29 +292,12 @@ const NewSection: NextPage = () => {
               </Link>
             </div>
 
-            {/* Newsletter Signup */}
-            <div className="mt-16 bg-gradient-to-r from-[#326101]/5 to-[#639427]/5 rounded-3xl p-8 text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Stay Updated with Geothermal News</h3>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                Subscribe to our newsletter and get the latest industry insights, project updates, and geothermal energy developments delivered to your inbox.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 rounded-full border border-[#326101] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#326101] focus:border-transparent"
-                />
-                <button className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300 whitespace-nowrap">
-                  Subscribe Now
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+          </div >
+        </section >
 
         {/* Modal */}
         {selectedArticle && <Modal article={selectedArticle} onClose={() => setSelectedArticle(null)} />}
-      </div>
+      </div >
     </>
   );
 };

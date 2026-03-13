@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 
 interface Stat {
   title: string;
-  value: number;
+  value: string;
 }
 
 interface StatsData {
@@ -13,7 +13,7 @@ interface StatsData {
 
 const StatsSectionPage: React.FC = () => {
   const { control, register, handleSubmit, formState: { errors }, reset } = useForm<StatsData>({
-    defaultValues: { stats: [{ title: '', value: 0 }] },
+    defaultValues: { stats: [{ title: '', value: '' }] },
   });
 
   const { fields, append, remove } = useFieldArray<StatsData, 'stats'>({
@@ -30,7 +30,7 @@ const StatsSectionPage: React.FC = () => {
         const response = await fetch('/api/stats');
         if (!response.ok) throw new Error('Failed to fetch');
         const data: Stat[] = await response.json();
-        reset({ stats: data.length > 0 ? data : [{ title: '', value: 0 }] });
+        reset({ stats: data.length > 0 ? data : [{ title: '', value: '' }] });
       } catch (err) {
         console.error('Error fetching stats data:', err);
         setError('Failed to load stats data.');
@@ -50,7 +50,7 @@ const StatsSectionPage: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to update');
       const updatedData: Stat[] = await response.json();
-      reset({ stats: updatedData.length > 0 ? updatedData : [{ title: '', value: 0 }] });
+      reset({ stats: updatedData.length > 0 ? updatedData : [{ title: '', value: '' }] });
       alert('Stats updated successfully!');
     } catch (err) {
       setError('Failed to update stats.');
@@ -74,18 +74,18 @@ const StatsSectionPage: React.FC = () => {
                     <input
                       {...register(`stats.${index}.title`, { required: 'Title is required' })}
                       placeholder="Stat Title (e.g., Users)"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                     />
                     {errors.stats?.[index]?.title && (
                       <p className="mt-1 text-sm text-red-500">{errors.stats[index]?.title?.message}</p>
                     )}
                   </div>
-                  <div className="w-24">
+                  <div className="w-32">
                     <input
-                      type="number"
-                      {...register(`stats.${index}.value`, { valueAsNumber: true, required: 'Value is required', min: 0 })}
-                      placeholder="Value"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                      type="text"
+                      {...register(`stats.${index}.value`, { required: 'Value is required' })}
+                      placeholder="e.g. 50+"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                     />
                     {errors.stats?.[index]?.value && (
                       <p className="mt-1 text-sm text-red-500">{errors.stats[index]?.value?.message}</p>
@@ -102,7 +102,7 @@ const StatsSectionPage: React.FC = () => {
               ))}
               <button
                 type="button"
-                onClick={() => append({ title: '', value: 0 })}
+                onClick={() => append({ title: '', value: '' })}
                 className="text-[#326101] underline hover:no-underline"
               >
                 Add Stat

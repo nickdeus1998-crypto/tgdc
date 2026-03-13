@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth';
-
-const prisma = new PrismaClient();
-
 const isAdmin = (request: Request) => {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -31,10 +28,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ items: items.map(mapHighlight) });
   } catch (error) {
     console.error('ADMIN impact highlights list error', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }
 
 export async function POST(request: Request) {
@@ -56,8 +50,5 @@ export async function POST(request: Request) {
     return NextResponse.json(mapHighlight(created));
   } catch (error) {
     console.error('ADMIN impact highlights create error', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 
 interface ProjectImpact {
   jobs: string;
@@ -73,43 +74,60 @@ const getProjectImage = (project?: Project | null): string => {
   return '/geothermal.jpg';
 };
 
+interface PortfolioStat {
+  id?: number;
+  title: string;
+  value: string;
+  colorFrom: string;
+  colorTo: string;
+}
+
+const defaultPortfolioStats: PortfolioStat[] = [
+  { title: 'Total Projects', value: '24', colorFrom: '#326101', colorTo: '#639427' },
+  { title: 'Total Investment', value: '$1.8B', colorFrom: '#3b82f6', colorTo: '#9333ea' },
+  { title: 'Operational', value: '8', colorFrom: '#f97316', colorTo: '#ef4444' },
+  { title: 'MW Capacity', value: '2,150', colorFrom: '#22c55e', colorTo: '#14b8a6' },
+];
+
 const ProjectSection: NextPage = () => {
   const [filter, setFilter] = useState<string>('all');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [visibleCount, setVisibleCount] = useState(6);
   const [loadingProjects, setLoadingProjects] = useState<boolean>(true);
   const [projectError, setProjectError] = useState<string | null>(null);
+  const [portfolioStats, setPortfolioStats] = useState<PortfolioStat[]>(defaultPortfolioStats);
+  const [portfolioTitle, setPortfolioTitle] = useState('Project Portfolio');
+  const [portfolioSubtitle, setPortfolioSubtitle] = useState('Discover our comprehensive portfolio of geothermal projects across Tanzania and beyond. From exploration to operation, we deliver sustainable energy solutions.');
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch('/api/projects?limit=6');
+        const res = await fetch('/api/projects?limit=3');
         if (!res.ok) throw new Error('Failed to fetch projects');
         const data = await res.json();
         const normalized: Project[] = Array.isArray(data?.items)
           ? data.items
-              .filter((item: any) => item && item.id)
-              .map((item: any) => ({
-                id: item.id,
-                title: item.title || 'Untitled Project',
-                location: item.location || 'Tanzania',
-                capacity: item.capacity || 'N/A',
-                investment: item.investment || 'N/A',
-                status: item.status || 'development',
-                category: item.category || item.status || 'development',
-                progress: typeof item.progress === 'number' ? item.progress : Number(item.progress) || 0,
-                description: item.description || '',
-                keyFeatures: Array.isArray(item.keyFeatures) ? item.keyFeatures : [],
-                timeline: Array.isArray(item.timeline) ? item.timeline : [],
-                impact: {
-                  jobs: item.impact?.jobs || '',
-                  co2: item.impact?.co2 || '',
-                  homes: item.impact?.homes || '',
-                  investment: item.impact?.investment || '',
-                },
-                imageUrl: item.imageUrl || null,
-              }))
+            .filter((item: any) => item && item.id)
+            .map((item: any) => ({
+              id: item.id,
+              title: item.title || 'Untitled Project',
+              location: item.location || 'Tanzania',
+              capacity: item.capacity || '',
+              investment: item.investment || '',
+              status: item.status || 'development',
+              category: item.category || item.status || 'development',
+              progress: typeof item.progress === 'number' ? item.progress : Number(item.progress) || 0,
+              description: item.description || '',
+              keyFeatures: Array.isArray(item.keyFeatures) ? item.keyFeatures : [],
+              timeline: Array.isArray(item.timeline) ? item.timeline : [],
+              impact: {
+                jobs: item.impact?.jobs || '',
+                co2: item.impact?.co2 || '',
+                homes: item.impact?.homes || '',
+                investment: item.impact?.investment || '',
+              },
+              imageUrl: item.imageUrl || null,
+            }))
           : [];
         setProjects(normalized);
       } catch (error) {
@@ -120,54 +138,34 @@ const ProjectSection: NextPage = () => {
       }
     };
     fetchProjects();
+
+    // Fetch portfolio stats
+    fetch('/api/portfolio-stats')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setPortfolioStats(data);
+      })
+      .catch(() => { });
+
+    // Fetch editable section titles
+    fetch('/api/site-settings?key=portfolio_section_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setPortfolioTitle(data.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=portfolio_section_subtitle')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setPortfolioSubtitle(data.value); })
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
     setVisibleCount(6);
   }, [filter, projects.length]);
 
-  useEffect(() => {
-    const animateCounter = (elementId: string, targetValue: number, suffix: string = '') => {
-      const element = document.getElementById(elementId);
-      if (!element) return;
-      const startValue = 0;
-      const duration = 2000;
-      const startTime = performance.now();
-
-      const updateCounter = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-        const currentValue = Math.floor(startValue + (targetValue - startValue) * easeOutQuart);
-        element.textContent = currentValue.toLocaleString() + suffix;
-        if (progress < 1) requestAnimationFrame(updateCounter);
-      };
-
-      requestAnimationFrame(updateCounter);
-    };
-
-    const handleLoad = () => {
-      setTimeout(() => {
-        animateCounter('totalProjects', 24);
-        animateCounter('totalInvestment', 1.8, 'B');
-        animateCounter('operationalProjects', 8);
-        animateCounter('totalCapacity', 2150);
-      }, 500);
-    };
-
-    window.addEventListener('load', handleLoad);
-    return () => window.removeEventListener('load', handleLoad);
-  }, []);
-
   const filteredProjects = useMemo(() => {
     const list = filter === 'all' ? projects : projects.filter((project) => project.category === filter);
     return list.slice(0, visibleCount);
   }, [projects, filter, visibleCount]);
-
-  const selectedProject = useMemo(
-    () => projects.find((project) => project.id === selectedProjectId) || null,
-    [projects, selectedProjectId]
-  );
 
   const categories = ['all', 'operational', 'construction', 'development', 'exploration'];
 
@@ -181,55 +179,33 @@ const ProjectSection: NextPage = () => {
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center px-4 py-2 bg-green-50 rounded-full mb-4">
-                <span className="text-[#326101] text-sm font-medium">Our Work</span>
-              </div>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                Project
-                <span className="block bg-gradient-to-r from-[#326101] to-[#639427] bg-clip-text text-transparent">
-                  Portfolio
-                </span>
+              <h2 className="text-3xl lg:text-4xl font-semibold text-gray-900 mb-4">
+                {portfolioTitle}
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Discover our comprehensive portfolio of geothermal projects across Tanzania and beyond.
-                From exploration to operation, we deliver sustainable energy solutions.
+                {portfolioSubtitle}
               </p>
             </div>
 
-            <div className="grid md:grid-cols-4 gap-6 mb-12">
-              <div className="bg-gradient-to-br from-[#326101] to-[#639427] text-white rounded-2xl p-6 text-center">
-                <div className="text-3xl font-bold mb-2" id="totalProjects">
-                  24
+            <div className={`grid md:grid-cols-${Math.min(portfolioStats.length, 4)} gap-6 mb-12`}>
+              {portfolioStats.map((stat, i) => (
+                <div
+                  key={i}
+                  className="text-white rounded-2xl p-6 text-center"
+                  style={{ background: `linear-gradient(to bottom right, ${stat.colorFrom}, ${stat.colorTo})` }}
+                >
+                  <div className="text-3xl font-semibold mb-2">{stat.value}</div>
+                  <div className="text-white/80 text-sm font-medium">{stat.title}</div>
                 </div>
-                <div className="text-white/80 text-sm font-medium">Total Projects</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl p-6 text-center">
-                <div className="text-3xl font-bold mb-2" id="totalInvestment">
-                  $1.8B
-                </div>
-                <div className="text-white/80 text-sm font-medium">Total Investment</div>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-2xl p-6 text-center">
-                <div className="text-3xl font-bold mb-2" id="operationalProjects">
-                  8
-                </div>
-                <div className="text-white/80 text-sm font-medium">Operational</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-2xl p-6 text-center">
-                <div className="text-3xl font-bold mb-2" id="totalCapacity">
-                  2,150
-                </div>
-                <div className="text-white/80 text-sm font-medium">MW Capacity</div>
-              </div>
+              ))}
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 mb-12">
               {categories.map((category) => (
                 <button
                   key={category}
-                  className={`px-6 py-3 rounded-full border-2 border-[#326101] text-[#326101] font-semibold transition-all duration-300 ease-in ${
-                    filter === category ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white scale-105' : ''
-                  }`}
+                  className={`px-6 py-3 rounded-full border-2 border-[#326101] text-[#326101] font-semibold transition-all duration-300 ease-in ${filter === category ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white scale-105' : ''
+                    }`}
                   onClick={() => setFilter(category)}
                 >
                   {getCategoryLabel(category)}
@@ -261,196 +237,38 @@ const ProjectSection: NextPage = () => {
                         <span className="backdrop-blur-md bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium">
                           {getStatusLabel(project.status)}
                         </span>
-                        <span className="text-emerald-200 text-2xl font-bold">{project.capacity}</span>
+                        <span className="text-emerald-200 text-2xl font-semibold">{project.capacity}</span>
                       </div>
                       <div className="text-white">
-                        <h3 className="text-xl font-bold mb-2">{project.title}</h3>
+                        <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
                         <p className="text-emerald-100 text-sm">{project.location}</p>
                       </div>
                     </div>
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-lg font-semibold text-gray-900">{project.investment} Investment</span>
-                      <span className={`${getStatusBadgeClass(project.status)} px-3 py-1 rounded-full text-sm font-medium`}>
-                        {project.progress}% Complete
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>{getCategoryLabel(project.category)} Progress</span>
-                        <span>{project.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-[#326101] to-[#639427] rounded-full h-2 transition-all duration-1000 ease-out"
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-4">{project.description}</p>
-                    <button
-                      className="w-full bg-[#326101] text-white py-2 rounded-lg font-semibold hover:bg-[#639427] transition-colors"
-                      onClick={() => setSelectedProjectId(project.id)}
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{project.description}</p>
+                    <Link
+                      href={`/portfolio/${project.id}`}
+                      className="block w-full bg-[#326101] text-white py-2 rounded-lg font-semibold hover:bg-[#639427] transition-colors text-center"
                     >
                       View Details
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
             </div>
 
-            {visibleCount < (filter === 'all' ? projects.length : projects.filter((p) => p.category === filter).length) && (
-              <div className="text-center mt-12">
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 6)}
-                  className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-4 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
-                >
-                  Load More Projects
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {selectedProject && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/50"
-            onClick={() => setSelectedProjectId(null)}
-          >
-            <div
-              className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-3xl font-bold text-gray-900">{selectedProject.title}</h2>
-                  <button
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
-                    onClick={() => setSelectedProjectId(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <div
-                  className="rounded-2xl overflow-hidden mb-6 h-64 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${getProjectImage(selectedProject)})` }}
-                >
-                  <div className="h-full w-full bg-gradient-to-br from-black/80 via-black/60 to-black/40 p-6 flex flex-col justify-end text-white">
-                    <h3 className="text-2xl font-bold mb-2">{selectedProject.title}</h3>
-                    <p className="text-emerald-100">
-                      {selectedProject.location} • {selectedProject.capacity}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-green-50 p-4 rounded-xl">
-                        <p className="text-sm text-gray-500 mb-1">Location</p>
-                        <span className="font-semibold text-[#326101]">{selectedProject.location}</span>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-xl">
-                        <p className="text-sm text-gray-500 mb-1">Capacity</p>
-                        <span className="font-semibold text-[#326101]">{selectedProject.capacity}</span>
-                      </div>
-                      <div className="bg-purple-50 p-4 rounded-xl">
-                        <p className="text-sm text-gray-500 mb-1">Investment</p>
-                        <span className="font-semibold text-[#326101]">{selectedProject.investment}</span>
-                      </div>
-                      <div className="bg-yellow-50 p-4 rounded-xl">
-                        <p className="text-sm text-gray-500 mb-1">Status</p>
-                        <span className="font-semibold text-[#326101]">{getStatusLabel(selectedProject.status)}</span>
-                      </div>
-                    </div>
-                    <div className="mb-6">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Overall Progress</span>
-                        <span>{selectedProject.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-[#326101] to-[#639427] rounded-full h-2"
-                          style={{ width: `${selectedProject.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 leading-relaxed">{selectedProject.description}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">Key Features</h3>
-                    <ul className="space-y-2 mb-6">
-                      {selectedProject.keyFeatures.map((feature, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="text-[#326101] mr-2">•</span>
-                          <span className="text-gray-600">{feature}</span>
-                        </li>
-                      ))}
-                      {!selectedProject.keyFeatures.length && (
-                        <li className="text-sm text-gray-500">No key features provided.</li>
-                      )}
-                    </ul>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">Project Impact</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-green-50 p-4 rounded-lg text-center">
-                        <div className="text-lg font-bold text-[#326101] mb-1">
-                          {selectedProject.impact.jobs || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-600">Jobs Created</div>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-lg text-center">
-                        <div className="text-lg font-bold text-blue-600 mb-1">
-                          {selectedProject.impact.co2 || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-600">CO₂ Savings</div>
-                      </div>
-                      <div className="bg-purple-50 p-4 rounded-lg text-center">
-                        <div className="text-lg font-bold text-purple-600 mb-1">
-                          {selectedProject.impact.homes || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-600">Homes Powered</div>
-                      </div>
-                      <div className="bg-orange-50 p-4 rounded-lg text-center">
-                        <div className="text-lg font-bold text-orange-600 mb-1">
-                          {selectedProject.impact.investment || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-600">Local Investment</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Project Timeline</h3>
-                  <div className="space-y-4">
-                    {selectedProject.timeline.map((phase, index) => (
-                      <div key={`${phase.phase}-${index}`} className="flex items-center">
-                        <div
-                          className={`w-4 h-4 rounded-full mr-4 ${
-                            phase.status === 'Completed'
-                              ? 'bg-green-500'
-                              : phase.status === 'In Progress'
-                              ? 'bg-yellow-500'
-                              : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold">{phase.phase}</span>
-                            <span className="text-sm text-gray-500">{phase.date}</span>
-                          </div>
-                          <div className="text-sm text-gray-600">{phase.status}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {!selectedProject.timeline.length && (
-                      <div className="text-sm text-gray-500">Timeline details unavailable.</div>
-                    )}
-                  </div>
-                </div>
-              </div>
+            <div className="text-center mt-12">
+              <Link
+                href="/projects"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#326101] to-[#639427] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+              >
+                View More Projects
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </Link>
             </div>
           </div>
-        )}
+        </section>
       </div>
       <style jsx global>{`
         @keyframes fadeInUp {

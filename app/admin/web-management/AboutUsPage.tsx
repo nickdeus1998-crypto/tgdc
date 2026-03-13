@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import IconPicker from '../components/IconPicker';
 
 interface TimelineItem {
   year: string;
@@ -37,40 +38,57 @@ interface AboutForm {
   missionVision: MissionVisionItem[];
   coreValues: CoreValueItem[];
   stats: { label: string; target: number }[];
+  keyAchievements: { label: string; value: string }[];
 }
 
 const defaultData: AboutForm = {
   heroTitle: 'About TGDC',
   heroSubtitle: "Leading Tanzania's sustainable energy future through innovative geothermal development",
   timeline: [
-    { year: '2008', title: 'Foundation', timeAgo: '15 years ago', description: 'TGDC established under TANESCO to spearhead geothermal development.' },
-    { year: '2012', title: 'First Exploration', timeAgo: '11 years ago', description: 'Comprehensive exploration in the Rift Valley begins.' },
+    { year: '2008', title: 'Foundation', timeAgo: '15 years ago', description: 'Tanzania Geothermal Development Company was established as a subsidiary of TANESCO to spearhead the development of geothermal energy resources in Tanzania.' },
+    { year: '2012', title: 'First Exploration', timeAgo: '11 years ago', description: 'Commenced comprehensive geothermal exploration activities in the Rift Valley region, including surface studies, geochemical analysis, and geophysical surveys.' },
+    { year: '2016', title: 'Major Breakthrough', timeAgo: '7 years ago', description: 'Successfully completed the first phase of drilling operations at Ngozi geothermal prospect, confirming significant geothermal resources.' },
+    { year: '2020', title: 'Expansion Phase', timeAgo: '3 years ago', description: 'Expanded operations to multiple geothermal prospects across Tanzania, including Songwe, Kiejo-Mbaka, and Luhoi.' },
+    { year: '2023', title: 'Present Day', timeAgo: 'Current', description: "Today, TGDC leads Tanzania's geothermal development with active projects across the country." },
   ],
   background: [
-    { title: 'Government Initiative', description: "Established to support energy security and economic development." },
+    { title: 'Government Initiative', description: "Established as a strategic government initiative to develop Tanzania's abundant geothermal resources, supporting national energy security and economic development goals." },
+    { title: 'Rift Valley Advantage', description: 'Located in the East African Rift Valley, Tanzania possesses exceptional geothermal potential with over 5,000 MW of estimated capacity across multiple geothermal prospects.' },
+    { title: 'Technical Expertise', description: 'Our multidisciplinary team combines local knowledge with international best practices, ensuring sustainable and efficient geothermal development across all project phases.' },
+    { title: 'Strategic Partnerships', description: 'Collaborating with international development partners, technology providers, and financial institutions to accelerate geothermal development and knowledge transfer.' },
   ],
   missionVision: [
     {
       title: 'Our Mission',
-      description: 'Develop Tanzania\'s geothermal resources sustainably and responsibly.',
+      description: "To develop Tanzania's geothermal energy resources in a sustainable, efficient, and environmentally responsible manner.",
       points: ['Sustainable energy development', 'Environmental stewardship', 'Community empowerment', 'Technical excellence'],
       icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />',
       gradient: 'from-[#326101] to-[#639427]'
     },
     {
       title: 'Our Vision',
-      description: 'Be the leading geothermal energy developer in East Africa.',
+      description: 'To be the leading geothermal energy developer in East Africa, recognized for excellence in sustainable energy solutions.',
       points: ['Regional leadership in geothermal', 'Innovation and technology advancement', 'Climate change mitigation', 'Sustainable development goals'],
       icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />',
       gradient: 'from-[#639427] to-[#8BC34A]'
     }
   ],
   coreValues: [
-    { title: 'Integrity', description: 'Highest ethical standards and transparency.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' },
+    { title: 'Integrity', description: 'We conduct our business with the highest ethical standards, transparency, and accountability.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' },
+    { title: 'Innovation', description: 'We embrace cutting-edge technologies and innovative approaches to advance geothermal energy development.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />' },
+    { title: 'Sustainability', description: 'We are committed to environmental protection and sustainable development for future generations.', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />' },
   ],
   stats: [
     { label: 'Years of Experience', target: 15 },
     { label: 'Active Projects', target: 8 },
+    { label: 'MW Potential', target: 250 },
+    { label: 'Expert Team', target: 50 },
+  ],
+  keyAchievements: [
+    { label: 'Geothermal Wells Drilled', value: '12+' },
+    { label: 'Prospects Identified', value: '15' },
+    { label: 'MW Confirmed Capacity', value: '100+' },
+    { label: 'International Partners', value: '8' },
   ],
 };
 
@@ -79,7 +97,16 @@ const AboutUsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
 
-  const { control, register, handleSubmit, reset, watch } = useForm<AboutForm>({
+  // History section titles (stored via SiteSetting)
+  const [historyTitle, setHistoryTitle] = useState('Our History');
+  const [historySubtitle, setHistorySubtitle] = useState('A journey of innovation and sustainable energy development in Tanzania');
+  const [savingHistory, setSavingHistory] = useState(false);
+
+  // Background section title
+  const [backgroundTitle, setBackgroundTitle] = useState('Our Background');
+  const [savingBackground, setSavingBackground] = useState(false);
+
+  const { control, register, handleSubmit, reset, watch, setValue } = useForm<AboutForm>({
     defaultValues: defaultData,
   });
 
@@ -89,6 +116,9 @@ const AboutUsPage: React.FC = () => {
   const missionVisionArray = useFieldArray({ control, name: 'missionVision' });
   const coreValuesArray = useFieldArray({ control, name: 'coreValues' });
   const statsArray = useFieldArray({ control, name: 'stats' });
+  const keyAchievementsArray = useFieldArray({ control, name: 'keyAchievements' });
+  const watchedMissionVision = useWatch({ control, name: 'missionVision' });
+  const watchedCoreValues = useWatch({ control, name: 'coreValues' });
 
   // Fetch existing
   useEffect(() => {
@@ -99,15 +129,17 @@ const AboutUsPage: React.FC = () => {
         const res = await fetch('/api/about');
         if (!res.ok) throw new Error('Failed to fetch About data');
         const data = await res.json();
-        // Normalize empty arrays
+        // Normalize empty arrays — use defaults when CMS has empty array
+        const or = <T,>(arr: any, def: T[]): T[] => (Array.isArray(arr) && arr.length > 0 ? arr : def);
         reset({
           heroTitle: data.heroTitle || defaultData.heroTitle,
           heroSubtitle: data.heroSubtitle || defaultData.heroSubtitle,
-          timeline: Array.isArray(data.timeline) ? data.timeline : defaultData.timeline,
-          background: Array.isArray(data.background) ? data.background : defaultData.background,
-          missionVision: Array.isArray(data.missionVision) ? data.missionVision : defaultData.missionVision,
-          coreValues: Array.isArray(data.coreValues) ? data.coreValues : defaultData.coreValues,
-          stats: Array.isArray(data.stats) ? data.stats : defaultData.stats,
+          timeline: or(data.timeline, defaultData.timeline),
+          background: or(data.background, defaultData.background),
+          missionVision: or(data.missionVision, defaultData.missionVision),
+          coreValues: or(data.coreValues, defaultData.coreValues),
+          stats: or(data.stats, defaultData.stats),
+          keyAchievements: or(data.keyAchievements, defaultData.keyAchievements),
         });
       } catch (e: any) {
         console.error(e);
@@ -117,6 +149,10 @@ const AboutUsPage: React.FC = () => {
       }
     };
     load();
+    // Load history section titles
+    fetch('/api/site-settings?key=history_section_title').then(r => r.ok ? r.json() : null).then(d => { if (d?.value) setHistoryTitle(d.value); }).catch(() => { });
+    fetch('/api/site-settings?key=history_section_subtitle').then(r => r.ok ? r.json() : null).then(d => { if (d?.value) setHistorySubtitle(d.value); }).catch(() => { });
+    fetch('/api/site-settings?key=background_section_title').then(r => r.ok ? r.json() : null).then(d => { if (d?.value) setBackgroundTitle(d.value); }).catch(() => { });
   }, [reset]);
 
   const onSubmit = async (values: AboutForm) => {
@@ -162,6 +198,76 @@ const AboutUsPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Hero Subtitle</label>
                     <input className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register('heroSubtitle')} />
                   </div>
+                </div>
+              </div>
+
+              {/* History Section Title */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">History Section Title</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Heading shown above the timeline on the About Us page.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={savingHistory}
+                    onClick={async () => {
+                      setSavingHistory(true);
+                      try {
+                        await Promise.all([
+                          fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'history_section_title', value: historyTitle }) }),
+                          fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'history_section_subtitle', value: historySubtitle }) }),
+                        ]);
+                        alert('History section title saved!');
+                      } catch { alert('Failed to save'); }
+                      finally { setSavingHistory(false); }
+                    }}
+                    className="px-4 py-1.5 bg-[#326101] text-white rounded-lg text-xs font-medium hover:bg-[#2a5101] disabled:bg-gray-400"
+                  >
+                    {savingHistory ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Title</label>
+                    <input type="text" value={historyTitle} onChange={(e) => setHistoryTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900" placeholder="Our History" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Subtitle</label>
+                    <input type="text" value={historySubtitle} onChange={(e) => setHistorySubtitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900" placeholder="A journey of..." />
+                  </div>
+                </div>
+              </div>
+
+              {/* Background Section Title */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">Background Section Title</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Heading shown above the background items on the About Us page.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={savingBackground}
+                    onClick={async () => {
+                      setSavingBackground(true);
+                      try {
+                        await fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'background_section_title', value: backgroundTitle }) });
+                        alert('Background section title saved!');
+                      } catch { alert('Failed to save'); }
+                      finally { setSavingBackground(false); }
+                    }}
+                    className="px-4 py-1.5 bg-[#326101] text-white rounded-lg text-xs font-medium hover:bg-[#2a5101] disabled:bg-gray-400"
+                  >
+                    {savingBackground ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Title</label>
+                  <input type="text" value={backgroundTitle} onChange={(e) => setBackgroundTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900" placeholder="Our Background" />
                 </div>
               </div>
 
@@ -240,7 +346,12 @@ const AboutUsPage: React.FC = () => {
                           },
                         })} />
                       </div>
-                      <input placeholder="SVG Path (inner)" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`missionVision.${index}.icon` as const)} />
+                      <input type="hidden" {...register(`missionVision.${index}.icon` as const)} />
+                      <IconPicker
+                        value={watchedMissionVision?.[index]?.icon || ''}
+                        onChange={(iconClass) => setValue(`missionVision.${index}.icon`, iconClass, { shouldValidate: true })}
+                        placeholder="Select an icon..."
+                      />
                       <div className="text-right">
                         <button type="button" className="text-red-600" onClick={() => missionVisionArray.remove(index)}>Remove</button>
                       </div>
@@ -260,7 +371,12 @@ const AboutUsPage: React.FC = () => {
                     <div key={field.id} className="p-3 border border-gray-200 rounded-lg space-y-3">
                       <div className="grid md:grid-cols-2 gap-3">
                         <input placeholder="Title" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`coreValues.${index}.title` as const)} />
-                        <input placeholder="SVG Path (inner)" className="px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`coreValues.${index}.icon` as const)} />
+                        <input type="hidden" {...register(`coreValues.${index}.icon` as const)} />
+                        <IconPicker
+                          value={watchedCoreValues?.[index]?.icon || ''}
+                          onChange={(iconClass) => setValue(`coreValues.${index}.icon`, iconClass, { shouldValidate: true })}
+                          placeholder="Select an icon..."
+                        />
                       </div>
                       <textarea placeholder="Description" rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`coreValues.${index}.description` as const)} />
                       <div className="text-right">
@@ -283,6 +399,23 @@ const AboutUsPage: React.FC = () => {
                       <input placeholder="Label" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`stats.${index}.label` as const)} />
                       <input type="number" placeholder="Target" className="w-32 px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`stats.${index}.target` as const, { valueAsNumber: true })} />
                       <button type="button" className="text-red-600" onClick={() => statsArray.remove(index)}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Key Achievements */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Key Achievements</h3>
+                  <button type="button" onClick={() => keyAchievementsArray.append({ label: '', value: '' })} className="text-[#326101] hover:underline">Add Item</button>
+                </div>
+                <div className="space-y-3">
+                  {keyAchievementsArray.fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                      <input placeholder="Label (e.g. Geothermal Wells Drilled)" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`keyAchievements.${index}.label` as const)} />
+                      <input placeholder="Value (e.g. 12+)" className="w-32 px-3 py-2 border border-gray-200 rounded-lg text-gray-900" {...register(`keyAchievements.${index}.value` as const)} />
+                      <button type="button" className="text-red-600" onClick={() => keyAchievementsArray.remove(index)}>Remove</button>
                     </div>
                   ))}
                 </div>

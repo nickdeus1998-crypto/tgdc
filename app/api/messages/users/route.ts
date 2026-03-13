@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { getJwtSecret, verifyJwt } from '@/app/lib/auth'
-
-const prisma = new PrismaClient()
-
 export async function GET(request: Request) {
   try {
     const cookie = request.headers.get('cookie') || ''
@@ -19,9 +16,6 @@ export async function GET(request: Request) {
     })
     return NextResponse.json({ users })
   } catch (e) {
-    return NextResponse.json({ users: [] }, { status: 200 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ users: [] }, { status: 200 }) }
 }
 

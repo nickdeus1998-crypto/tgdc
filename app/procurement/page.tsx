@@ -1,18 +1,25 @@
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import Procurement, { Tender } from './Tender'
 
 
 
 export default async function Tenders() {
-  const prisma = new PrismaClient()
-  const rows = await prisma.tender.findMany({ orderBy: [{ publish: 'desc' }] })
-  await prisma.$disconnect()
-  
-  var tenderData: Tender[]   =  [];
 
-  rows.forEach((row)=>{
-       tenderData.push({...row, deadline: new Date(row.deadline).toLocaleDateString(),publish: new Date(row.publish).toLocaleDateString()})
+  const rows = await prisma.tender.findMany({ orderBy: [{ publish: 'desc' }] })
+
+  let tenderNote = ''
+  try {
+    const setting = await prisma.siteSetting.findUnique({ where: { key: 'tenderNote' } })
+    tenderNote = setting?.value || ''
+  } catch { }
+
+
+
+  var tenderData: Tender[] = [];
+
+  rows.forEach((row) => {
+    tenderData.push({ ...row, deadline: new Date(row.deadline).toLocaleDateString(), publish: new Date(row.publish).toLocaleDateString() })
   })
 
   const tenders = rows.map((r) => ({
@@ -28,7 +35,7 @@ export default async function Tenders() {
 
   }))
 
-  
+
 
 
 
@@ -36,8 +43,7 @@ export default async function Tenders() {
 
   return (
     <>
-      <Procurement  tenderData={tenderData} />
+      <Procurement tenderData={tenderData} tenderNote={tenderNote} />
     </>
   )
 }
-

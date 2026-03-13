@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — NEVER commit secrets
+.env
+.env.*
 
 # vercel
 .vercel
@@ -40,9 +41,18 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# generated prisma client (regenerated via `npx prisma generate`)
+/generated/
 
-node_modules
-# Keep environment variables out of version control
-.env
+# database journal & old backups
+prisma/dev.db-journal
+prisma/previous_db/
 
-/generated/prisma
+# user-uploaded media (261MB+ — deploy separately or use cloud storage)
+public/uploads/
+
+# scratch / working notes (not part of the codebase)
+pageData_block.txt
+tmp_segment.txt
+tgdc_working.txt
+static_pages_content.txt

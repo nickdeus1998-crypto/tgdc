@@ -59,11 +59,19 @@ export function verifyJwt(token: string, secret: string): null | Record<string, 
 }
 
 export function getJwtSecret() {
-  return process.env.STAKEHOLDER_JWT_SECRET || 'dev-stakeholder-secret-change-me'
+  const secret = process.env.STAKEHOLDER_JWT_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('STAKEHOLDER_JWT_SECRET environment variable is required in production')
+    }
+    return 'dev-stakeholder-secret-change-me'
+  }
+  return secret
 }
 
 export function stakeholderCookieOptions() {
   const week = 60 * 60 * 24 * 7
-  return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${week}`
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${week}${secure}`
 }
 

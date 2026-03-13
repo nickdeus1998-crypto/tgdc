@@ -79,7 +79,7 @@ import React, { useEffect, useState } from 'react';
 
 interface Stat {
   title: string;
-  value: number;
+  value: string;
 }
 
 interface StatsResponse {
@@ -103,9 +103,12 @@ function StatSection() {
         const responseData = await response.json();
         // Validate as array for compatibility
         if (Array.isArray(responseData)) {
-          setData({ stats: responseData as Stat[] });
+          // Filter out stats with value 0 or empty — treat as not configured
+          const filtered = (responseData as Stat[]).filter(s => s.value && String(s.value) !== '0');
+          setData({ stats: filtered });
         } else if (responseData && Array.isArray(responseData.stats)) {
-          setData(responseData);
+          const filtered = responseData.stats.filter((s: Stat) => s.value && String(s.value) !== '0');
+          setData({ ...responseData, stats: filtered });
         } else {
           console.warn('Invalid stats data received:', responseData);
           setData({ stats: [] });
@@ -121,29 +124,27 @@ function StatSection() {
   }, []);
 
   if (loading) return <div className="text-center py-8">Loading stats...</div>;
-  if (!data || data.stats.length === 0) {
-    return <div className="text-center py-8 text-gray-500">No stats available.</div>;
-  }
+  if (!data || data.stats.length === 0) return null;
 
   return (
-    <section className="py-16 bg-gray-900 rounded-2xl mx-4" aria-labelledby="stats-title">
+    <section className="relative z-10 -mt-20 py-12 bg-gray-900/95 backdrop-blur-sm rounded-2xl mx-4 sm:mx-8 shadow-2xl border border-white/5" aria-labelledby="stats-title">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         {/* Optional Section Title */}
         {data.title && (
-          <h2 id="stats-title" className="text-2xl font-bold text-white text-center mb-8">
+          <h2 id="stats-title" className="text-xl font-semibold text-white text-center mb-8">
             {data.title}
           </h2>
         )}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center" role="list">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 text-center" role="list">
           {data.stats.map((stat, index) => (
 
-             <div key={index} className="flex flex-col items-center">
-                 <div className="text-3xl font-bold text-green-500 mb-2">
-                   {stat.value.toLocaleString()}
-                 </div>
-                 <div className="text-gray-300 text-sm sm:text-base">{stat.title}</div>
-             </div>
-           
+            <div key={index} className="flex flex-col items-center">
+              <div className="text-3xl font-semibold text-[#639427] mb-2">
+                {stat.value}
+              </div>
+              <div className="text-gray-300 text-sm sm:text-base">{stat.title}</div>
+            </div>
+
           ))}
         </div>
       </div>

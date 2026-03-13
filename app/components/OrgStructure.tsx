@@ -15,13 +15,23 @@ interface LevelGroup {
   members: Leader[];
 }
 
-const LeaderCard = ({ leader }: { leader: Leader }) => (
-  <div className="col-span-1 text-center p-4">
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 h-full flex flex-col items-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={leader.imageUrl || '/geothermal.jpg'} alt={leader.name} className="w-full h-48 object-cover rounded-xl mb-3" />
-      <p className="text-sm font-semibold text-gray-900 leading-tight">{leader.name}</p>
-      <p className="text-xs text-gray-600 mt-1 uppercase">{leader.role}</p>
+const LeaderCard = ({ leader, isTop = false }: { leader: Leader; isTop?: boolean }) => (
+  <div className="flex flex-col items-center">
+    <div className={`bg-white rounded-2xl border-2 ${isTop ? 'border-[#326101]' : 'border-gray-200'} overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${isTop ? 'w-56' : 'w-48'}`}>
+      {/* Photo — aspect ratio matches recommended 300x350 upload */}
+      <div className="aspect-[6/7] overflow-hidden bg-gray-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={leader.imageUrl || '/geothermal.jpg'}
+          alt={leader.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      {/* Info */}
+      <div className={`${isTop ? 'py-4 px-3' : 'py-3 px-3'} text-center`}>
+        <p className={`font-bold text-gray-900 leading-tight ${isTop ? 'text-base' : 'text-sm'}`}>{leader.name}</p>
+        <p className={`font-semibold text-[#326101] mt-1 leading-tight ${isTop ? 'text-xs' : 'text-[11px]'}`}>{leader.role}</p>
+      </div>
     </div>
   </div>
 );
@@ -50,8 +60,11 @@ export default function OrgStructure() {
   if (loading) {
     return (
       <section id="org-structure" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
-          Loading organization chart...
+        <div className="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
+          <div className="animate-pulse flex flex-col items-center space-y-4">
+            <div className="w-12 h-12 bg-gray-100 rounded-full border-4 border-t-[#326101] animate-spin"></div>
+            <p>Loading organization chart...</p>
+          </div>
         </div>
       </section>
     );
@@ -60,7 +73,7 @@ export default function OrgStructure() {
   if (!levels.length) {
     return (
       <section id="org-structure" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+        <div className="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
           Organization structure will be published soon.
         </div>
       </section>
@@ -71,36 +84,58 @@ export default function OrgStructure() {
   const otherLevels = levels.slice(1);
 
   return (
-    <section id="org-structure" className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-3xl shadow border border-gray-100 p-6 sm:p-10">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center px-4 py-2 bg-green-50 rounded-full mb-4">
-              <span className="text-[#326101] text-sm font-medium">Organizational Structure</span>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Leadership Snapshot</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              A simple view of TGDC leadership with each management tier in a single row.
-            </p>
-          </div>
+    <section id="org-structure" className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-3">Leadership Snapshot</h2>
+          <p className="text-gray-500 max-w-2xl mx-auto">
+            A comprehensive view of TGDC&apos;s strategic leadership and management team.
+          </p>
+        </div>
 
-          <div className="flex flex-col items-center mb-12">
+        {/* Org Chart */}
+        <div className="flex flex-col items-center">
+
+          {/* Top Level — centered leader(s) */}
+          <div className="flex justify-center gap-8 flex-wrap">
             {topLevel.members.map((leader) => (
-              <LeaderCard key={leader.id} leader={leader} />
+              <LeaderCard key={leader.id} leader={leader} isTop />
             ))}
-            <p className="text-sm text-gray-500 mt-2">{topLevel.label}</p>
           </div>
 
-          {otherLevels.map((level) => (
-            <div key={level.order} className="border-t border-gray-100 py-6">
-              <h3 className="text-sm font-semibold text-gray-500 mb-4">{level.label}</h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {level.members.map((leader) => (
-                  <LeaderCard key={leader.id} leader={leader} />
-                ))}
+          {/* Connector: vertical line from top level down */}
+          <div className="w-0.5 h-10 bg-[#326101]" />
+
+          {/* Remaining levels */}
+          {otherLevels.map((level, levelIdx) => {
+            const count = level.members.length;
+            return (
+              <div key={level.order} className="w-full flex flex-col items-center">
+
+                {/* Horizontal bar spanning the cards */}
+                <div className="relative w-full max-w-5xl">
+                  <div className="h-0.5 bg-[#326101] mx-auto" style={{ width: count > 1 ? `${Math.min(90, count * 22)}%` : '0%' }} />
+                </div>
+
+                {/* Vertical drops to each card + the cards */}
+                <div className={`grid gap-x-6 gap-y-0 w-full max-w-5xl ${count === 1 ? 'grid-cols-1 max-w-xs' : count === 2 ? 'grid-cols-2 max-w-lg' : count === 3 ? 'grid-cols-3 max-w-3xl' : 'grid-cols-2 md:grid-cols-4'}`}>
+                  {level.members.map((leader) => (
+                    <div key={leader.id} className="flex flex-col items-center">
+                      {/* Vertical drop */}
+                      <div className="w-0.5 h-6 bg-[#326101]" />
+                      <LeaderCard leader={leader} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Connector to next level if not last */}
+                {levelIdx < otherLevels.length - 1 && (
+                  <div className="w-0.5 h-10 bg-[#326101]" />
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 export async function GET() {
   try {
     const stats = await prisma.stat.findMany(); // Use the Stat model for all records
     return NextResponse.json(stats);
   } catch (error) {
     console.error('GET /api/stats error:', error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Database error' }, { status: 500 }); }
 }
 
 export async function POST(request: NextRequest) {
@@ -38,8 +32,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(updatedStats);
   } catch (error) {
     console.error('POST /api/stats error:', error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Database error' }, { status: 500 }); }
 }

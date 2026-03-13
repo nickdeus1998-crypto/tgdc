@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { getJwtSecret, verifyJwt } from '@/app/lib/auth'
 import path from 'path'
 import fs from 'fs/promises'
-
-const prisma = new PrismaClient()
 const MAX_BYTES = 10 * 1024 * 1024 // 10MB
 
 const ALLOWED: Array<{ mime: string; ext: string; sig?: number[] }> = [
@@ -85,8 +83,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, id: doc.id, path: relPublicPath })
   } catch (e) {
     console.error('UPLOAD DOCUMENT error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }

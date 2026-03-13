@@ -20,12 +20,12 @@ interface Site {
 const GeothermalSites: NextPage = () => {
   const [currentZone, setCurrentZone] = useState<string>("Eastern Zone");
   const [currentQuery, setCurrentQuery] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isSideSheetOpen, setIsSideSheetOpen] = useState<boolean>(false);
   const [selectedSite, setSelectedSite] = useState<{ zone: string; site: Site } | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [err, setErr] = useState<string | null>(null);
-  
+
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const markerIconRef = useRef<any>(null);
@@ -33,14 +33,12 @@ const GeothermalSites: NextPage = () => {
 
   const zones = ["Eastern Zone", "Lake Zone", "Southern Zone", "Northern Zone", "Central Zone", "All"];
   const getZoneButtonClass = (zone: string) =>
-    `px-3 py-1.5 rounded-full border text-sm transition-all duration-200 ${
-      currentZone === zone
-        ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white border-transparent'
-        : 'text-gray-700 border-green-200 hover:bg-green-50'
+    `px-3 py-1.5 rounded-full border text-sm transition-all duration-200 ${currentZone === zone
+      ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white border-transparent'
+      : 'text-gray-700 border-green-200 hover:bg-green-50'
     }`;
   const getZonePolygonClass = (zone: string) =>
-    `cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-      currentZone === zone ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
+    `cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${currentZone === zone ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
     }`;
 
   const updateStats = () => {
@@ -63,11 +61,11 @@ const GeothermalSites: NextPage = () => {
     });
   };
 
-  const openSiteModal = (id: string) => {
+  const openSiteSideSheet = (id: string) => {
     const site = sites.find((x) => x.id === id);
     if (site) {
       setSelectedSite({ zone: site.zone, site });
-      setIsModalOpen(true);
+      setIsSideSheetOpen(true);
     }
   };
 
@@ -83,7 +81,7 @@ const GeothermalSites: NextPage = () => {
     if (!markersLayerRef.current || !mapRef.current) return;
     markersLayerRef.current.clearLayers();
     const filteredSites = getFilteredSites(currentZone, currentQuery);
-    
+
     const bounds: [number, number][] = [];
     filteredSites.forEach((site) => {
       const coord = { lat: Number(site.lat), lng: Number(site.lng) };
@@ -111,12 +109,20 @@ const GeothermalSites: NextPage = () => {
 
   useEffect(() => {
     if (mapContainerRef.current && !mapRef.current) {
-  mapRef.current = L.map(mapContainerRef.current, { scrollWheelZoom: false }).setView([-6.5, 35.0], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(mapRef.current);
-  markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
-  updateMarkers();
-  setTimeout(() => mapRef.current?.invalidateSize(true), 250);
-}
+      // Fix for broken leaflet marker icons
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+
+      mapRef.current = L.map(mapContainerRef.current, { scrollWheelZoom: false }).setView([-6.5, 35.0], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(mapRef.current);
+      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      updateMarkers();
+      setTimeout(() => mapRef.current?.invalidateSize(true), 250);
+    }
 
     const handleResize = () => {
       if (mapRef.current) {
@@ -130,7 +136,7 @@ const GeothermalSites: NextPage = () => {
       const btn = target.closest('.leaflet-more');
       if (btn) {
         const id = btn.getAttribute('data-id');
-        if (id) openSiteModal(id);
+        if (id) openSiteSideSheet(id);
       }
     };
     document.addEventListener('click', handlePopupClick);
@@ -195,10 +201,6 @@ const GeothermalSites: NextPage = () => {
           className="bg-[radial-gradient(1000px_500px_at_10%_-10%,rgba(99,148,39,0.18),transparent_60%),radial-gradient(900px_500px_at_110%_0%,rgba(50,97,1,0.18),transparent_60%),linear-gradient(135deg,#326101,#639427)] text-white py-16 md:py-20"
         >
           <div className="max-w-6xl mx-auto px-6">
-            <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
-              Geothermal Sites
-            </span>
             <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
               Tanzania’s Geothermal Sites by Zone
             </h1>
@@ -281,9 +283,8 @@ const GeothermalSites: NextPage = () => {
                     <text x="540" y="398" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Central</text>
                   </g>
                   <g
-                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${
-                      currentZone === 'All' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
-                    }`}
+                    className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${currentZone === 'All' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''
+                      }`}
                     onClick={() => handleZoneClick('All')}
                   >
                     <polygon points="210,370 270,335 330,370 330,440 270,475 210,440" fill="#d1d5db" fillOpacity="0.9" />
@@ -338,7 +339,7 @@ const GeothermalSites: NextPage = () => {
                         </div>
                         <button
                           className="bg-[#326101] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#639427]"
-                          onClick={() => openSiteModal(site.id)}
+                          onClick={() => openSiteSideSheet(site.id)}
                         >
                           View
                         </button>
@@ -359,47 +360,99 @@ const GeothermalSites: NextPage = () => {
           </div>
         </section>
 
-        {/* Modal */}
-        {isModalOpen && selectedSite && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
-            <div className="relative bg-white max-w-2xl w-full rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-              <div className="flex items-start justify-between p-6 border-b">
+        {/* Side Sheet (Drawer) */}
+        {isSideSheetOpen && selectedSite && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-[fade_0.2s_ease-out]" onClick={() => setIsSideSheetOpen(false)} />
+            <div className="absolute inset-y-0 right-0 max-w-lg w-full bg-white shadow-2xl flex flex-col animate-[slideIn_0.3s_ease-out]">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-[#326101] text-white">
                 <div>
-                  <h4 className="text-xl font-bold text-gray-900">{selectedSite.site.title}</h4>
-                  <p className="text-sm text-gray-500 mt-1">{selectedSite.zone}</p>
+                  <h4 className="text-xl font-bold">{selectedSite.site.title}</h4>
+                  <p className="text-sm text-white/70 mt-1 uppercase tracking-wider">{selectedSite.zone}</p>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600 text-2xl leading-none" onClick={() => setIsModalOpen(false)}>
+                <button
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors leading-none text-2xl"
+                  onClick={() => setIsSideSheetOpen(false)}
+                >
                   &times;
                 </button>
               </div>
-              <div className="p-6 text-gray-700 leading-relaxed">
-                <p className="mb-3 text-gray-700">{selectedSite.site.summary}</p>
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <div className="text-sm text-gray-600 mb-1">Highlights</div>
-                  <ul className="list-disc pl-5 space-y-1">
+
+              <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                <div>
+                  <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Overview</h5>
+                  <p className="text-gray-700 text-lg leading-relaxed">{selectedSite.site.summary}</p>
+                </div>
+
+                {selectedSite.site.tag && (
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Location Context</h5>
+                    <span className="inline-block px-3 py-1 bg-green-50 text-[#326101] rounded-full text-sm font-medium border border-green-100">
+                      {selectedSite.site.tag}
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Key Highlights</h5>
+                  <div className="grid gap-3">
                     {selectedSite.site.details.map((detail, index) => (
-                      <li key={index}>{detail}</li>
+                      <div key={index} className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="w-2 h-2 rounded-full bg-[#639427] mt-2 shrink-0" />
+                        <span className="text-gray-700">{detail}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                </div>
+
+                <div className="pt-8 border-t border-gray-100">
+                  <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Site Coordinates</h5>
+                  <div className="flex gap-8">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Latitude</div>
+                      <div className="font-mono text-gray-900">{selectedSite.site.lat}°</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Longitude</div>
+                      <div className="font-mono text-gray-900">{selectedSite.site.lng}°</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="px-6 py-4 bg-gray-50 border-t text-right">
+
+              <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <p className="text-xs text-gray-400">© Tanzania Geothermal Development Company</p>
                 <button
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#326101] text-white hover:bg-[#639427]"
-                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold bg-[#326101] text-white hover:bg-[#639427] transition-all shadow-md active:scale-95"
+                  onClick={() => setIsSideSheetOpen(false)}
                 >
-                  Close
+                  Close View
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
-          <style jsx global>{`
+      <style jsx global>{`
             @keyframes fade {
-              from { opacity: 0; transform: translateY(6px); }
-              to { opacity: 1; transform: none; }
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes slideIn {
+              from { transform: translateX(100%); }
+              to { transform: translateX(0); }
+            }
+            .leaflet-popup-content-wrapper {
+              border-radius: 12px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            }
+            .leaflet-more {
+              cursor: pointer;
+              transition: all 0.2s;
+            }
+            .leaflet-more:hover {
+              filter: brightness(1.1);
+              transform: translateY(-1px);
             }
           `}</style>
     </>
@@ -407,15 +460,3 @@ const GeothermalSites: NextPage = () => {
 };
 
 export default GeothermalSites;
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
 import { sendMail } from '@/app/lib/email'
-
-const prisma = new PrismaClient()
-
 function getAdminPayload(request: Request) {
   const cookie = request.headers.get('cookie') || ''
   const m = cookie.match(/(?:^|; )user_token=([^;]+)/)
@@ -40,10 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ items, nextCursor })
   } catch (e) {
     console.error('ADMIN stakeholder messages error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -79,8 +73,5 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ ok: true, id: message.id })
   } catch (e) {
     console.error('ADMIN stakeholder reply error', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  } finally {
-    await prisma.$disconnect()
-  }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }

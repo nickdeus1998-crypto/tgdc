@@ -211,31 +211,26 @@ const Hero: React.FC = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
-    // Reset form (simplified for brevity)
   };
 
   return (
     <>
-      <section className="bg-gradient-to-tr from-[#1f3f00]/80 via-[#326101]/60 to-transparent text-white py-12 md:py-16">
+      <section className="bg-gradient-to-r from-[#326101] to-[#639427] text-white py-10 md:py-14">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-[#34d399]"></span>
-                Procurement Management
-              </span>
-              <h1 className="text-3xl md:text-4xl font-extrabold mt-4 leading-tight">
-                Tenders Management System
+              <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
+                Tenders Management
               </h1>
-              <p className="text-white/90 text-lg mt-3 max-w-2xl">
+              <p className="text-white/80 text-base mt-2 max-w-2xl">
                 Create, publish, and manage procurement tenders for geothermal exploration equipment and services.
               </p>
             </div>
             <button
               onClick={openModal}
-              className="bg-white text-[#326101] px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 flex items-center gap-2"
+              className="bg-white text-[#326101] px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-50 flex items-center gap-2 text-sm shadow-sm"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               Create Tender
@@ -258,6 +253,10 @@ const ManageTendersSection: React.FC = () => {
   const emptyForm = { ref: '', title: '', category: '', status: 'open', deadline: '', publish: '', scope: '', docs: '' };
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
 
+  const [tenderNote, setTenderNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteOk, setNoteOk] = useState('');
+
   const load = async () => {
     setLoading(true); setErr(null);
     try {
@@ -265,15 +264,8 @@ const ManageTendersSection: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed to load tenders');
       const mapped: ApiTender[] = (data || []).map((r: any) => ({
-        id: r.id,
-        ref: r.ref,
-        title: r.title,
-        category: r.category,
-        status: r.status,
-        deadline: r.deadline,
-        publish: r.publish,
-        scope: r.scope,
-        docs: r.docs,
+        id: r.id, ref: r.ref, title: r.title, category: r.category,
+        status: r.status, deadline: r.deadline, publish: r.publish, scope: r.scope, docs: r.docs,
       }));
       setRows(mapped);
     } catch (e: any) {
@@ -281,16 +273,36 @@ const ManageTendersSection: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  const loadNote = async () => {
+    try {
+      const res = await fetch('/api/site-settings?key=tenderNote');
+      if (res.ok) {
+        const data = await res.json();
+        setTenderNote(data.value || '');
+      }
+    } catch { }
+  };
+
+  const saveNote = async () => {
+    setNoteSaving(true); setNoteOk('');
+    try {
+      const res = await fetch('/api/site-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'tenderNote', value: tenderNote }),
+      });
+      if (res.ok) setNoteOk('Saved!');
+    } catch { }
+    setNoteSaving(false);
+    setTimeout(() => setNoteOk(''), 2000);
+  };
+
+  useEffect(() => { load(); loadNote(); }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(null); setOk(null);
     try {
-      const payload = {
-        ...form,
-        deadline: form.deadline,
-        publish: form.publish,
-      };
+      const payload = { ...form, deadline: form.deadline, publish: form.publish };
       const res = await fetch(editingId ? `/api/tender/${editingId}` : '/api/tender', {
         method: editingId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -309,14 +321,10 @@ const ManageTendersSection: React.FC = () => {
   const onEdit = (row: ApiTender) => {
     setEditingId(row.id);
     setForm({
-      ref: row.ref,
-      title: row.title,
-      category: row.category,
-      status: row.status,
-      deadline: row.deadline ? new Date(row.deadline).toISOString().slice(0,10) : '',
-      publish: row.publish ? new Date(row.publish).toISOString().slice(0,10) : '',
-      scope: row.scope,
-      docs: row.docs,
+      ref: row.ref, title: row.title, category: row.category, status: row.status,
+      deadline: row.deadline ? new Date(row.deadline).toISOString().slice(0, 10) : '',
+      publish: row.publish ? new Date(row.publish).toISOString().slice(0, 10) : '',
+      scope: row.scope, docs: row.docs,
     });
   };
 
@@ -348,7 +356,7 @@ const ManageTendersSection: React.FC = () => {
                 <table className="w-full text-left">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="py-2 px-3 text-xs font-semibold text-gray-700">Ref</th>
+                      <th className="py-2 px-3 text-xs font-semibold text-gray-700">Tender No</th>
                       <th className="py-2 px-3 text-xs font-semibold text-gray-700">Title</th>
                       <th className="py-2 px-3 text-xs font-semibold text-gray-700">Status</th>
                       <th className="py-2 px-3 text-xs font-semibold text-gray-700">Deadline</th>
@@ -383,7 +391,7 @@ const ManageTendersSection: React.FC = () => {
               <div className="text-sm font-semibold text-gray-700 mb-3">{editingId ? 'Edit Tender' : 'New Tender'}</div>
               <form className="space-y-3" onSubmit={onSubmit}>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Ref</label>
+                  <label className="block text-xs text-gray-500 mb-1">Tender No</label>
                   <input value={form.ref} onChange={e => setForm({ ...form, ref: e.target.value })} required className="w-full px-3 py-2 border border-gray-200 rounded-md" />
                 </div>
                 <div>
@@ -415,7 +423,7 @@ const ManageTendersSection: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Docs URL</label>
+                  <label className="block text-xs text-gray-500 mb-1">Link to NEST</label>
                   <input value={form.docs} onChange={e => setForm({ ...form, docs: e.target.value })} required className="w-full px-3 py-2 border border-gray-200 rounded-md" />
                 </div>
                 <div>
@@ -431,6 +439,33 @@ const ManageTendersSection: React.FC = () => {
               </form>
             </div>
           </div>
+        </div>
+
+        {/* Tender Note Editor */}
+        <div className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Tender Note</h3>
+              <p className="text-sm text-gray-500">This note is displayed on the public tender detail modal.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {noteOk && <span className="text-sm text-emerald-600">{noteOk}</span>}
+              <button
+                onClick={saveNote}
+                disabled={noteSaving}
+                className="px-4 py-2 rounded-lg text-sm text-white bg-[#326101] hover:bg-[#639427] disabled:opacity-50"
+              >
+                {noteSaving ? 'Saving…' : 'Save Note'}
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={tenderNote}
+            onChange={(e) => setTenderNote(e.target.value)}
+            rows={3}
+            placeholder="e.g. Note: Bids are submitted through official channels as per instructions in the tender documents. This is an information page only."
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
+          />
         </div>
       </div>
     </section>
@@ -590,20 +625,21 @@ const NavigationTabs: React.FC<{ currentTab: string; switchTab: (tab: string) =>
   currentTab,
   switchTab,
 }) => {
-  const tabs = [ 'Manage'];
+  const tabs = ['Manage'];
 
   return (
-    <section className="py-6">
+    <section className="py-4">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
-          <div className="flex flex-wrap gap-2">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-2">
+          <div className="flex flex-wrap gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => switchTab(tab.toLowerCase().replace(' ', ''))}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-[#e8f5e8] ${
-                  currentTab === tab.toLowerCase().replace(' ', '') ? 'bg-[linear-gradient(135deg,_#326101,_#639427)] text-white' : ''
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${currentTab === tab.toLowerCase().replace(' ', '')
+                  ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 {tab}
               </button>
@@ -917,9 +953,8 @@ const EvaluationSection: React.FC = () => {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          bid.status === 'Leading' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bid.status === 'Leading' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}
                       >
                         {bid.status}
                       </span>
@@ -1208,12 +1243,10 @@ const TenderManagement: NextPage = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 text-gray-800 box-border">
+    <div className="bg-gray-50 text-gray-800 min-h-screen box-border">
       <Head>
         <title>TGDC – Tenders Management</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       </Head>
       <Hero />
       <NavigationTabs currentTab={currentTab} switchTab={switchTab} />

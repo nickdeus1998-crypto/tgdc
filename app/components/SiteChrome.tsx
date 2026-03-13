@@ -9,8 +9,10 @@ import AnalyticsTracker from "./AnalyticsTracker";
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
+  const isMaintenance = pathname === "/maintenance";
 
-  if (isAdmin) {
+  // Don't show header/footer on admin or maintenance pages
+  if (isAdmin || isMaintenance) {
     return <>{children}</>;
   }
 

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from '@/lib/prisma'
 export async function GET() {
   try {
     const section = await prisma.serviceSection.findFirst({
@@ -22,10 +19,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('GET /api/services error:', error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Database error' }, { status: 500 }); }
 }
 
 export async function POST(request: NextRequest) {
@@ -79,8 +73,5 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('POST /api/services error:', error);
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
+    return NextResponse.json({ error: 'Database error' }, { status: 500 }); }
 }

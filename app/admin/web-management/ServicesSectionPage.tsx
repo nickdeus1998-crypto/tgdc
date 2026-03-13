@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import IconPicker from '../components/IconPicker';
 
 interface Feature {
   text: string;
@@ -18,16 +19,34 @@ interface ServicesSectionData {
   headerOne: string;
   headerTwo: string;
   subheader?: string;
+  mandate?: string;
+  mandateTitle?: string;
+  mandateVisibleOnHomepage?: boolean;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaPrimaryLabel?: string;
+  ctaPrimaryHref?: string;
+  ctaSecondaryLabel?: string;
+  ctaSecondaryHref?: string;
   services: Service[];
 }
 
 const ServicesSectionPage: React.FC = () => {
-  const { control, register, handleSubmit, formState: { errors }, reset } = useForm<ServicesSectionData>({
-    defaultValues: { 
-      headerOne: '', 
-      headerTwo: '', 
-      subheader: '', 
-      services: [{ icon: '', title: '', content: '', features: [{ text: '' }] }] 
+  const { control, register, handleSubmit, setValue, formState: { errors }, reset } = useForm<ServicesSectionData>({
+    defaultValues: {
+      headerOne: '',
+      headerTwo: '',
+      subheader: '',
+      mandate: '',
+      mandateTitle: '',
+      mandateVisibleOnHomepage: false,
+      ctaTitle: '',
+      ctaSubtitle: '',
+      ctaPrimaryLabel: '',
+      ctaPrimaryHref: '',
+      ctaSecondaryLabel: '',
+      ctaSecondaryHref: '',
+      services: [{ icon: '', title: '', content: '', features: [{ text: '' }] }]
     },
   });
 
@@ -35,6 +54,9 @@ const ServicesSectionPage: React.FC = () => {
     control,
     name: 'services',
   });
+
+  // Watch all services so features re-render correctly
+  const watchedServices = useWatch({ control, name: 'services' });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,18 +67,27 @@ const ServicesSectionPage: React.FC = () => {
         const response = await fetch('/api/services');
         if (!response.ok) throw new Error('Failed to fetch');
         const data: ServicesSectionData = await response.json();
-        reset({ 
-          headerOne: data.headerOne || '', 
-          headerTwo: data.headerTwo || '', 
-          subheader: data.subheader || '', 
-          services: data.services.length > 0 
-            ? data.services.map(s => ({ 
-                ...s, 
-                features: Array.isArray(s.features) 
-                  ? (s.features as unknown as string[]).map((f: string) => ({ text: f })) 
-                  : [{ text: '' }] 
-              }))
-            : [{ icon: '', title: '', content: '', features: [{ text: '' }] }] 
+        reset({
+          headerOne: data.headerOne || '',
+          headerTwo: data.headerTwo || '',
+          subheader: data.subheader || '',
+          mandate: data.mandate || '',
+          mandateTitle: data.mandateTitle || '',
+          mandateVisibleOnHomepage: data.mandateVisibleOnHomepage ?? false,
+          ctaTitle: data.ctaTitle || '',
+          ctaSubtitle: data.ctaSubtitle || '',
+          ctaPrimaryLabel: data.ctaPrimaryLabel || '',
+          ctaPrimaryHref: data.ctaPrimaryHref || '',
+          ctaSecondaryLabel: data.ctaSecondaryLabel || '',
+          ctaSecondaryHref: data.ctaSecondaryHref || '',
+          services: data.services.length > 0
+            ? data.services.map(s => ({
+              ...s,
+              features: Array.isArray(s.features)
+                ? (s.features as unknown as string[]).map((f: string) => ({ text: f }))
+                : [{ text: '' }]
+            }))
+            : [{ icon: '', title: '', content: '', features: [{ text: '' }] }]
         });
       } catch (err) {
         console.error('Error fetching services data:', err);
@@ -83,18 +114,27 @@ const ServicesSectionPage: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to update');
       const updatedData: ServicesSectionData = await response.json();
-      reset({ 
-        headerOne: updatedData.headerOne || '', 
-        headerTwo: updatedData.headerTwo || '', 
-        subheader: updatedData.subheader || '', 
-        services: updatedData.services.length > 0 
-          ? updatedData.services.map(s => ({ 
-              ...s, 
-              features: Array.isArray(s.features) 
-                ? (s.features as unknown as string[]).map((f: string) => ({ text: f })) 
-                : [{ text: '' }] 
-            }))
-          : [{ icon: '', title: '', content: '', features: [{ text: '' }] }] 
+      reset({
+        headerOne: updatedData.headerOne || '',
+        headerTwo: updatedData.headerTwo || '',
+        subheader: updatedData.subheader || '',
+        mandate: updatedData.mandate || '',
+        mandateTitle: updatedData.mandateTitle || '',
+        mandateVisibleOnHomepage: updatedData.mandateVisibleOnHomepage ?? false,
+        ctaTitle: updatedData.ctaTitle || '',
+        ctaSubtitle: updatedData.ctaSubtitle || '',
+        ctaPrimaryLabel: updatedData.ctaPrimaryLabel || '',
+        ctaPrimaryHref: updatedData.ctaPrimaryHref || '',
+        ctaSecondaryLabel: updatedData.ctaSecondaryLabel || '',
+        ctaSecondaryHref: updatedData.ctaSecondaryHref || '',
+        services: updatedData.services.length > 0
+          ? updatedData.services.map(s => ({
+            ...s,
+            features: Array.isArray(s.features)
+              ? (s.features as unknown as string[]).map((f: string) => ({ text: f }))
+              : [{ text: '' }]
+          }))
+          : [{ icon: '', title: '', content: '', features: [{ text: '' }] }]
       });
       alert('Services section updated successfully!');
     } catch (err) {
@@ -111,6 +151,37 @@ const ServicesSectionPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Services Section Management</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* ─── Mandate ─── */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+              <label className="block text-sm font-bold text-gray-800 mb-3">TGDC Mandate</label>
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Mandate Heading</label>
+                <input
+                  {...register('mandateTitle')}
+                  placeholder="e.g., Our Mandate"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                />
+              </div>
+              <textarea
+                id="mandate"
+                {...register('mandate')}
+                rows={4}
+                placeholder="TGDC is the sole government entity dedicated to..."
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+              />
+              <p className="mt-1 text-xs text-gray-400">This text appears on the services page above the service cards.</p>
+              <div className="flex items-center gap-2 mt-3">
+                <input
+                  id="mandateVisibleOnHomepage"
+                  type="checkbox"
+                  {...register('mandateVisibleOnHomepage')}
+                  className="w-4 h-4 text-[#326101] border-gray-300 rounded"
+                />
+                <label htmlFor="mandateVisibleOnHomepage" className="text-sm text-gray-700">Show mandate on homepage</label>
+              </div>
+            </div>
+
+            {/* ─── Section Headers ─── */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Section Headers</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -118,7 +189,7 @@ const ServicesSectionPage: React.FC = () => {
                   <input
                     {...register('headerOne', { required: 'Header One is required' })}
                     placeholder="Header One (e.g., Comprehensive)"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                   />
                   {errors.headerOne && (
                     <p className="mt-1 text-sm text-red-500">{errors.headerOne.message}</p>
@@ -126,13 +197,10 @@ const ServicesSectionPage: React.FC = () => {
                 </div>
                 <div>
                   <input
-                    {...register('headerTwo', { required: 'Header Two is required' })}
-                    placeholder="Header Two (e.g., Geothermal Services)"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                    {...register('headerTwo')}
+                    placeholder="Header Two - optional (e.g., Geothermal Services)"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                   />
-                  {errors.headerTwo && (
-                    <p className="mt-1 text-sm text-red-500">{errors.headerTwo.message}</p>
-                  )}
                 </div>
               </div>
               <div className="mb-6">
@@ -142,7 +210,7 @@ const ServicesSectionPage: React.FC = () => {
                   {...register('subheader')}
                   rows={3}
                   placeholder="Section description (e.g., From initial site assessment...)"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                 />
               </div>
             </div>
@@ -153,10 +221,11 @@ const ServicesSectionPage: React.FC = () => {
                 <div key={serviceField.id} className="border border-gray-200 rounded-lg p-4 mb-4">
                   <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
                     <div className="flex-1">
-                      <input
-                        {...register(`services.${serviceIndex}.icon`, { required: 'Icon is required' })}
-                        placeholder="Icon class (e.g., fas fa-map)"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                      <input type="hidden" {...register(`services.${serviceIndex}.icon`, { required: 'Icon is required' })} />
+                      <IconPicker
+                        value={watchedServices?.[serviceIndex]?.icon || ''}
+                        onChange={(iconClass) => setValue(`services.${serviceIndex}.icon`, iconClass, { shouldValidate: true })}
+                        placeholder="Select an icon..."
                       />
                       {errors.services?.[serviceIndex]?.icon && (
                         <p className="mt-1 text-sm text-red-500">{errors.services?.[serviceIndex]?.icon?.message}</p>
@@ -166,7 +235,7 @@ const ServicesSectionPage: React.FC = () => {
                       <input
                         {...register(`services.${serviceIndex}.title`, { required: 'Title is required' })}
                         placeholder="Service Title"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                       />
                       {errors.services?.[serviceIndex]?.title && (
                         <p className="mt-1 text-sm text-red-500">{errors.services?.[serviceIndex]?.title?.message}</p>
@@ -177,7 +246,7 @@ const ServicesSectionPage: React.FC = () => {
                         {...register(`services.${serviceIndex}.content`, { required: 'Content is required' })}
                         placeholder="Service Description"
                         rows={2}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
                       />
                       {errors.services?.[serviceIndex]?.content && (
                         <p className="mt-1 text-sm text-red-500">{errors.services?.[serviceIndex]?.content?.message}</p>
@@ -195,42 +264,38 @@ const ServicesSectionPage: React.FC = () => {
                   {/* Nested Features Array */}
                   <div className="ml-4 border-l-2 border-gray-200 pl-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Features</label>
-                    {serviceField.features && (
-                      <div>
-                        {control._getWatch(`services.${serviceIndex}.features`)?.map((featureField: Feature, featureIndex: number) => (
-                          <div key={featureIndex} className="flex space-x-2 mb-2">
-                            <input
-                              {...register(`services.${serviceIndex}.features.${featureIndex}.text`, { required: 'Feature is required' })}
-                              placeholder="Feature text"
-                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-black"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const features = [...(control._getWatch(`services.${serviceIndex}.features`) || [])];
-                                features.splice(featureIndex, 1);
-                                // Update via setValue if needed, but for simplicity, rely on re-render
-                              }}
-                              className="px-3 py-2 text-red-600 hover:text-red-800"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentFeatures = control._getWatch(`services.${serviceIndex}.features`) || [];
-                            // Append new feature via useFieldArray for nested
-                            // Note: For nested, you'd typically use a separate useFieldArray per service, but for brevity, simulate
-                            // In production, nest useFieldArray
-                          }}
-                          className="text-[#326101] underline hover:no-underline text-sm"
-                        >
-                          Add Feature
-                        </button>
-                      </div>
-                    )}
+                    <div>
+                      {(watchedServices?.[serviceIndex]?.features || []).map((_feat: Feature, featureIndex: number) => (
+                        <div key={featureIndex} className="flex space-x-2 mb-2">
+                          <input
+                            {...register(`services.${serviceIndex}.features.${featureIndex}.text`, { required: 'Feature is required' })}
+                            placeholder="Feature text"
+                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = watchedServices?.[serviceIndex]?.features || [];
+                              const updated = current.filter((_: Feature, i: number) => i !== featureIndex);
+                              setValue(`services.${serviceIndex}.features`, updated.length > 0 ? updated : [{ text: '' }]);
+                            }}
+                            className="px-3 py-2 text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = watchedServices?.[serviceIndex]?.features || [];
+                          setValue(`services.${serviceIndex}.features`, [...current, { text: '' }]);
+                        }}
+                        className="text-[#326101] underline hover:no-underline text-sm"
+                      >
+                        Add Feature
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -241,6 +306,67 @@ const ServicesSectionPage: React.FC = () => {
               >
                 Add Service
               </button>
+            </div>
+
+            {/* ─── CTA Section ─── */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+              <label className="block text-sm font-bold text-gray-800 mb-3">Call to Action Section</label>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">CTA Title</label>
+                  <input
+                    {...register('ctaTitle')}
+                    placeholder="e.g., Ready to Start Your Geothermal Project?"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">CTA Subtitle</label>
+                  <textarea
+                    {...register('ctaSubtitle')}
+                    rows={2}
+                    placeholder="e.g., Let our experts help you harness the power of geothermal energy."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Primary Button Label</label>
+                    <input
+                      {...register('ctaPrimaryLabel')}
+                      placeholder="e.g., Get Free Consultation"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Primary Button Link</label>
+                    <input
+                      {...register('ctaPrimaryHref')}
+                      placeholder="e.g., /about-us"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Secondary Button Label</label>
+                    <input
+                      {...register('ctaSecondaryLabel')}
+                      placeholder="e.g., Download Service Guide"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Secondary Button Link</label>
+                    <input
+                      {...register('ctaSecondaryHref')}
+                      placeholder="e.g., /information-center"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900"
+                    />
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-400">This content appears at the bottom of the services section as a call-to-action.</p>
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}

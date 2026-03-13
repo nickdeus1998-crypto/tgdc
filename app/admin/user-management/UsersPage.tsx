@@ -237,8 +237,8 @@ export default function UsersPage() {
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
                 >
                   <option value="admin">Admin</option>
-                  <option value="editor">Editor</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="hr">HR</option>
+                  <option value="user">User</option>
                 </select>
               </div>
               <div className="flex items-center justify-end gap-3 pt-2">

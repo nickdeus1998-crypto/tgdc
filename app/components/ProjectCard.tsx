@@ -50,13 +50,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, setModalProject }) =
         <div className="flex items-center justify-between mb-4">
           <span className="text-lg font-semibold text-gray-900">{project.investment} Investment</span>
           <span className={`${bg} ${text} px-3 py-1 rounded-full text-sm font-medium`}>
-            {project.progress}% Complete
+            {project.progress ? `${project.progress}% Complete` : '—'}
           </span>
         </div>
         <div className="mb-4">
           <div className="flex justify-between text-sm text-gray-600 mb-2">
             <span>{status.charAt(0).toUpperCase() + status.slice(1)} Progress</span>
-            <span>{project.progress}%</span>
+            <span>{project.progress ? `${project.progress}%` : '—'}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div className="progress-bar" style={{ width: `${project.progress}%` }}></div>

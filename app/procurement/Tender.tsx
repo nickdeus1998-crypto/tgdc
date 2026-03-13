@@ -3,82 +3,68 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 export interface Tender {
-  id: number;
-  ref: string;
-  title: string;
-  category: string;
-  status: string;
-  deadline: string;
-  publish: string;
-  scope: string;
-  docs: string;
-  award?: { winner: string; date: string; amount: string };
+    id: number;
+    ref: string;
+    title: string;
+    category: string;
+    status: string;
+    deadline: string;
+    publish: string;
+    scope: string;
+    docs: string;
+    award?: { winner: string; date: string; amount: string };
 }
 
-interface ProcurementPlanItem {
-  ref: string;
-  title: string;
-  category: string;
-  quarter: string;
-  notes: string;
-}
-
-const tenders: Tender[]  = [
-  {
-    id: 1,
-    ref: 'TGDC/2024/G/001',
-    title: 'Delivery and Delivery of Geological Sampling Equipment',
-    category: 'goods',
-    status: 'open',
-    deadline: '2025-10-20',
-    publish: '2025-09-30',
-    scope: 'Supply field-grade sampling tools and accessories for geothermal exploration across Eastern Zone pilot areas.',
-    docs: 'https://example.com/docs/TGDC-2024-G-001.zip',
-  },
-  {
-    id: 2,
-    ref: 'TGDC/2025/S/002',
-    title: 'Provision of Environmental Consultancy Services (ESIA Support)',
-    category: 'consultancy',
-    status: 'open',
-    deadline: '2025-11-05',
-    publish: '2025-10-01',
-    scope: 'Environmental and social support services for ESIA preparation and stakeholder engagement for identified prospects.',
-    docs: 'https://example.com/docs/TGDC-2025-S-002.zip',
-  },
-  {
-    id: 3,
-    ref: 'TGDC/2025/W/003',
-    title: 'Minor Civil Works for Pilot Facilities',
-    category: 'works',
-    status: 'closed',
-    deadline: '2025-09-15',
-    publish: '2025-08-20',
-    scope: 'Construction of small shelters and pads in pilot locations for equipment housing.',
-    docs: 'https://example.com/docs/TGDC-2025-W-003.zip',
-    award: { winner: 'ABC Builders Ltd', date: '2025-09-25', amount: 'TZS 480,000,000' },
-  },
-  {
-    id: 4,
-    ref: 'TGDC/2025/S/004',
-    title: 'Maintenance and Calibration of Monitoring Instruments',
-    category: 'services',
-    status: 'awarded',
-    deadline: '2025-09-01',
-    publish: '2025-07-25',
-    scope: 'Routine maintenance, calibration, and certification of geothermal monitoring instruments.',
-    docs: 'https://example.com/docs/TGDC-2025-S-004.zip',
-    award: { winner: 'GeoCare Services', date: '2025-09-10', amount: 'TZS 120,000,000' },
-  },
+const tenders: Tender[] = [
+    {
+        id: 1,
+        ref: 'TGDC/2024/G/001',
+        title: 'Delivery and Delivery of Geological Sampling Equipment',
+        category: 'goods',
+        status: 'open',
+        deadline: '2025-10-20',
+        publish: '2025-09-30',
+        scope: 'Supply field-grade sampling tools and accessories for geothermal exploration across Eastern Zone pilot areas.',
+        docs: 'https://example.com/docs/TGDC-2024-G-001.zip',
+    },
+    {
+        id: 2,
+        ref: 'TGDC/2025/S/002',
+        title: 'Provision of Environmental Consultancy Services (ESIA Support)',
+        category: 'consultancy',
+        status: 'open',
+        deadline: '2025-11-05',
+        publish: '2025-10-01',
+        scope: 'Environmental and social support services for ESIA preparation and stakeholder engagement for identified prospects.',
+        docs: 'https://example.com/docs/TGDC-2025-S-002.zip',
+    },
+    {
+        id: 3,
+        ref: 'TGDC/2025/W/003',
+        title: 'Minor Civil Works for Pilot Facilities',
+        category: 'works',
+        status: 'closed',
+        deadline: '2025-09-15',
+        publish: '2025-08-20',
+        scope: 'Construction of small shelters and pads in pilot locations for equipment housing.',
+        docs: 'https://example.com/docs/TGDC-2025-W-003.zip',
+        award: { winner: 'ABC Builders Ltd', date: '2025-09-25', amount: 'TZS 480,000,000' },
+    },
+    {
+        id: 4,
+        ref: 'TGDC/2025/S/004',
+        title: 'Maintenance and Calibration of Monitoring Instruments',
+        category: 'services',
+        status: 'awarded',
+        deadline: '2025-09-01',
+        publish: '2025-07-25',
+        scope: 'Routine maintenance, calibration, and certification of geothermal monitoring instruments.',
+        docs: 'https://example.com/docs/TGDC-2025-S-004.zip',
+        award: { winner: 'GeoCare Services', date: '2025-09-10', amount: 'TZS 120,000,000' },
+    },
 ];
 
-const procurementPlan: ProcurementPlanItem[] = [
-  { ref: 'TGDC/PLN/001', title: 'Supply of Field Sampling Kits', category: 'Goods', quarter: 'Q1', notes: 'Standardized kits for multiple sites' },
-  { ref: 'TGDC/PLN/002', title: 'Consultancy for ESIA Support', category: 'Consultancy', quarter: 'Q2', notes: 'Framework agreement planned' },
-  { ref: 'TGDC/PLN/003', title: 'Civil Works: Small Structures', category: 'Works', quarter: 'Q3', notes: 'For pilot area facilities' },
-];
-
-function Procurement({ tenderData }: { tenderData: Tender[] }) {
+function Procurement({ tenderData, tenderNote }: { tenderData: Tender[]; tenderNote?: string }) {
     const [currentTab, setCurrentTab] = useState<string>('open');
     const [query, setQuery] = useState<string>('');
     const [category, setCategory] = useState<string>('all');
@@ -144,7 +130,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
         const data = (tenderData && tenderData.length ? tenderData : tenders);
         const filtered = filterSort(data).filter((x) => (currentTab === 'open' ? x.status === 'open' : x.status !== 'open'));
         const rows = [
-            ['Ref', 'Title', 'Category', 'Status', 'Publish Date', 'Deadline', 'Docs URL'],
+            ['Tender No', 'Title', 'Category', 'Status', 'Publish Date', 'Deadline', 'Docs URL'],
             ...filtered.map((t) => [t.ref, t.title, catLabel(t.category), t.status, t.publish, t.deadline, t.docs]),
         ];
         const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -170,10 +156,6 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
             {/* Hero */}
             <section className="bg-[radial-gradient(900px_460px_at_10%_-10%,rgba(99,148,39,0.18),transparent_60%),radial-gradient(800px_420px_at_110%_0%,rgba(50,97,1,0.18),transparent_60%),linear-gradient(135deg,#326101,#639427)] text-white py-16 md:py-20">
                 <div className="max-w-6xl mx-auto px-6">
-                    <span className="inline-flex items-center gap-2 text-sm bg-white/15 px-3 py-1.5 rounded-full">
-                        <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
-                        Procurement
-                    </span>
                     <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">Tenders and Opportunities</h1>
                     <p className="text-white/90 text-lg md:text-xl mt-4 max-w-3xl">
                         Browse open tenders, view details, and download documents. Simple, clear, and up to date.
@@ -186,13 +168,13 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                 <div className="max-w-6xl mx-auto px-6">
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
                         <div className="flex flex-wrap gap-2">
-                            {['open', 'closed', 'plan'].map((tab) => (
+                            {['open', 'closed'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setTab(tab)}
                                     className={`px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-green-50 ${currentTab === tab ? 'bg-gradient-to-r from-[#326101] to-[#639427] text-white' : ''}`}
                                 >
-                                    {tab === 'open' ? 'Open Tenders' : tab === 'closed' ? 'Closed / Awarded' : 'Procurement Plan'}
+                                    {tab === 'open' ? 'Open Tenders' : 'Closed / Awarded'}
                                 </button>
                             ))}
                         </div>
@@ -240,7 +222,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                     onChange={(e) => {
                                         setStatus(e.target.value);
                                         setTab(e.target.value === 'open' ? 'open' : 'closed');
-                                    } }
+                                    }}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:border-transparent"
                                 >
                                     <option value="open">Open</option>
@@ -294,7 +276,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                                 {catLabel(t.category)}
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">Ref: {t.ref} • Published: {formatDate(t.publish)}</div>
+                                        <div className="text-xs text-gray-500 mt-1">Tender No: {t.ref} • Published: {formatDate(t.publish)}</div>
                                         <p className="text-sm text-gray-700 mt-2">{t.scope}</p>
                                         <div className="mt-2 text-xs text-gray-600">
                                             Deadline: <span className="font-medium text-gray-800">{formatDate(t.deadline)}</span>
@@ -312,14 +294,6 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                         >
                                             View details
                                         </button>
-                                        <Link
-                                            href={t.docs}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 hover:bg-gray-50"
-                                        >
-                                            Download
-                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -351,7 +325,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                                 {catLabel(t.category)}
                                             </span>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">Ref: {t.ref} • Published: {formatDate(t.publish)}</div>
+                                        <div className="text-xs text-gray-500 mt-1">Tender No: {t.ref} • Published: {formatDate(t.publish)}</div>
                                         <p className="text-sm text-gray-700 mt-2">{t.scope}</p>
                                         <div className="mt-2 text-xs text-gray-600">
                                             Deadline: <span className="font-medium text-gray-800">{formatDate(t.deadline)}</span>
@@ -369,14 +343,6 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                         >
                                             View details
                                         </button>
-                                        <Link
-                                            href={t.docs}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 hover:bg-gray-50"
-                                        >
-                                            Download
-                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -388,54 +354,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                 </div>
             </section>
 
-            {/* Procurement Plan */}
-            <section className={`${currentTab === 'plan' ? 'block' : 'hidden'} pb-16`}>
-                <div className="max-w-6xl mx-auto px-6 space-y-4">
-                    <div className="bg-white rounded-2xl border p-5 transition-transform duration-200 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(0,0,0,0.06)]">
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Annual Procurement Plan (Sample)</h2>
-                                <p className="text-sm text-gray-600 mt-1">Planned items for the current financial year.</p>
-                            </div>
-                            <Link
-                                href="https://example.com/procurement-plan.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-4 py-2 rounded-lg text-sm text-white bg-[#326101] hover:bg-[#639427]"
-                            >
-                                Open PDF
-                            </Link>
-                        </div>
-                        <div className="mt-4 overflow-x-auto">
-                            <table className="min-w-full text-sm">
-                                <thead className="bg-gray-50 text-gray-600">
-                                    <tr>
-                                        <th className="text-left py-2 px-3">Ref</th>
-                                        <th className="text-left py-2 px-3">Title</th>
-                                        <th className="text-left py-2 px-3">Category</th>
-                                        <th className="text-left py-2 px-3">Quarter</th>
-                                        <th className="text-left py-2 px-3">Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {procurementPlan.map((item) => (
-                                        <tr key={item.ref}>
-                                            <td className="py-2 px-3">{item.ref}</td>
-                                            <td className="py-2 px-3">{item.title}</td>
-                                            <td className="py-2 px-3">{item.category}</td>
-                                            <td className="py-2 px-3">{item.quarter}</td>
-                                            <td className="py-2 px-3">{item.notes}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                        Note: Replace sample links and rows with your official plan items and document URLs.
-                    </p>
-                </div>
-            </section>
+
 
             {/* Tender Details Modal */}
             {modal.open && modal.tender && (
@@ -460,7 +379,7 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                         </div>
                         <div className="p-5 text-gray-700 leading-relaxed">
                             <div className="mb-3">
-                                <span className="text-sm text-gray-500">Reference:</span>{' '}
+                                <span className="text-sm text-gray-500">Tender No:</span>{' '}
                                 <span className="font-medium">{modal.tender.ref}</span>
                             </div>
                             <div className="mb-3">
@@ -487,8 +406,8 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                 </div>
                             )}
                             <p className="text-xs text-gray-500 mt-4">
-                                Note: Bids are submitted through official channels as per instructions in the tender documents. This is an
-                                information page only.
+                                {tenderNote || 'Note: Bids are submitted through official channels as per instructions in the tender documents. This is an information page only.'}{' '}
+                                For more details, visit the <Link href="https://nest.go.tz/tenders/published-tenders" target="_blank" rel="noopener noreferrer" className="text-[#326101] underline font-medium">link to NEST</Link>.
                             </p>
                         </div>
                         <div className="px-5 py-4 bg-gray-50 border-t flex flex-wrap items-center justify-end gap-2">
@@ -500,18 +419,18 @@ function Procurement({ tenderData }: { tenderData: Tender[] }) {
                                     } catch {
                                         showToast('Copy failed');
                                     }
-                                } }
+                                }}
                                 className="px-3 py-2 rounded-lg text-sm border border-gray-200 hover:bg-gray-100"
                             >
-                                Copy Ref
+                                Copy Tender No
                             </button>
                             <Link
-                                href={modal.tender.docs}
+                                href="https://nest.go.tz/tenders/published-tenders"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="px-3 py-2 rounded-lg text-sm text-white bg-[#326101] hover:bg-[#639427]"
                             >
-                                Open Documents
+                                Link to NEST
                             </Link>
                             <button
                                 onClick={() => setModal({ open: false, tender: null })}

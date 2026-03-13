@@ -15,6 +15,14 @@ interface ServicesData {
   headerOne: string;
   headerTwo: string;
   subheader?: string;
+  mandate?: string;
+  mandateTitle?: string;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaPrimaryLabel?: string;
+  ctaPrimaryHref?: string;
+  ctaSecondaryLabel?: string;
+  ctaSecondaryHref?: string;
   services: Service[];
 }
 
@@ -44,6 +52,8 @@ export default function ServicesPage() {
     headerTwo: 'Services',
     subheader:
       'End-to-end geothermal solutions — from exploration to operations — tailored to your project needs.',
+    mandate:
+      'TGDC is the sole government entity dedicated to the exploration, development and utilization of geothermal resources in the country with specific mandate to; conduct geothermal resource exploration, manage geothermal drilling, and harness geothermal energy for electricity production and direct heat utilization.',
     services: [
       {
         id: 1,
@@ -110,12 +120,47 @@ export default function ServicesPage() {
           <p className="text-gray-600">Loading services…</p>
         </div>
       ) : (
-        <ServicesSection
-          headerOne={payload.headerOne}
-          headerTwo={payload.headerTwo}
-          subheader={payload.subheader}
-          services={payload.services}
-        />
+        <>
+          {/* ─── Mandate Section ─── */}
+          {payload.mandate && (
+            <section id="mandate" className="py-16 bg-white">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+                    {payload.mandateTitle || 'TGDC Mandate'}
+                  </h2>
+                </div>
+
+                <div className="bg-gradient-to-br from-gray-50 to-[#326101]/[0.03] border border-[#326101]/10 rounded-2xl p-8 md:p-10">
+                  <div className="flex gap-5 items-start">
+                    <div className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-xl bg-[#326101]/10 items-center justify-center mt-1">
+                      <svg className="w-6 h-6 text-[#326101]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-700 text-lg leading-relaxed">
+                      {payload.mandate}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ─── Services Section ─── */}
+          <ServicesSection
+            headerOne={payload.headerOne}
+            headerTwo={payload.headerTwo}
+            subheader={payload.subheader}
+            services={payload.services}
+            ctaTitle={payload.ctaTitle}
+            ctaSubtitle={payload.ctaSubtitle}
+            ctaPrimaryLabel={payload.ctaPrimaryLabel}
+            ctaPrimaryHref={payload.ctaPrimaryHref}
+            ctaSecondaryLabel={payload.ctaSecondaryLabel}
+            ctaSecondaryHref={payload.ctaSecondaryHref}
+          />
+        </>
       )}
     </div>
   );
