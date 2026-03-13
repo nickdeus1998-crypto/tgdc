@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     domains: ['www.tgdc.go.tz', 'images.unsplash.com'],
+    unoptimized: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
