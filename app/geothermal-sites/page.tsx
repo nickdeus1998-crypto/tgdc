@@ -3,8 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import type L from 'leaflet';
 
 interface Site {
   id: string; // slug
@@ -26,9 +25,9 @@ const GeothermalSites: NextPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const mapRef = useRef<L.Map | null>(null);
-  const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const markerIconRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
+  const markersLayerRef = useRef<any>(null);
+  const leafletRef = useRef<typeof L | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const zones = ["Eastern Zone", "Lake Zone", "Southern Zone", "Northern Zone", "Central Zone", "All"];
@@ -78,7 +77,8 @@ const GeothermalSites: NextPage = () => {
   };
 
   const updateMarkers = () => {
-    if (!markersLayerRef.current || !mapRef.current) return;
+    const Leaf = leafletRef.current;
+    if (!markersLayerRef.current || !mapRef.current || !Leaf) return;
     markersLayerRef.current.clearLayers();
     const filteredSites = getFilteredSites(currentZone, currentQuery);
 
@@ -96,7 +96,7 @@ const GeothermalSites: NextPage = () => {
         <div class="text-sm text-gray-600 mb-2">${site.summary}</div>
         <button class="leaflet-more bg-[#326101] text-white px-3 py-1.5 rounded text-xs font-semibold" data-id="${site.id}">Open details</button>
       `;
-      const marker = L.marker([coord.lat, coord.lng]).addTo(markersLayerRef.current!).bindPopup(popupHtml);
+      const marker = Leaf.marker([coord.lat, coord.lng]).addTo(markersLayerRef.current!).bindPopup(popupHtml);
       bounds.push([coord.lat, coord.lng]);
     });
     if (bounds.length) {
@@ -108,21 +108,27 @@ const GeothermalSites: NextPage = () => {
   };
 
   useEffect(() => {
-    if (mapContainerRef.current && !mapRef.current) {
+    const initMap = async () => {
+      if (!mapContainerRef.current || mapRef.current) return;
+      const Leaf = (await import('leaflet')).default;
+      await import('leaflet/dist/leaflet.css');
+      leafletRef.current = Leaf;
+
       // Fix for broken leaflet marker icons
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
+      delete (Leaf.Icon.Default.prototype as any)._getIconUrl;
+      Leaf.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
 
-      mapRef.current = L.map(mapContainerRef.current, { scrollWheelZoom: false }).setView([-6.5, 35.0], 5);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(mapRef.current);
-      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      mapRef.current = Leaf.map(mapContainerRef.current, { scrollWheelZoom: false }).setView([-6.5, 35.0], 5);
+      Leaf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(mapRef.current);
+      markersLayerRef.current = Leaf.layerGroup().addTo(mapRef.current);
       updateMarkers();
       setTimeout(() => mapRef.current?.invalidateSize(true), 250);
-    }
+    };
+    initMap();
 
     const handleResize = () => {
       if (mapRef.current) {
