@@ -5,6 +5,7 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface NewsArticle {
   id: string;
@@ -192,7 +193,7 @@ const Modal: React.FC<{ article: NewsArticle; onClose: () => void }> = ({ articl
             </span>
           </div>
           <h2 className="text-3xl font-semibold text-gray-900 mb-6 leading-tight">{article.title}</h2>
-          <div className="prose prose-lg text-gray-700 mb-6 max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+          <div className="prose prose-lg text-gray-700 mb-6 max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }} />
           <button
             onClick={onClose}
             className="bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-300"

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
+import { sanitizeHtml } from '@/app/lib/sanitize'
 
 export default async function NewsArticlePage({ params }: { params: { id: string } }) {
   const id = Number(params.id)
@@ -89,7 +90,7 @@ export default async function NewsArticlePage({ params }: { params: { id: string
                 prose-strong:text-gray-900
                 prose-ul:my-4 prose-ol:my-4 prose-li:my-1"
               style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
-              dangerouslySetInnerHTML={{ __html: row.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(row.content) }}
             />
 
             {/* Images gallery */}

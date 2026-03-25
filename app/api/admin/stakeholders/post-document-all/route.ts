@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, stakeholdersCount: stakeholders.length, path: relPublicPath })
     } catch (e: any) {
         console.error('GLOBAL STAKEHOLDER UPLOAD error', e)
-        return NextResponse.json({ error: `Server error: ${e.message || 'Unknown error'}` }, { status: 500 })
+        return NextResponse.json({ error: 'Server error' }, { status: 500 })
     } finally {
     }
 }

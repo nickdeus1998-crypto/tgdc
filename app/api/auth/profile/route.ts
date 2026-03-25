@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getJwtSecret, verifyJwt, hashPassword } from '@/app/lib/auth'
+import { getJwtSecret, verifyJwt, hashPassword, validatePassword } from '@/app/lib/auth'
 
 
 async function getAuthenticatedUser(request: Request) {
@@ -51,6 +51,10 @@ export async function PUT(request: Request) {
 
         const updateData: any = { name, email }
         if (password && password.trim() !== '') {
+            const pwCheck = validatePassword(password)
+            if (!pwCheck.valid) {
+                return NextResponse.json({ error: pwCheck.errors[0], errors: pwCheck.errors }, { status: 400 })
+            }
             updateData.password = await hashPassword(password)
         }
 

@@ -82,6 +82,6 @@ export async function POST(request: Request) {
         })
     } catch (e: any) {
         console.error('REPOSITORY UPLOAD error', e)
-        return NextResponse.json({ error: `Server error: ${e.message || 'Unknown error'}` }, { status: 500 })
+        return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }

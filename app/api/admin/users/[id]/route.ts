@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'
-import { getJwtSecret, hashPassword, verifyJwt } from '@/app/lib/auth';
+import { getJwtSecret, hashPassword, verifyJwt, validatePassword } from '@/app/lib/auth';
 function getAdminPayload(request: Request) {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -23,7 +23,13 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if ('name' in body) data.name = body.name?.trim() || null;
     if ('email' in body) data.email = body.email?.trim();
     if ('role' in body) data.role = body.role?.trim() || 'admin';
-    if (body.password) data.password = await hashPassword(body.password);
+    if (body.password) {
+      const pwCheck = validatePassword(body.password);
+      if (!pwCheck.valid) {
+        return NextResponse.json({ error: pwCheck.errors[0], errors: pwCheck.errors }, { status: 400 });
+      }
+      data.password = await hashPassword(body.password);
+    }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

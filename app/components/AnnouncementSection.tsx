@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import AnnouncementBanner from './AnnouncementBanner';
 import SideTab from './SideTab';
 import AnnouncementsFeed from './AnnouncementsFeed';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface Announcement {
   id: number;
@@ -229,7 +230,7 @@ const AnnouncementSection: React.FC = () => {
             <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-[90%] sm:max-w-md mx-auto shadow-2xl transform scale-95 hover:scale-100 transition-transform duration-300">
               <div className="text-center">
                 <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${modalContent.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: modalContent.icon }} />
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: sanitizeHtml(modalContent.icon) }} />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{modalContent.title}</h3>
                 <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">{modalContent.description}</p>

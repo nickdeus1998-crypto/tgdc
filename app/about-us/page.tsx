@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OrgStructure from '../components/OrgStructure';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface TimelineItem {
   year: string;
@@ -377,7 +378,7 @@ const AboutUs: React.FC = () => {
                         <i className={`${icon} text-white text-2xl`} />
                       ) : (
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <g dangerouslySetInnerHTML={{ __html: icon }} />
+                          <g dangerouslySetInnerHTML={{ __html: sanitizeHtml(icon) }} />
                         </svg>
                       )}
                     </div>
@@ -417,7 +418,7 @@ const AboutUs: React.FC = () => {
                         <i className={`${cvIcon} text-white text-2xl`} />
                       ) : (
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <g dangerouslySetInnerHTML={{ __html: cvIcon }} />
+                          <g dangerouslySetInnerHTML={{ __html: sanitizeHtml(cvIcon) }} />
                         </svg>
                       )}
                     </div>

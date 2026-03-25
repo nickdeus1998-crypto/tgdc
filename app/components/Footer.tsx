@@ -1,6 +1,7 @@
-﻿'use client'
+'use client'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface ContactInfoProps {
   address: string;
@@ -231,7 +232,7 @@ Barabara ya Mwai Kibaki
               href: s.url ?? '#',
               icon: (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <g dangerouslySetInnerHTML={{ __html: s.icon || '' }} />
+                  <g dangerouslySetInnerHTML={{ __html: sanitizeHtml(s.icon || '') }} />
                 </svg>
               ),
             }))

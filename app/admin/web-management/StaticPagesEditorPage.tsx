@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 import dynamic from 'next/dynamic';
 
 const StableQuillEditor = dynamic(() => import('../components/StableQuillEditor'), { ssr: false });
@@ -163,7 +164,7 @@ const StaticPagesEditorPage: React.FC = () => {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
                     <div className="border border-gray-100 rounded-lg p-8 bg-gray-50/50">
-                        <div className="rich-content" dangerouslySetInnerHTML={{ __html: content || '<p style="color:#9ca3af;font-style:italic">No content yet. Start typing above.</p>' }} />
+                        <div className="rich-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) || '<p style="color:#9ca3af;font-style:italic">No content yet. Start typing above.</p>' }} />
                     </div>
                 </div>
             </div>

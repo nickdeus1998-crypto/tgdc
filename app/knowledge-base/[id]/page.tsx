@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface KBPost {
     id: number;
@@ -127,7 +128,7 @@ export default function KnowledgeBasePostPage() {
                     <div className="px-8 py-8">
                         <div
                             className="rich-content prose prose-lg max-w-none"
-                            dangerouslySetInnerHTML={{ __html: post.content }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
                         />
                     </div>
                 </div>

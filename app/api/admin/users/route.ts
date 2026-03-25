@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'
-import { getJwtSecret, hashPassword, verifyJwt } from '@/app/lib/auth';
+import { getJwtSecret, hashPassword, verifyJwt, validatePassword } from '@/app/lib/auth';
 function getAdminPayload(request: Request) {
   const cookie = request.headers.get('cookie') || '';
   const match = cookie.match(/(?:^|; )user_token=([^;]+)/);
@@ -38,8 +38,12 @@ export async function POST(request: Request) {
     const name = body?.name?.trim() || null;
     const password = body?.password;
     const role = body?.role?.trim() || 'admin';
-    if (!email || !password || password.length < 6) {
-      return NextResponse.json({ error: 'Email and password (min 6 chars) are required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.errors[0], errors: pwCheck.errors }, { status: 400 });
     }
 
     const hashed = await hashPassword(password);

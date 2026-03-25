@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface ModalContent {
   title: string;
@@ -128,7 +129,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
               </div>
               <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-6 text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: modalBody }} />
+            <div className="p-6 text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(modalBody) }} />
             <div className="px-6 py-4 bg-gray-50 border-t text-right">
               <button onClick={closeModal} className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary-green text-white hover:bg-secondary-green">Close</button>
             </div>

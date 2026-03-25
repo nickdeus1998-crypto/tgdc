@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { hashPassword, signJwt, getJwtSecret, stakeholderCookieOptions } from '@/app/lib/auth'
+import { hashPassword, signJwt, getJwtSecret, stakeholderCookieOptions, validatePassword } from '@/app/lib/auth'
 export async function POST(request: Request) {
   try {
     const { email, name, password } = await request.json()
     if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+
+    // Enforce strong password policy
+    const pwCheck = validatePassword(password)
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.errors[0], errors: pwCheck.errors }, { status: 400 })
+    }
 
     const exists = await prisma.user.findUnique({ where: { email } })
     if (exists) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
@@ -23,4 +29,3 @@ export async function POST(request: Request) {
     console.error('AUTH REGISTER error', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
-

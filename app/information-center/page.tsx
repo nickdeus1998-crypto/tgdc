@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface Newsletter {
   id: number;
@@ -919,7 +920,7 @@ const InformationCenter: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none overflow-x-hidden max-h-48 overflow-y-auto pr-1" dangerouslySetInnerHTML={{ __html: a.content }} />
+                      <div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none overflow-x-hidden max-h-48 overflow-y-auto pr-1" dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.content) }} />
                       <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
                         {a.scheduledDate && (
                           <span className="flex items-center gap-1">

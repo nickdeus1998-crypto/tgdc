@@ -1,27 +1,21 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { cookies } from 'next/headers'
+import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
 import { clearMaintenanceCache } from '@/lib/maintenance'
 
-
-// Verify admin authentication
-async function verifyAdmin() {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('user_token')?.value
-
-    if (!token) {
-        return false
-    }
-
-    // In a real implementation, verify the JWT token here
-    // For now, we'll just check if it exists
-    return true
+// Verify admin authentication — properly validates JWT signature + admin role
+function verifyAdmin(request: Request): boolean {
+    const cookie = request.headers.get('cookie') || ''
+    const match = cookie.match(/(?:^|; )user_token=([^;]+)/)
+    const token = match ? decodeURIComponent(match[1]) : null
+    if (!token) return false
+    const payload = verifyJwt(token, getJwtSecret())
+    return payload?.role === 'admin'
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const isAdmin = await verifyAdmin()
-        if (!isAdmin) {
+        if (!verifyAdmin(request)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
@@ -50,8 +44,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
     try {
-        const isAdmin = await verifyAdmin()
-        if (!isAdmin) {
+        if (!verifyAdmin(request)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 

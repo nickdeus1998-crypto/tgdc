@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface Announcement {
     id: number;
@@ -160,7 +161,7 @@ export default function FloatingAnnouncement() {
                         {/* Content Section with Max Height & Scroll */}
                         <div className={`p-5 bg-white transition-all duration-300 ${isExpanded ? 'bg-gray-50' : ''}`}>
                             <div className={`text-xs text-gray-600 leading-relaxed custom-scrollbar prose prose-sm max-w-none ${isExpanded ? 'max-h-60 overflow-y-auto pr-2' : 'line-clamp-3'
-                                }`} dangerouslySetInnerHTML={{ __html: current.content }} />
+                                }`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.content) }} />
 
                             <div className="flex gap-2 mt-5">
                                 <button

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface StaticPageViewProps {
     slug: string;
@@ -60,7 +61,7 @@ const StaticPageView: React.FC<StaticPageViewProps> = ({ slug, fallbackTitle }) 
                     ) : content ? (
                         <div
                             className="rich-content"
-                            dangerouslySetInnerHTML={{ __html: content }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                         />
                     ) : (
                         <div className="text-center py-16">

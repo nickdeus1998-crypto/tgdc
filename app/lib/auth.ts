@@ -31,7 +31,7 @@ function base64url(input: Buffer | string) {
     .replace(/\//g, '_')
 }
 
-export function signJwt(payload: Record<string, any>, secret: string, expiresInSec = 60 * 60 * 24 * 7) {
+export function signJwt(payload: Record<string, any>, secret: string, expiresInSec = 60 * 60) {
   const header = { alg: 'HS256', typ: 'JWT' }
   const now = Math.floor(Date.now() / 1000)
   const body = { iat: now, exp: now + expiresInSec, ...payload }
@@ -70,8 +70,100 @@ export function getJwtSecret() {
 }
 
 export function stakeholderCookieOptions() {
-  const week = 60 * 60 * 24 * 7
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${week}${secure}`
+  const oneHour = 60 * 60
+  const isSecure = process.env.FORCE_SECURE_COOKIES === 'true' || process.env.NODE_ENV === 'production'
+  const secure = isSecure ? '; Secure' : ''
+  return `Path=/; HttpOnly; SameSite=Strict; Max-Age=${oneHour}${secure}`
+}
+
+// ── Password Policy ──────────────────────────────────────────────
+// Enforces: min 12 chars, uppercase, lowercase, digit, special character
+export interface PasswordValidationResult {
+  valid: boolean
+  errors: string[]
+}
+
+export function validatePassword(password: string): PasswordValidationResult {
+  const errors: string[] = []
+  if (!password || password.length < 12) errors.push('Password must be at least 12 characters long')
+  if (!/[A-Z]/.test(password)) errors.push('Password must contain at least one uppercase letter')
+  if (!/[a-z]/.test(password)) errors.push('Password must contain at least one lowercase letter')
+  if (!/[0-9]/.test(password)) errors.push('Password must contain at least one number')
+  if (!/[!@#$%^&*()_+\-=\[\]{}|;:'",.<>?/~`]/.test(password)) errors.push('Password must contain at least one special character')
+  return { valid: errors.length === 0, errors }
+}
+
+// ── Login Rate Limiter ───────────────────────────────────────────
+// In-memory rate limiter: max attempts per window per IP
+const LOGIN_MAX_ATTEMPTS = 5
+const LOGIN_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+
+interface RateLimitEntry { count: number; firstAttempt: number }
+const loginAttempts = new Map<string, RateLimitEntry>()
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of loginAttempts) {
+    if (now - entry.firstAttempt > LOGIN_WINDOW_MS) loginAttempts.delete(key)
+  }
+}, 5 * 60 * 1000).unref?.()
+
+export function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfterSec?: number } {
+  const now = Date.now()
+  const entry = loginAttempts.get(ip)
+  if (!entry || now - entry.firstAttempt > LOGIN_WINDOW_MS) {
+    // New window
+    loginAttempts.set(ip, { count: 1, firstAttempt: now })
+    return { allowed: true }
+  }
+  if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+    const retryAfterSec = Math.ceil((LOGIN_WINDOW_MS - (now - entry.firstAttempt)) / 1000)
+    return { allowed: false, retryAfterSec }
+  }
+  entry.count++
+  return { allowed: true }
+}
+
+export function recordFailedLogin(ip: string) {
+  const now = Date.now()
+  const entry = loginAttempts.get(ip)
+  if (!entry || now - entry.firstAttempt > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, firstAttempt: now })
+  } else {
+    entry.count++
+  }
+}
+
+// ── Centralized Route Auth Helpers ──────────────────────────────
+// Import these in API routes instead of redefining locally.
+
+/** Extract JWT cookie, verify signature, and return the payload (or null). */
+function extractPayload(request: Request): Record<string, any> | null {
+  const cookie = request.headers.get('cookie') || ''
+  const match = cookie.match(/(?:^|; )user_token=([^;]+)/)
+  const token = match ? decodeURIComponent(match[1]) : null
+  if (!token) return null
+  return verifyJwt(token, getJwtSecret())
+}
+
+/** Returns true if the request has a valid JWT with role === 'admin'. */
+export function isAdmin(request: Request): boolean {
+  const payload = extractPayload(request)
+  return payload?.role === 'admin'
+}
+
+/** Returns the admin JWT payload, or null if not admin. */
+export function getAdminPayload(request: Request): Record<string, any> | null {
+  const payload = extractPayload(request)
+  if (!payload || payload.role !== 'admin') return null
+  return payload
+}
+
+/** Returns the JWT payload for any authenticated internal user (admin or user), or null. */
+export function getInternalPayload(request: Request): Record<string, any> | null {
+  const payload = extractPayload(request)
+  if (!payload || !['admin', 'user'].includes(payload.role)) return null
+  return payload
 }
 

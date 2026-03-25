@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -830,7 +831,7 @@ export default function Dashboard({ allowedTabs, defaultTab }: DashboardProps) {
               className="editor-content p-6"
               contentEditable
               suppressContentEditableWarning
-              dangerouslySetInnerHTML={{ __html: editorContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(editorContent) }}
               onInput={(e) => setEditorContent(e.currentTarget.innerHTML)}
             />
           </div>
@@ -1069,7 +1070,7 @@ export default function Dashboard({ allowedTabs, defaultTab }: DashboardProps) {
                 </div>
               </div>
               <div className="card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-8 prose max-w-none" dangerouslySetInnerHTML={{ __html: newsArticles[currentNewsId].content }} />
+                <div className="p-8 prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(newsArticles[currentNewsId].content) }} />
               </div>
               {/* Comments */}
               {/* ... */}
