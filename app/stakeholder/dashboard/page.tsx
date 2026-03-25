@@ -16,6 +16,9 @@ export default function StakeholderDashboard() {
   const [docCursor, setDocCursor] = useState<number | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [newPw, setNewPw] = useState('');
+  const [savingPw, setSavingPw] = useState(false);
+  const [pwStatus, setPwStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/stakeholder/me').then(r => r.json()).then(d => {
@@ -96,6 +99,31 @@ export default function StakeholderDashboard() {
       setUploadStatus('Upload failed.');
     } finally {
       setUploading(false);
+    }
+  }
+
+  const updatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwStatus(null);
+    setSavingPw(true);
+    try {
+      const res = await fetch('/api/stakeholder/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPw })
+      });
+      let data: any = {};
+      try { data = await res.json(); } catch { data = { error: 'Invalid response from server' }; }
+      if (res.ok) {
+        setPwStatus('Password updated successfully.');
+        setNewPw('');
+      } else {
+        setPwStatus(data.error || 'Failed to update password.');
+      }
+    } catch {
+       setPwStatus('Error connecting to server.');
+    } finally {
+      setSavingPw(false);
     }
   }
 
@@ -245,6 +273,27 @@ export default function StakeholderDashboard() {
               )}
             </div>
           </section>
+
+          <section className="bg-white rounded-xl border border-gray-100 shadow p-6 md:col-span-2">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Profile Settings</h2>
+            <form onSubmit={updatePassword} className="max-w-md space-y-3">
+              {pwStatus && <p className={`text-sm mb-3 ${pwStatus.includes('success') ? 'text-emerald-600' : 'text-red-600'}`}>{pwStatus}</p>}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-900 placeholder-gray-500"
+                />
+              </div>
+              <button disabled={savingPw || !newPw} className="bg-gradient-to-r from-[#326101] to-[#639427] disabled:opacity-50 text-white rounded-md px-4 py-2 font-semibold">
+                {savingPw ? 'Updating…' : 'Update Password'}
+              </button>
+            </form>
+          </section>
+
         </div>
       </div>
     </div>
