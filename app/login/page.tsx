@@ -19,13 +19,16 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed')
-      if (data.role === 'admin') router.push('/admin'); else router.push('/admin');
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      let data: any = {};
+      try { data = await res.json(); } catch { throw new Error('Invalid response from server'); }
+      if (!res.ok) throw new Error(data?.error || 'Invalid credentials or login failed');
+      
+      // Use window.location.href for a hard navigation to bypass router cache
+      window.location.href = '/admin';
     } catch (err: any) {
-      setError(err.message)
-    } finally { setLoading(false) }
+      setError(err.message || 'Login failed');
+    } finally { setLoading(false); }
   }
 
   return (

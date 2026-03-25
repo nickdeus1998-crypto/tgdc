@@ -20,13 +20,16 @@ export default function StakeholderLogin() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/stakeholder/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
-      router.push('/stakeholder/dashboard')
+      const res = await fetch('/api/stakeholder/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      let data: any = {};
+      try { data = await res.json(); } catch { throw new Error('Invalid response from server'); }
+      if (!res.ok) throw new Error(data?.error || 'Invalid credentials or login failed');
+      
+      // Force hard navigation
+      window.location.href = '/stakeholder/dashboard';
     } catch (err: any) {
-      setError(err.message)
-    } finally { setLoading(false) }
+      setError(err.message || 'Login failed');
+    } finally { setLoading(false); }
   }
 
   return (
