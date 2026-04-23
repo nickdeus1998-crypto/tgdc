@@ -45,7 +45,7 @@ export default function RootLayout({
           </I18nProvider>
         </ThemeProvider>
 
-        <div id="google_translate_element" style={{ position: 'fixed', bottom: '20px', left: '20px', zIndex: 9999, opacity: 0.5 }}></div>
+        <div id="google_translate_element" style={{ position: 'absolute', top: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: -1 }}></div>
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
             window.googleTranslateElementInit = function() {

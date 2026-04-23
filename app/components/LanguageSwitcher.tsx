@@ -23,31 +23,38 @@ export default function LanguageSwitcher() {
   const switchTo = (code: string) => {
     setCurrent(code);
     
-    // Set the Google Translate cookie
-    // We set it multiple ways to ensure it sticks on .go.tz domains
     const cookieValue = `googtrans=/en/${code}`;
     document.cookie = `${cookieValue}; path=/`;
     document.cookie = `${cookieValue}; path=/; domain=${window.location.hostname}`;
     
-    // Also try to set it on the base domain if it's a subdomain (like www.tgdc.go.tz)
     const parts = window.location.hostname.split('.');
     if (parts.length >= 3) {
       const baseDomain = parts.slice(-3).join('.');
       document.cookie = `${cookieValue}; path=/; domain=${baseDomain}`;
     }
 
+    // Smart Trigger: Use MutationObserver to watch for the Google dropdown
     const triggerGoogle = () => {
       const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
       if (select) {
         select.value = code;
         select.dispatchEvent(new Event("change"));
-      } else {
-        // Retry if the widget hasn't finished loading yet
-        setTimeout(triggerGoogle, 500);
+        return true;
       }
+      return false;
     };
-    
-    triggerGoogle();
+
+    if (!triggerGoogle()) {
+      const observer = new MutationObserver((mutations, obs) => {
+        if (triggerGoogle()) {
+          obs.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      
+      // Fallback timeout
+      setTimeout(() => observer.disconnect(), 10000);
+    }
   };
 
   return (
