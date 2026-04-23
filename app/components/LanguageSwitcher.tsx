@@ -11,13 +11,30 @@ const LANGUAGES = [
 export default function LanguageSwitcher() {
   const { locale } = useI18n();
   const [current, setCurrent] = useState<string>(locale);
+  
+  useEffect(() => {
+    // Check if there is already a Google Translate cookie
+    const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
+    if (match && match[1]) {
+      setCurrent(match[1]);
+    }
+  }, []);
 
   const switchTo = (code: string) => {
     setCurrent(code);
     
-    // We intentionally do NOT call setLocale(code) here.
-    // Keeping the React UI in English ensures Google Translate has a 
-    // consistent source text to translate, which fixes the "partial translation" issue.
+    // Set the Google Translate cookie
+    // We set it multiple ways to ensure it sticks on .go.tz domains
+    const cookieValue = `googtrans=/en/${code}`;
+    document.cookie = `${cookieValue}; path=/`;
+    document.cookie = `${cookieValue}; path=/; domain=${window.location.hostname}`;
+    
+    // Also try to set it on the base domain if it's a subdomain (like www.tgdc.go.tz)
+    const parts = window.location.hostname.split('.');
+    if (parts.length >= 3) {
+      const baseDomain = parts.slice(-3).join('.');
+      document.cookie = `${cookieValue}; path=/; domain=${baseDomain}`;
+    }
 
     const triggerGoogle = () => {
       const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
