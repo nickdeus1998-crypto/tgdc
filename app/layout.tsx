@@ -48,9 +48,9 @@ export default function RootLayout({
         <div id="google_translate_element" className="google-translate-hidden"></div>
         <Script
           src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
-        <Script id="google-translate-init" strategy="lazyOnload">
+        <Script id="google-translate-init" strategy="afterInteractive">
           {`
             function googleTranslateElementInit() {
               new window.google.translate.TranslateElement({

@@ -26,13 +26,8 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
 
   // Initialize from localStorage or cookie on mount
   useEffect(() => {
-    try {
-      const stored = (typeof window !== 'undefined' && (localStorage.getItem('locale') as Locale)) || undefined;
-      const cookieMatch = typeof document !== 'undefined' && document.cookie.match(/(?:^|; )locale=([^;]+)/);
-      const fromCookie = (cookieMatch && decodeURIComponent(cookieMatch[1])) as Locale | null;
-      const initial = (stored || fromCookie || 'en') as Locale;
-      if (initial !== locale) setLocaleState(initial);
-    } catch {}
+    // Force English source text so Google Translate can work reliably on the whole page.
+    setLocaleState('en');
   }, []);
 
   const setLocale = (l: Locale) => {

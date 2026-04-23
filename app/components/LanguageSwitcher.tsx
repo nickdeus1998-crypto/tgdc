@@ -9,25 +9,28 @@ const LANGUAGES = [
 ];
 
 export default function LanguageSwitcher() {
-  const { locale, setLocale } = useI18n();
+  const { locale } = useI18n();
   const [current, setCurrent] = useState<string>(locale);
 
-  // Sync state if locale changes from elsewhere
-  useEffect(() => {
-    setCurrent(locale);
-  }, [locale]);
-
   const switchTo = (code: string) => {
-    // 1. Update manual translations (React state)
-    setLocale(code as "en" | "sw");
     setCurrent(code);
+    
+    // We intentionally do NOT call setLocale(code) here.
+    // Keeping the React UI in English ensures Google Translate has a 
+    // consistent source text to translate, which fixes the "partial translation" issue.
 
-    // 2. Update machine translations (Google Translate Widget)
-    const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
-    if (select) {
-      select.value = code;
-      select.dispatchEvent(new Event("change"));
-    }
+    const triggerGoogle = () => {
+      const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+      if (select) {
+        select.value = code;
+        select.dispatchEvent(new Event("change"));
+      } else {
+        // Retry if the widget hasn't finished loading yet
+        setTimeout(triggerGoogle, 500);
+      }
+    };
+    
+    triggerGoogle();
   };
 
   return (
