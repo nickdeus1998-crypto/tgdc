@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { isMaintenanceMode, shouldBypassMaintenance, hasPreviewAccess } from './lib/maintenance'
+import { shouldBypassMaintenance, hasPreviewAccess } from './lib/maintenance'
+import prisma from './lib/prisma'
+
+// Force Node.js runtime so we can use Prisma (SQLite) directly
+// Edge runtime does NOT support Prisma/SQLite
+export const runtime = 'nodejs'
 
 // NOTE: Middleware runs on the Edge runtime — do not import Node 'crypto'.
 // Implement minimal HS256 JWT verification using Web Crypto here.
@@ -37,23 +42,48 @@ async function verifyJwtEdge(token: string, secret: string): Promise<Record<stri
     }
 }
 
+/**
+ * Check maintenance mode directly via Prisma (no self-fetch).
+ * This avoids the circular dependency where middleware fetches its own API route.
+ */
+async function checkMaintenanceMode(): Promise<boolean> {
+    try {
+        // Check environment variable override first
+        if (process.env.FORCE_MAINTENANCE_MODE === 'true') {
+            return true
+        }
+
+        const settings = await prisma.siteSettings.findFirst()
+        if (!settings) return false
+
+        let enabled = settings.maintenanceEnabled
+
+        // Check scheduled maintenance times
+        if (enabled && settings.maintenanceStartTime && settings.maintenanceEndTime) {
+            const currentTime = new Date()
+            const startTime = new Date(settings.maintenanceStartTime)
+            const endTime = new Date(settings.maintenanceEndTime)
+
+            // Only enable if current time is within the scheduled window
+            enabled = currentTime >= startTime && currentTime <= endTime
+        }
+
+        return enabled
+    } catch (error) {
+        console.error('Middleware: Error checking maintenance mode:', error)
+        return false
+    }
+}
+
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
 
     // Check maintenance mode first (before auth checks)
+    // We only check if we are NOT on a bypass path already
     let maintenanceActive = false
     try {
-        // We use a relative fetch which works in Next.js middleware
-        // We only check if we are NOT on a bypass path already
         if (!shouldBypassMaintenance(pathname)) {
-            const baseUrl = req.nextUrl.origin
-            const res = await fetch(`${baseUrl}/api/maintenance/settings`, {
-                next: { revalidate: 30 } // Cache for 30 seconds
-            })
-            if (res.ok) {
-                const data = await res.json()
-                maintenanceActive = data.maintenanceActive
-            }
+            maintenanceActive = await checkMaintenanceMode()
         }
     } catch (err) {
         console.error('Middleware maintenance check failed:', err)
