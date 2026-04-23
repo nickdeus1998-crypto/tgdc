@@ -46,19 +46,23 @@ export default function RootLayout({
         </ThemeProvider>
 
         <div id="google_translate_element" className="google-translate-hidden"></div>
-        <Script
-          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="afterInteractive"
-        />
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
-            function googleTranslateElementInit() {
+            window.googleTranslateElementInit = function() {
               new window.google.translate.TranslateElement({
                 pageLanguage: 'en',
                 includedLanguages: 'en,sw',
                 autoDisplay: false
               }, 'google_translate_element');
-            }
+            };
+            (function() {
+              var gt = document.createElement('script');
+              gt.type = 'text/javascript';
+              gt.async = true;
+              gt.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+              var s = document.getElementsByTagName('script')[0];
+              s.parentNode.insertBefore(gt, s);
+            })();
           `}
         </Script>
       </body>
