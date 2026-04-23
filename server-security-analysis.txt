@@ -1,0 +1,90 @@
+============================================================
+       TGDC SERVER SECURITY & PERFORMANCE ANALYSIS
+============================================================
+Server IP: 100.127.7.37
+Date: 2026-03-25
+
+1. SYSTEM & HARDWARE OVERVIEW
+------------------------------------------------------------
+• OS: Ubuntu 22.04.5 LTS (Jammy)
+• Kernel: Linux 5.15.0-134-generic x86_64
+• CPU: Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz (2 Cores)
+• Memory: 3.8Gi Total | ~2Gi Used | ~1.4Gi Free | ~387Mi Cache
+• Disk (/): 99G Total | 11G Used | 83G Free (12% Usage)
+• Disk (/mnt): 99G Total | 24K Used | 94G Free (1% Usage)
+
+Performance Analysis:
+- CPU resources (2 cores) are currently sufficient for a Next.js/SQLite setup but may struggle with high concurrent traffic or Prisma query spikes.
+- RAM (4GB) is healthy with ~1.4GB free. Next.js and PM2 are currently using ~57MB, which is excellent.
+- Disk latency/IOPS should be monitored since SQLite relies heavily on disk write speeds. There is plenty of storage capacity remaining.
+
+2. SECURITY VULNERABILITIES & MISCONFIGURATIONS
+-----------------------------------------------
+
+2.1 [CRITICAL] UFW Firewall is INACTIVE
+    Risk: The server's built-in Uncomplicated Firewall (UFW) is disabled.
+    Impact: All network ports bound to 0.0.0.0 are exposed to the internet,
+            bypassing basic access controls.
+    Recommendation:
+      - Enable UFW immediately: `sudo ufw enable`
+      - Allow OpenSSH (Port 22/TCP)
+      - Allow Nginx (Port 80/TCP, 443/TCP)
+      - Deny all other incoming traffic by default.
+
+2.2 [HIGH] SSH Password Authentication is ENABLED
+    Risk: `sshd_config` permits PasswordAuthentication.
+    Impact: The server is vulnerable to SSH brute-force attacks (dictionary attacks).
+    Recommendation:
+      - Set `PasswordAuthentication no` in `/etc/ssh/sshd_config`.
+      - Enforce Key-Based Authentication (RSA/Ed25519) for `tgdc-admin`.
+      - Set `PermitRootLogin prohibit-password` or `no`.
+
+2.3 [MEDIUM] Suspicious Internal Port Bindings
+    Observation:
+      - Port 3000 (Node.js/PM2) is listening on `0.0.0.0`.
+      - Port 44221 (Node/Prisma studio?) is listening on `127.0.0.1`.
+    Risk: If Node.js is meant to be proxied behind Nginx, it should only bind
+          to `127.0.0.1:3000`, not `0.0.0.0:3000`. Exposing 3000 globally allows
+          attackers to bypass Nginx security headers, rate limiters, or WAFs.
+    Recommendation:
+      - Update the start script to bind to localhost: `HOST=127.0.0.1 pm2 start npm --name "tgdc" -- run start`
+
+2.4 [MEDIUM] Node.js Version (v18.20.8) is Nearing EOL
+    Risk: Node 18 reaches End-of-Life (EOL) in April 2025.
+    Impact: No further security patches will be provided. We already encountered
+            compatibility issues with `isomorphic-dompurify`.
+    Recommendation:
+      - Upgrade the server to Node.js v20 LTS or v22 LTS.
+
+3. PROCESS MANAGEMENT & STABILITY
+---------------------------------------------
+
+3.1 [MEDIUM] PM2 App Instability (80 Restarts)
+    Observation: The `tgdc` PM2 process shows 80 process restarts.
+    Impact: High restart counts indicate the application is frequently crashing,
+            likely due to Out-Of-Memory (OOM) errors, unhandled promise rejections,
+            or SQLite locking conflicts.
+    Recommendation:
+      - Inspect PM2 logs: `pm2 logs tgdc --lines 100` to identify the crash reason.
+      - SQLite database locking (`P2024`) is a common cause in Next.js when multiple
+        requests attempt simultaneous writes.
+      - Consider running PM2 in cluster mode (`-i max`) ONLY if migrated to PostgreSQL/MySQL.
+        SQLite cannot handle multi-process concurrency safely.
+
+4. NGINX CONFIGURATION OVERVIEW
+------------------------------------------------------------
+Note: Could not fully read /etc/nginx/nginx.conf due to permissions, but standard
+hardening is recommended:
+  - Add `server_tokens off;` to hide Nginx version.
+  - Implement TLS v1.2/v1.3 only (disable TLS v1.0/v1.1).
+  - Add proxy_set_header to pass real client IP to Next.js for rate limiting to work.
+
+============================================================
+SUMMARY OF ACTION ITEMS
+============================================================
+1. [Security] Enable UFW Firewall and restrict inbound ports (22, 80, 443).
+2. [Security] Disable SSH Password Authentication; switch to SSH Keys only.
+3. [Security] Bind the Next.js app to 127.0.0.1:3000 instead of 0.0.0.0:3000.
+4. [Stability] Investigate PM2 logs to determine why the app crashed 80 times.
+5. [Maintenance] Upgrade Node.js from v18 LTS to v20/v22 LTS soon.
+6. [Architecture] Migrate from SQLite to PostgreSQL/MySQL for production scalability.

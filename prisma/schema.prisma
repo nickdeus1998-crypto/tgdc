@@ -377,6 +377,19 @@ model OrgLeader {
   updatedAt   DateTime @updatedAt
 }
 
+model BoardCommittee {
+  id          Int      @id @default(autoincrement())
+  levelLabel  String   // e.g., "Board Chair"
+  levelOrder  Int      @default(0)
+  columnOrder Int      @default(0)
+  name        String
+  role        String
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model DirectUsePage {
   id                Int      @id @default(autoincrement())
   heroTitle         String?

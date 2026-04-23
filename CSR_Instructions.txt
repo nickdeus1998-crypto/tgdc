@@ -1,0 +1,50 @@
+CERTIFICATE SIGNING REQUEST (CSR) GENERATION GUIDE
+Target Server IP: 100.127.7.37
+Website: www.tgdc.go.tz
+
+Following eGA compliance, the Certificate Signing Request (CSR) must be generated directly on the destination production server. 
+
+=========================================================
+STEP 1: LOGIN TO THE SERVER
+=========================================================
+Open your terminal and SSH into the new server:
+ssh [username]@100.127.7.37
+(Use the provided password: P@$$w0rd-2026)
+
+=========================================================
+STEP 2: RUN THE OPENSSL COMMAND
+=========================================================
+Copy and paste the following command into your server terminal exactly as it is. It will generate the CSR and the Private Key silently without asking interactive questions:
+
+openssl req -new -newkey rsa:2048 -nodes -keyout /tmp/tgdc.go.tz.key -out /tmp/tgdc.go.tz.csr -subj "/C=TZ/ST=Dar es Salaam/L=Dar es Salaam/O=Tanzania Geothermal Development Company/OU=ICT Department/CN=www.tgdc.go.tz"
+
+What this command does:
+• -newkey rsa:2048: Creates a strong, industry-standard 2048-bit RSA key.
+• -nodes: Ensures the private key is not password-protected (required by Nginx/web servers to auto-start).
+• -keyout: Saves the secret Private Key to `/tmp/tgdc.go.tz.key`.
+• -out: Saves the public CSR file to `/tmp/tgdc.go.tz.csr`.
+• -subj: Automatically fills out the eGA application details (Country, State, City, Organization, Unit, and Domain Name).
+
+=========================================================
+STEP 3: EXTRACT THE CSR TO SEND TO eGA
+=========================================================
+Once generated, you need to view and copy the CSR text to send to eGA (GovCA). 
+
+Run this command to view the CSR text:
+cat /tmp/tgdc.go.tz.csr
+
+Copy everything, including the BEGIN and END tags:
+-----BEGIN CERTIFICATE REQUEST-----
+(Text block...)
+-----END CERTIFICATE REQUEST-----
+
+Important: Send ONLY this CSR block to the eGA Certificate Authority. 
+
+=========================================================
+STEP 4: SECURE THE PRIVATE KEY
+=========================================================
+The Private Key must remain securely on the server! 
+You can verify it is there by running:
+cat /tmp/tgdc.go.tz.key
+
+DO NOT send the Private Key (.key) to eGA or anyone else. Keep it safe on the server until eGA returns your SSL Certificate (.crt). Once you have the certificate, both files will be moved into the production Nginx/Next.js SSL configuration directory.
