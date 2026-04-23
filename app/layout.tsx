@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import I18nProvider from "./components/I18nProvider";
 import { Poppins } from "next/font/google";
-import WeglotLoader from "./components/WeglotLoader";
 import PreviewBanner from "./components/PreviewBanner";
+import Script from "next/script";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,7 +36,6 @@ export default function RootLayout({
         />
       </head>
       <body className={poppins.className}>
-        <WeglotLoader />
         <ThemeProvider attribute="class" enableSystem={true} defaultTheme="system">
           <I18nProvider>
             <PreviewBanner />
@@ -45,6 +44,23 @@ export default function RootLayout({
             </SiteChrome>
           </I18nProvider>
         </ThemeProvider>
+
+        <div id="google_translate_element" className="google-translate-hidden"></div>
+        <Script
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="lazyOnload"
+        />
+        <Script id="google-translate-init" strategy="lazyOnload">
+          {`
+            function googleTranslateElementInit() {
+              new window.google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,sw',
+                autoDisplay: false
+              }, 'google_translate_element');
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

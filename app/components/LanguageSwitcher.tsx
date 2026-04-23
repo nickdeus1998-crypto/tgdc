@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "./I18nProvider";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -8,37 +9,26 @@ const LANGUAGES = [
 ];
 
 export default function LanguageSwitcher() {
-  const [current, setCurrent] = useState<string>("en");
-  const [ready, setReady] = useState(false);
+  const { locale, setLocale } = useI18n();
+  const [current, setCurrent] = useState<string>(locale);
 
+  // Sync state if locale changes from elsewhere
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const wg = (window as any).Weglot;
-    if (!wg) {
-      const timer = setInterval(() => {
-        const inst = (window as any).Weglot;
-        if (inst) {
-          setReady(true);
-          setCurrent(inst.getCurrentLang?.() || "en");
-          inst.on?.("languageChanged", (lang: string) => setCurrent(lang));
-          clearInterval(timer);
-        }
-      }, 400);
-      return () => clearInterval(timer);
-    }
-    setReady(true);
-    setCurrent(wg.getCurrentLang?.() || "en");
-    wg.on?.("languageChanged", (lang: string) => setCurrent(lang));
-  }, []);
+    setCurrent(locale);
+  }, [locale]);
 
   const switchTo = (code: string) => {
-    const wg = (window as any).Weglot;
-    if (wg) {
-      wg.switchTo?.(code);
+    // 1. Update manual translations (React state)
+    setLocale(code as "en" | "sw");
+    setCurrent(code);
+
+    // 2. Update machine translations (Google Translate Widget)
+    const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+    if (select) {
+      select.value = code;
+      select.dispatchEvent(new Event("change"));
     }
   };
-
-  if (!ready) return null;
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow-sm">
@@ -47,7 +37,7 @@ export default function LanguageSwitcher() {
           key={lang.code}
           onClick={() => switchTo(lang.code)}
           className={`px-2 py-1 rounded-full transition ${
-            current === lang.code ? "bg-emerald-100 text-emerald-800" : "text-gray-600 hover:text-gray-900"
+            current === lang.code ? "bg-[#326101]/10 text-[#326101]" : "text-gray-600 hover:text-gray-900"
           }`}
         >
           {lang.label}
