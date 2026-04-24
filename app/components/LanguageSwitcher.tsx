@@ -24,13 +24,24 @@ export default function LanguageSwitcher() {
     setCurrent(code);
     
     const cookieValue = `googtrans=/en/${code}`;
+    
+    // Clear any stale googtrans cookies first
+    document.cookie = `googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    document.cookie = `googtrans=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    
+    // Set fresh cookies - path-level (always works)
     document.cookie = `${cookieValue}; path=/`;
+    // Set on exact hostname (e.g. www.tgdc.go.tz)
     document.cookie = `${cookieValue}; path=/; domain=${window.location.hostname}`;
     
+    // For subdomains (e.g. www.tgdc.go.tz → set on .tgdc.go.tz)
     const parts = window.location.hostname.split('.');
     if (parts.length >= 3) {
+      // For gov domains like www.tgdc.go.tz, the registrable domain is tgdc.go.tz
+      // Browsers treat .go.tz as a public suffix so we set on .tgdc.go.tz
       const baseDomain = parts.slice(-3).join('.');
-      document.cookie = `${cookieValue}; path=/; domain=${baseDomain}`;
+      document.cookie = `googtrans=; path=/; domain=.${baseDomain}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      document.cookie = `${cookieValue}; path=/; domain=.${baseDomain}`;
     }
 
     // Smart Trigger: Use MutationObserver to watch for the Google dropdown
@@ -52,8 +63,13 @@ export default function LanguageSwitcher() {
       });
       observer.observe(document.body, { childList: true, subtree: true });
       
-      // Fallback timeout
-      setTimeout(() => observer.disconnect(), 10000);
+      // Fallback: if widget still not found, reload page so cookie takes effect
+      setTimeout(() => {
+        observer.disconnect();
+        if (!document.querySelector(".goog-te-combo")) {
+          window.location.reload();
+        }
+      }, 5000);
     }
   };
 
