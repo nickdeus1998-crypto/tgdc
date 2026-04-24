@@ -1,7 +1,19 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { sanitizeHtml } from '@/app/lib/sanitize';
+import DOMPurify from 'isomorphic-dompurify';
+
+/** Sanitize SVG icon markup specifically — allows SVG tags that the general sanitizer strips */
+function sanitizeSvgIcon(dirty: string): string {
+  if (!dirty) return '';
+  return DOMPurify.sanitize(dirty, {
+    ALLOWED_TAGS: ['svg', 'path', 'g', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse', 'defs', 'use', 'symbol', 'text', 'tspan'],
+    ALLOWED_ATTR: ['d', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'viewBox', 'xmlns', 'class', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'width', 'height', 'points', 'transform', 'fill-rule', 'clip-rule', 'opacity'],
+    FORBID_TAGS: ['script', 'style'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+  });
+}
 
 interface ContactInfoProps {
   address: string;
@@ -231,9 +243,9 @@ Barabara ya Mwai Kibaki
               name: s.name ?? 'Social',
               href: s.url ?? '#',
               icon: (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <g dangerouslySetInnerHTML={{ __html: sanitizeHtml(s.icon || '') }} />
-                </svg>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"
+                  dangerouslySetInnerHTML={{ __html: sanitizeSvgIcon(s.icon || '') }}
+                />
               ),
             }))
             : defaultSocialLinks
@@ -250,7 +262,7 @@ Barabara ya Mwai Kibaki
         if (analyticsRes.ok) {
           const analyticsData = await analyticsRes.json();
           setStats([
-            { title: 'Monthly Site Visitors', value: analyticsData.visitors30d || 0 },
+            { title: 'Monthly Site Visitors', value: analyticsData.visitors30d || analyticsData.visitors7d || 0 },
             { title: 'Total Documents', value: analyticsData.documents || 0 },
             { title: 'Latest News Items', value: analyticsData.news || 0 },
           ]);

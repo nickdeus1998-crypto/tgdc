@@ -19,19 +19,30 @@ export async function GET() {
     // Fallback: compute from PageView for last 7 days if Stat values missing
     let pv7 = statMap['pageviews7d'] || 0
     let vis7 = statMap['visitors7d'] || 0
+    const now = new Date()
     if (!pv7 || !vis7) {
-      const now = new Date()
-      const start = new Date(now)
-      start.setDate(now.getDate() - 6)
-      const events = await prisma.pageView.findMany({
-        where: { createdAt: { gte: start } },
+      const start7 = new Date(now)
+      start7.setDate(now.getDate() - 6)
+      const events7 = await prisma.pageView.findMany({
+        where: { createdAt: { gte: start7 } },
         select: { session: true },
       })
-      pv7 = events.length
-      const set = new Set<string>()
-      for (const e of events) if (e.session) set.add(e.session)
-      vis7 = set.size
+      pv7 = events7.length
+      const set7 = new Set<string>()
+      for (const e of events7) if (e.session) set7.add(e.session)
+      vis7 = set7.size
     }
+
+    // Compute 30-day unique visitors for the footer "Monthly Site Visitors" counter
+    const start30 = new Date(now)
+    start30.setDate(now.getDate() - 29)
+    const events30 = await prisma.pageView.findMany({
+      where: { createdAt: { gte: start30 } },
+      select: { session: true },
+    })
+    const set30 = new Set<string>()
+    for (const e of events30) if (e.session) set30.add(e.session)
+    const vis30 = set30.size
 
     return NextResponse.json({
       news,
@@ -42,6 +53,7 @@ export async function GET() {
       services: { sections, services },
       pageviews7d: pv7,
       visitors7d: vis7,
+      visitors30d: vis30,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'analytics_failed' }, { status: 500 }) }
