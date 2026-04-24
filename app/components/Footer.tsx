@@ -7,12 +7,16 @@ import DOMPurify from 'isomorphic-dompurify';
 /** Sanitize SVG icon markup specifically — allows SVG tags that the general sanitizer strips */
 function sanitizeSvgIcon(dirty: string): string {
   if (!dirty) return '';
-  return DOMPurify.sanitize(dirty, {
+  // Wrap in <svg> so DOMPurify doesn't strip root SVG elements like <path> or <g>
+  const wrapped = `<svg>${dirty}</svg>`;
+  const sanitized = DOMPurify.sanitize(wrapped, {
     ALLOWED_TAGS: ['svg', 'path', 'g', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse', 'defs', 'use', 'symbol', 'text', 'tspan'],
     ALLOWED_ATTR: ['d', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'viewBox', 'xmlns', 'class', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'width', 'height', 'points', 'transform', 'fill-rule', 'clip-rule', 'opacity'],
     FORBID_TAGS: ['script', 'style'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick'],
   });
+  // Strip the wrapper <svg> and </svg> tags
+  return sanitized.replace(/^<svg[^>]*>/i, '').replace(/<\/svg>$/i, '');
 }
 
 interface ContactInfoProps {
