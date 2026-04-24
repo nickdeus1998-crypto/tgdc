@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OrgStructure from '../components/OrgStructure';
-import BoardCommittee from '../components/BoardCommittee';
 import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface TimelineItem {
@@ -434,9 +433,6 @@ const AboutUs: React.FC = () => {
       </section>
 
       <OrgStructure />
-
-      <BoardCommittee />
-
     </div>
   );
 };
