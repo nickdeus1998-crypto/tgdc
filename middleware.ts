@@ -48,14 +48,10 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
             return true
         }
 
-        // Call our public maintenance status endpoint
-        // Using a relative URL or constructing it from origin
-        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        // Call our public maintenance status endpoint with cache busting
         const origin = req.nextUrl.origin
-        
-        const res = await fetch(`${origin}/api/maintenance-status`, {
-            // Short cache to avoid overwhelming the server while keeping it relatively fresh
-            next: { revalidate: 30 } 
+        const res = await fetch(`${origin}/api/maintenance-status?t=${Date.now()}`, {
+            cache: 'no-store',
         })
         
         if (!res.ok) return false
