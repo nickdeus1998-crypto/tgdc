@@ -33,7 +33,7 @@ const nextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { 
             key: 'Content-Security-Policy', 
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net translate.google.com translate.googleapis.com translate-pa.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com https://cdnjs.cloudflare.com translate.googleapis.com www.gstatic.com; font-src 'self' fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.tile.openstreetmap.org https://images.unsplash.com data: blob: translate.google.com www.gstatic.com fonts.gstatic.com; connect-src 'self' translate.googleapis.com translate-pa.googleapis.com; frame-src 'self' translate.google.com;" 
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net translate.google.com translate.googleapis.com translate-pa.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com https://cdnjs.cloudflare.com translate.googleapis.com www.gstatic.com; font-src 'self' fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.tile.openstreetmap.org https://images.unsplash.com https://unpkg.com data: blob: translate.google.com www.gstatic.com fonts.gstatic.com; connect-src 'self' translate.googleapis.com translate-pa.googleapis.com; frame-src 'self' translate.google.com;" 
           },
         ],
       },

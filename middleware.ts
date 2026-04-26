@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { shouldBypassMaintenance, hasPreviewAccess } from './lib/maintenance'
-import prisma from './lib/prisma'
-
-// Force Node.js runtime so we can use Prisma (SQLite) directly
-// Edge runtime does NOT support Prisma/SQLite
-export const runtime = 'nodejs'
-
-// NOTE: Middleware runs on the Edge runtime — do not import Node 'crypto'.
+// Middleware runs on the Edge runtime — do not import Node 'crypto' or Prisma directly.
+// We use a fetch call to an API endpoint to check maintenance status.
 // Implement minimal HS256 JWT verification using Web Crypto here.
 
 function getJwtSecret() {
@@ -43,32 +38,30 @@ async function verifyJwtEdge(token: string, secret: string): Promise<Record<stri
 }
 
 /**
- * Check maintenance mode directly via Prisma (no self-fetch).
- * This avoids the circular dependency where middleware fetches its own API route.
+ * Check maintenance mode via an internal API call.
+ * This works around the limitation of not being able to use Prisma in Edge middleware.
  */
-async function checkMaintenanceMode(): Promise<boolean> {
+async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
     try {
         // Check environment variable override first
         if (process.env.FORCE_MAINTENANCE_MODE === 'true') {
             return true
         }
 
-        const settings = await prisma.siteSettings.findFirst()
-        if (!settings) return false
-
-        let enabled = settings.maintenanceEnabled
-
-        // Check scheduled maintenance times
-        if (enabled && settings.maintenanceStartTime && settings.maintenanceEndTime) {
-            const currentTime = new Date()
-            const startTime = new Date(settings.maintenanceStartTime)
-            const endTime = new Date(settings.maintenanceEndTime)
-
-            // Only enable if current time is within the scheduled window
-            enabled = currentTime >= startTime && currentTime <= endTime
-        }
-
-        return enabled
+        // Call our public maintenance status endpoint
+        // Using a relative URL or constructing it from origin
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        const origin = req.nextUrl.origin
+        
+        const res = await fetch(`${origin}/api/maintenance-status`, {
+            // Short cache to avoid overwhelming the server while keeping it relatively fresh
+            next: { revalidate: 30 } 
+        })
+        
+        if (!res.ok) return false
+        
+        const data = await res.json()
+        return !!data.active
     } catch (error) {
         console.error('Middleware: Error checking maintenance mode:', error)
         return false
@@ -83,7 +76,7 @@ export async function middleware(req: NextRequest) {
     let maintenanceActive = false
     try {
         if (!shouldBypassMaintenance(pathname)) {
-            maintenanceActive = await checkMaintenanceMode()
+            maintenanceActive = await checkMaintenanceMode(req)
         }
     } catch (err) {
         console.error('Middleware maintenance check failed:', err)

@@ -44,11 +44,11 @@ export default function BoardCommitteeSection() {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/board-committee');
-        if (!res.ok) throw new Error('Failed to load board committee');
+        if (!res.ok) throw new Error('Failed to load board of directors');
         const data = await res.json();
         setLevels(Array.isArray(data?.levels) ? data.levels : []);
       } catch (error) {
-        console.error('BoardCommittee fetch error', error);
+        console.error('BoardOfDirectors fetch error', error);
         setLevels([]);
       } finally {
         setLoading(false);
@@ -63,7 +63,7 @@ export default function BoardCommitteeSection() {
         <div className="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
           <div className="animate-pulse flex flex-col items-center space-y-4">
             <div className="w-12 h-12 bg-gray-100 rounded-full border-4 border-t-[#326101] animate-spin"></div>
-            <p>Loading board committee...</p>
+            <p>Loading board of directors...</p>
           </div>
         </div>
       </section>
@@ -74,7 +74,7 @@ export default function BoardCommitteeSection() {
     return (
       <section id="board-committee" className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 text-center text-gray-500 text-sm">
-          Board committee information will be published soon.
+          Board of directors information will be published soon.
         </div>
       </section>
     );
@@ -88,9 +88,9 @@ export default function BoardCommitteeSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-3">Board Committee</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-3">Board of Directors</h2>
           <p className="text-gray-500 max-w-2xl mx-auto">
-            A comprehensive view of TGDC&apos;s board committee members and governance structure.
+            A comprehensive view of TGDC&apos;s board of directors members and governance structure.
           </p>
         </div>
 

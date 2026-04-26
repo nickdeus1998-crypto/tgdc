@@ -28,7 +28,7 @@ const defaultForm: FormState = {
   isActive: true,
 };
 
-const BoardCommitteeAdminPage: React.FC = () => {
+const BoardOfDirectorsAdminPage: React.FC = () => {
   const [items, setItems] = useState<BoardMember[]>([]);
   const [form, setForm] = useState<FormState>(defaultForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -184,7 +184,7 @@ const BoardCommitteeAdminPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900">{editingId ? 'Edit Board Member' : 'Add Board Member'}</h2>
-            <p className="text-sm text-gray-500">Manage board committee entries shown on the About Us page.</p>
+            <p className="text-sm text-gray-500">Manage board of directors entries shown on the About Us page.</p>
           </div>
           {editingId && (
             <button className="text-sm text-[#326101] hover:underline" onClick={resetForm} disabled={saving}>
@@ -350,4 +350,4 @@ const BoardCommitteeAdminPage: React.FC = () => {
   );
 };
 
-export default BoardCommitteeAdminPage;
+export default BoardOfDirectorsAdminPage;

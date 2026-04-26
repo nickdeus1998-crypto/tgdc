@@ -94,6 +94,7 @@ export function shouldBypassMaintenance(pathname: string): boolean {
         '/api/stakeholder',
         '/api/site-settings',
         '/api/maintenance',
+        '/api/maintenance-status',
         '/preview',
         '/_next',
         '/favicon.ico',
