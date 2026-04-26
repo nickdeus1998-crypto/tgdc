@@ -28,14 +28,16 @@ export async function isMaintenanceMode(): Promise<boolean> {
 
         let enabled = settings.maintenanceEnabled
 
-        // Check scheduled maintenance times
-        if (enabled && settings.maintenanceStartTime && settings.maintenanceEndTime) {
+        // If not manually enabled, check if we are within a scheduled window
+        if (!enabled && settings.maintenanceStartTime && settings.maintenanceEndTime) {
             const currentTime = new Date()
             const startTime = new Date(settings.maintenanceStartTime)
             const endTime = new Date(settings.maintenanceEndTime)
 
-            // Only enable if current time is within the scheduled window
-            enabled = currentTime >= startTime && currentTime <= endTime
+            // Auto-enable during the scheduled window
+            if (currentTime >= startTime && currentTime <= endTime) {
+                enabled = true
+            }
         }
 
         return enabled
