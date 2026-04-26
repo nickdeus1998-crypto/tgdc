@@ -5,6 +5,9 @@ import I18nProvider from "./components/I18nProvider";
 import { Poppins } from "next/font/google";
 import PreviewBanner from "./components/PreviewBanner";
 import Script from "next/script";
+import { isMaintenanceMode, shouldBypassMaintenance, hasPreviewAccess } from "@/lib/maintenance";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,11 +32,25 @@ export const viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") || "/"; // We'll set this in middleware
+
+  // Check maintenance mode
+  if (!shouldBypassMaintenance(pathname)) {
+    const active = await isMaintenanceMode();
+    if (active) {
+      // Check for preview access (cookies are handled automatically in Server Components)
+      const isPreview = headerList.get("cookie")?.includes("preview_mode=true");
+      if (!isPreview) {
+        redirect("/maintenance");
+      }
+    }
+  }
   return (
     <html lang="en" suppressHydrationWarning>
       <head>

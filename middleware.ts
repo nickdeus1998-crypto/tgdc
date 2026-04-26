@@ -38,57 +38,14 @@ async function verifyJwtEdge(token: string, secret: string): Promise<Record<stri
 }
 
 /**
- * Check maintenance mode via an internal API call.
- * This works around the limitation of not being able to use Prisma in Edge middleware.
+ * Middleware handles auth protection and passes the current pathname to the root layout.
  */
-async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
-    try {
-        // Check environment variable override first
-        if (process.env.FORCE_MAINTENANCE_MODE === 'true') {
-            return true
-        }
-
-        // Call our public maintenance status endpoint with cache busting
-        // We use 127.0.0.1:3000 internally to avoid DNS/SSL issues in the Edge runtime
-        // Call our public maintenance status endpoint using a relative URL
-        // Next.js middleware supports relative URLs for internal fetches
-        let res = await fetch('/api/maintenance-status', {
-            cache: 'no-store',
-        }).catch(() => null)
-        
-        if (!res || !res.ok) return false
-        
-        const data = await res.json()
-        return !!data.active
-    } catch (error) {
-        console.error('Middleware: Error checking maintenance mode:', error)
-        return false
-    }
-}
-
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl
-
-    // Check maintenance mode first (before auth checks)
-    // We only check if we are NOT on a bypass path already
-    let maintenanceActive = false
-    try {
-        if (!shouldBypassMaintenance(pathname)) {
-            maintenanceActive = await checkMaintenanceMode(req)
-        }
-    } catch (err) {
-        console.error('Middleware maintenance check failed:', err)
-    }
-
-    if (maintenanceActive) {
-        // Check if user has preview access
-        if (!hasPreviewAccess(req)) {
-            // Redirect to maintenance page
-            const url = req.nextUrl.clone()
-            url.pathname = '/maintenance'
-            return NextResponse.redirect(url)
-        }
-    }
+    
+    // Add custom header for pathname so Server Components can see it
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set('x-pathname', pathname)
 
     // Handle preview mode activation
     if (pathname.startsWith('/preview')) {
@@ -106,6 +63,7 @@ export async function middleware(req: NextRequest) {
         url.pathname = targetPath
 
         const response = NextResponse.redirect(url)
+        response.headers.set('x-pathname', targetPath)
         response.cookies.set('preview_mode', 'true', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -134,7 +92,11 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(url)
         }
     }
-    return NextResponse.next()
+    return NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    })
 }
 
 export const config = {
