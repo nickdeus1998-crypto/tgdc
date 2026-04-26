@@ -43,10 +43,8 @@ export default async function RootLayout({
   const pathname = headerList.get("x-pathname") || "/"; // We'll set this in middleware
 
   // Check maintenance mode
-  console.log(`Layout Check: pathname=${pathname}`);
   if (!shouldBypassMaintenance(pathname)) {
     const active = await isMaintenanceMode();
-    console.log(`Maintenance Active: ${active}`);
     if (active) {
       redirect("/maintenance");
     }
