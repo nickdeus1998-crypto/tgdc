@@ -49,8 +49,8 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
         }
 
         // Call our public maintenance status endpoint with cache busting
-        const origin = req.nextUrl.origin
-        const res = await fetch(`${origin}/api/maintenance-status?t=${Date.now()}`, {
+        // We use localhost:3000 internally to avoid DNS/SSL issues in the Edge runtime
+        const res = await fetch(`http://localhost:3000/api/maintenance-status?t=${Date.now()}`, {
             cache: 'no-store',
         })
         
