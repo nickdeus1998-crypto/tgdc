@@ -50,12 +50,20 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
 
         // Call our public maintenance status endpoint with cache busting
         // We use 127.0.0.1:3000 internally to avoid DNS/SSL issues in the Edge runtime
-        let res = await fetch(`http://127.0.0.1:3000/api/maintenance-status?t=${Date.now()}`, {
+        // Try fetching from the local network IP shown in the PM2 logs
+        let res = await fetch(`http://10.1.90.70:3000/api/maintenance-status?t=${Date.now()}`, {
             cache: 'no-store',
         }).catch(() => null)
 
         if (!res || !res.ok) {
-            // Fallback to origin if 127.0.0.1 fails
+            // Fallback to 127.0.0.1
+            res = await fetch(`http://127.0.0.1:3000/api/maintenance-status?t=${Date.now()}`, {
+                cache: 'no-store',
+            }).catch(() => null)
+        }
+
+        if (!res || !res.ok) {
+            // Fallback to origin
             const origin = req.nextUrl.origin
             res = await fetch(`${origin}/api/maintenance-status?t=${Date.now()}`, {
                 cache: 'no-store',
