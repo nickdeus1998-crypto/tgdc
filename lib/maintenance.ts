@@ -21,19 +21,10 @@ export async function isMaintenanceMode(): Promise<boolean> {
         return true
     }
 
-    // Check cache
-    const now = Date.now()
-    if (maintenanceCache && now - maintenanceCache.timestamp < CACHE_TTL) {
-        return maintenanceCache.enabled
-    }
-
     // Fetch from database
     try {
         const settings = await getMaintenanceSettings()
-        if (!settings) {
-            maintenanceCache = { enabled: false, settings: null, timestamp: now }
-            return false
-        }
+        if (!settings) return false
 
         let enabled = settings.maintenanceEnabled
 
@@ -47,7 +38,6 @@ export async function isMaintenanceMode(): Promise<boolean> {
             enabled = currentTime >= startTime && currentTime <= endTime
         }
 
-        maintenanceCache = { enabled, settings, timestamp: now }
         return enabled
     } catch (error) {
         console.error('Error checking maintenance mode:', error)

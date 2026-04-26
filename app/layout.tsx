@@ -14,6 +14,8 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "TGDC | Tanzania Geothermal Development Company",
   description: "Leading sustainable geothermal energy solutions in Tanzania.",
@@ -44,11 +46,7 @@ export default async function RootLayout({
   if (!shouldBypassMaintenance(pathname)) {
     const active = await isMaintenanceMode();
     if (active) {
-      // Check for preview access (cookies are handled automatically in Server Components)
-      const isPreview = headerList.get("cookie")?.includes("preview_mode=true");
-      if (!isPreview) {
-        redirect("/maintenance");
-      }
+      redirect("/maintenance");
     }
   }
   return (
