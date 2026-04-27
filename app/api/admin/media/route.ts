@@ -78,9 +78,9 @@ export async function GET(request: Request) {
 
     const items = await listMediaFiles()
     return NextResponse.json({ items })
-  } catch (error) {
+  } catch (error: any) {
     console.error('ADMIN media list error', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
   }
 }
 
@@ -91,7 +91,10 @@ export async function POST(request: Request) {
     }
 
     const form = await request.formData()
-    const uploaded = form.getAll('files').filter((file): file is File => file instanceof File)
+    // Avoid `instanceof File` since `File` might not be globally defined in some Node environments
+    const uploaded = form.getAll('files').filter((file): file is any => 
+      file !== null && typeof file === 'object' && 'arrayBuffer' in file && 'name' in file
+    )
 
     if (!uploaded.length) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 })
@@ -140,9 +143,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ items: results })
-  } catch (error) {
+  } catch (error: any) {
     console.error('ADMIN media upload error', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
   }
 }
 
