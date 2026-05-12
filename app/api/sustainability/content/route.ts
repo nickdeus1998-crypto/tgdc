@@ -1,32 +1,64 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { verifyJwt, getJwtSecret } from '@/app/lib/auth';
+
+function isAdmin(request: Request) {
+    const cookie = request.headers.get('cookie') || '';
+    const m = cookie.match(/(?:^|; )user_token=([^;]+)/);
+    const token = m ? decodeURIComponent(m[1]) : null;
+    const payload = token ? verifyJwt(token, getJwtSecret()) : null;
+    return payload?.role === 'admin';
+}
 
 export async function GET() {
     try {
-        const row: any = await prisma.$queryRawUnsafe(
-            'SELECT content FROM SustainabilityContent WHERE id = 1'
-        );
-        const content = row?.[0]?.content ? JSON.parse(row[0].content) : {};
+        const row = await prisma.sustainabilityContent.findUnique({
+            where: { id: 1 }
+        });
+        const content = row?.content ? JSON.parse(row.content) : {};
         return NextResponse.json(content);
-    } catch {
+    } catch (e: any) {
+        // If table doesn't exist yet, return empty object gracefully
+        console.error('GET /api/sustainability/content error:', e?.message || e);
         return NextResponse.json({});
     }
 }
 
 export async function POST(req: Request) {
     try {
+        if (!isAdmin(req)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await req.json();
-        const now = new Date().toISOString();
-        await prisma.$executeRawUnsafe(
-            `INSERT INTO SustainabilityContent (id, content, createdAt, updatedAt)
-       VALUES (1, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET content=excluded.content, updatedAt=excluded.updatedAt`,
-            JSON.stringify(body),
-            now,
-            now
-        );
-        return NextResponse.json(body);
+        console.log('POST /api/sustainability/content - saving tab content');
+
+        const updated = await prisma.sustainabilityContent.upsert({
+            where: { id: 1 },
+            update: {
+                content: JSON.stringify(body),
+                updatedAt: new Date(),
+            },
+            create: {
+                id: 1,
+                content: JSON.stringify(body),
+            },
+        });
+
+        console.log('POST /api/sustainability/content - saved successfully');
+        return NextResponse.json(JSON.parse(updated.content));
     } catch (e: any) {
-        return NextResponse.json({ error: e?.message }, { status: 500 });
+        const message = e?.message || 'Unknown error';
+        console.error('POST /api/sustainability/content error:', message);
+
+        // Check if it's a table-not-found error and give a clear message
+        if (message.includes('no such table') || message.includes('does not exist') || message.includes('P2021')) {
+            return NextResponse.json(
+                { error: 'SustainabilityContent table not found. Please run: npx prisma db push' },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

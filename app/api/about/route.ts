@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Helpers to parse JSON columns safely
 function parseJSON<T>(value: any, fallback: T): T {
   if (value == null) return fallback;
@@ -21,6 +25,7 @@ export async function GET() {
         missionVision: [],
         coreValues: [],
         stats: [],
+        keyAchievements: [],
       });
     }
     const r = rows[0];
@@ -33,6 +38,7 @@ export async function GET() {
       missionVision: parseJSON(r.missionVision, [] as any[]),
       coreValues: parseJSON(r.coreValues, [] as any[]),
       stats: parseJSON(r.stats, [] as any[]),
+      keyAchievements: parseJSON(r.keyAchievements, [] as any[]),
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
     };
@@ -53,13 +59,14 @@ export async function POST(request: NextRequest) {
       missionVision = [],
       coreValues = [],
       stats = [],
+      keyAchievements = [],
     } = body || {};
 
     const now = new Date().toISOString();
     // Upsert using SQLite ON CONFLICT
     await prisma.$executeRawUnsafe(
-      `INSERT INTO About (id, heroTitle, heroSubtitle, timeline, background, missionVision, coreValues, stats, createdAt, updatedAt)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO About (id, heroTitle, heroSubtitle, timeline, background, missionVision, coreValues, stats, keyAchievements, createdAt, updatedAt)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          heroTitle=excluded.heroTitle,
          heroSubtitle=excluded.heroSubtitle,
@@ -68,6 +75,7 @@ export async function POST(request: NextRequest) {
          missionVision=excluded.missionVision,
          coreValues=excluded.coreValues,
          stats=excluded.stats,
+         keyAchievements=excluded.keyAchievements,
          updatedAt=excluded.updatedAt`,
       heroTitle,
       heroSubtitle,
@@ -76,6 +84,7 @@ export async function POST(request: NextRequest) {
       JSON.stringify(missionVision),
       JSON.stringify(coreValues),
       JSON.stringify(stats),
+      JSON.stringify(keyAchievements),
       now,
       now,
     );
@@ -92,6 +101,7 @@ export async function POST(request: NextRequest) {
       missionVision: parseJSON(r.missionVision, missionVision),
       coreValues: parseJSON(r.coreValues, coreValues),
       stats: parseJSON(r.stats, stats),
+      keyAchievements: parseJSON(r.keyAchievements, keyAchievements),
       createdAt: r.createdAt ?? now,
       updatedAt: r.updatedAt ?? now,
     };

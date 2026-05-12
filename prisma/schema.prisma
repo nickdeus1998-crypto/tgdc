@@ -272,6 +272,13 @@ model SustainabilityPartner {
   updatedAt        DateTime @updatedAt
 }
 
+model SustainabilityContent {
+  id        Int      @id @default(1)
+  content   String   // Stores JSON string of tab contents
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Information Center items (photos, videos, newsletters, press)
 model InformationItem {
   id          Int       @id @default(autoincrement())

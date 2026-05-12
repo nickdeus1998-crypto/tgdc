@@ -207,7 +207,10 @@ const SustainabilityPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tabContent),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || `Save failed (HTTP ${res.status})`);
+      }
       alert('Tab content saved!');
     } catch (e: any) {
       setErr(e?.message || 'Save failed');

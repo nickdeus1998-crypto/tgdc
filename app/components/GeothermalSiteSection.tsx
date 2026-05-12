@@ -29,6 +29,8 @@ const GeothermalSection: NextPage = () => {
   const [featuredTitle, setFeaturedTitle] = useState('Featured Geothermal Projects');
   const [geoSectionTitle, setGeoSectionTitle] = useState('Geothermal Sites in Tanzania');
   const [geoSectionSubtitle, setGeoSectionSubtitle] = useState("Discover Tanzania\u0027s geothermal potential across the Rift Valley.");
+  const [homeMapTitle, setHomeMapTitle] = useState('Tanzania Geothermal Map');
+  const [homeMapSubhead, setHomeMapSubhead] = useState('Click a zone to filter markers and projects.');
   const [activeZone, setActiveZone] = useState('All Zones');
   const [mapReady, setMapReady] = useState(false);
 
@@ -88,6 +90,15 @@ const GeothermalSection: NextPage = () => {
     fetch('/api/site-settings?key=geothermal_section_subtitle')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.value) setGeoSectionSubtitle(data.value); })
+      .catch(() => { });
+
+    fetch('/api/site-settings?key=geothermal_home_map_title')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setHomeMapTitle(data.value); })
+      .catch(() => { });
+    fetch('/api/site-settings?key=geothermal_home_map_subhead')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.value) setHomeMapSubhead(data.value); })
       .catch(() => { });
 
     return () => {
@@ -200,12 +211,12 @@ const GeothermalSection: NextPage = () => {
               ))}
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-xl mb-12">
+             <div className="bg-white rounded-2xl p-6 shadow-xl mb-12">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Tanzania Geothermal Map</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{homeMapTitle}</h3>
                   <p className="text-gray-500 text-sm">
-                    Click a zone to filter markers and projects.
+                    {homeMapSubhead}
                   </p>
                 </div>
               </div>

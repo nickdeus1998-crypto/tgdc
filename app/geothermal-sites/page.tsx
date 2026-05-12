@@ -25,6 +25,14 @@ const GeothermalSites: NextPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // Editable zone map settings
+  const [zoneMapTitle, setZoneMapTitle] = useState('Zone Map');
+  const [zoneMapSubhead, setZoneMapSubhead] = useState('Click a zone to filter, then explore exact site pins on the map.');
+  const [activeLabel, setActiveLabel] = useState('Active');
+  const [noDataLabel, setNoDataLabel] = useState('No data yet');
+  const [heroTitle, setHeroTitle] = useState('Tanzania’s Geothermal Sites by Zone');
+  const [heroDescription, setHeroDescription] = useState('Explore geothermal prospects across zones. Start with the Eastern Zone sites and drill down into each location’s background and status.');
+
   const mapRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
   const leafletRef = useRef<typeof L | null>(null);
@@ -187,12 +195,33 @@ const GeothermalSites: NextPage = () => {
     })();
   }, []);
 
+  // Load zone map labels from site-settings
+  useEffect(() => {
+    const settingsKeys = [
+      { key: 'geothermal_zone_map_title', setter: setZoneMapTitle },
+      { key: 'geothermal_zone_map_subhead', setter: setZoneMapSubhead },
+      { key: 'geothermal_active_label', setter: setActiveLabel },
+      { key: 'geothermal_nodata_label', setter: setNoDataLabel },
+      { key: 'geothermal_hero_title', setter: setHeroTitle },
+      { key: 'geothermal_hero_description', setter: setHeroDescription },
+    ];
+    settingsKeys.forEach(({ key, setter }) => {
+      fetch(`/api/site-settings?key=${key}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data?.value) setter(data.value); })
+        .catch(() => { });
+    });
+  }, []);
+
   useEffect(() => {
     updateMarkers();
   }, [currentZone, currentQuery]);
 
   const { easternCount, othersCount, totalCount } = updateStats();
   const filteredSites = getFilteredSites(currentZone, currentQuery);
+
+  // Compute which zones have site data for dynamic hex coloring
+  const zonesWithData = new Set(sites.map(s => s.zone));
 
   return (
     <>
@@ -208,10 +237,10 @@ const GeothermalSites: NextPage = () => {
         >
           <div className="max-w-6xl mx-auto px-6">
             <h1 className="text-4xl md:text-5xl font-extrabold mt-4 leading-tight">
-              Tanzania’s Geothermal Sites by Zone
+              {heroTitle}
             </h1>
             <p className="text-white/90 text-lg md:text-xl mt-4 max-w-3xl">
-              Explore geothermal prospects across zones. Start with the Eastern Zone sites and drill down into each location’s background and status.
+              {heroDescription}
             </p>
           </div>
         </section>
@@ -252,41 +281,41 @@ const GeothermalSites: NextPage = () => {
           <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-8">
             {/* Hex Map + Leaflet Map */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">Zone Map</h3>
-                  <p className="text-gray-600 text-sm">Click a zone to filter, then explore exact site pins on the map.</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{zoneMapTitle}</h3>
+                  <p className="text-gray-600 text-sm">{zoneMapSubhead}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="inline-flex items-center gap-1 text-xs text-gray-600">
-                    <span className="w-3 h-3 rounded bg-emerald-500"></span> Active
+                    <span className="w-3 h-3 rounded bg-emerald-500"></span> {activeLabel}
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs text-gray-600">
-                    <span className="w-3 h-3 rounded bg-gray-300"></span> No data yet
+                    <span className="w-3 h-3 rounded bg-gray-300"></span> {noDataLabel}
                   </span>
                 </div>
               </div>
               <div className="w-full mb-5">
                 <svg viewBox="0 0 900 520" className="w-full h-auto">
                   <g className={getZonePolygonClass('Eastern Zone')} onClick={() => handleZoneClick('Eastern Zone')}>
-                    <polygon points="150,140 210,105 270,140 270,210 210,245 150,210" fill="#10b981" fillOpacity="0.9" />
-                    <text x="210" y="178" textAnchor="middle" fill="white" fontSize="16" fontWeight="700">Eastern</text>
+                    <polygon points="150,140 210,105 270,140 270,210 210,245 150,210" fill={zonesWithData.has('Eastern Zone') ? '#10b981' : '#d1d5db'} fillOpacity="0.9" />
+                    <text x="210" y="178" textAnchor="middle" fill={zonesWithData.has('Eastern Zone') ? 'white' : '#111827'} fontSize="16" fontWeight="700">Eastern</text>
                   </g>
                   <g className={getZonePolygonClass('Lake Zone')} onClick={() => handleZoneClick('Lake Zone')}>
-                    <polygon points="370,70 430,35 490,70 490,140 430,175 370,140" fill="#d1d5db" fillOpacity="0.9" />
-                    <text x="430" y="108" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Lake</text>
+                    <polygon points="370,70 430,35 490,70 490,140 430,175 370,140" fill={zonesWithData.has('Lake Zone') ? '#10b981' : '#d1d5db'} fillOpacity="0.9" />
+                    <text x="430" y="108" textAnchor="middle" fill={zonesWithData.has('Lake Zone') ? 'white' : '#111827'} fontSize="16" fontWeight="700">Lake</text>
                   </g>
                   <g className={getZonePolygonClass('Southern Zone')} onClick={() => handleZoneClick('Southern Zone')}>
-                    <polygon points="370,220 430,185 490,220 490,290 430,325 370,290" fill="#d1d5db" fillOpacity="0.9" />
-                    <text x="430" y="258" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Southern</text>
+                    <polygon points="370,220 430,185 490,220 490,290 430,325 370,290" fill={zonesWithData.has('Southern Zone') ? '#10b981' : '#d1d5db'} fillOpacity="0.9" />
+                    <text x="430" y="258" textAnchor="middle" fill={zonesWithData.has('Southern Zone') ? 'white' : '#111827'} fontSize="16" fontWeight="700">Southern</text>
                   </g>
                   <g className={getZonePolygonClass('Northern Zone')} onClick={() => handleZoneClick('Northern Zone')}>
-                    <polygon points="590,140 650,105 710,140 710,210 650,245 590,210" fill="#d1d5db" fillOpacity="0.9" />
-                    <text x="650" y="178" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Northern</text>
+                    <polygon points="590,140 650,105 710,140 710,210 650,245 590,210" fill={zonesWithData.has('Northern Zone') ? '#10b981' : '#d1d5db'} fillOpacity="0.9" />
+                    <text x="650" y="178" textAnchor="middle" fill={zonesWithData.has('Northern Zone') ? 'white' : '#111827'} fontSize="16" fontWeight="700">Northern</text>
                   </g>
                   <g className={getZonePolygonClass('Central Zone')} onClick={() => handleZoneClick('Central Zone')}>
-                    <polygon points="480,360 540,325 600,360 600,430 540,465 480,430" fill="#d1d5db" fillOpacity="0.9" />
-                    <text x="540" y="398" textAnchor="middle" fill="#111827" fontSize="16" fontWeight="700">Central</text>
+                    <polygon points="480,360 540,325 600,360 600,430 540,465 480,430" fill={zonesWithData.has('Central Zone') ? '#10b981' : '#d1d5db'} fillOpacity="0.9" />
+                    <text x="540" y="398" textAnchor="middle" fill={zonesWithData.has('Central Zone') ? 'white' : '#111827'} fontSize="16" fontWeight="700">Central</text>
                   </g>
                   <g
                     className={`cursor-pointer transition-all duration-250 ease-in-out hover:-translate-y-1 hover:brightness-105 ${currentZone === 'All' ? 'outline outline-3 outline-white/80 outline-offset-[-2px]' : ''

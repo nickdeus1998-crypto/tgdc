@@ -9,10 +9,11 @@ function isAdmin(request: Request) {
   return payload?.role === 'admin'
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!isAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const id = Number(params.id)
+    const { id: idStr } = await params
+    const id = Number(idStr)
     if (!id) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
     const body = await request.json()
     const updated = await prisma.sustainabilityPartner.update({
@@ -33,10 +34,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!isAdmin(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const id = Number(params.id)
+    const { id: idStr } = await params
+    const id = Number(idStr)
     if (!id) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
     await prisma.sustainabilityPartner.delete({ where: { id } })
     return NextResponse.json({ ok: true })
@@ -44,4 +46,3 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     console.error('ADMIN sustainability partner delete error', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
-

@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'
+
 export async function GET() {
   try {
     const items = await prisma.impactHighlight.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
+    
+    const settings = await prisma.impactHighlightSettings.findFirst();
+
     return NextResponse.json({
+      sectionTitle: settings?.sectionTitle || 'Project Impact Highlights',
       items: items.map((item) => ({
         id: item.id,
         title: item.title,
@@ -20,5 +25,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('GET /api/impact-highlights error', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
 }
