@@ -916,6 +916,29 @@ const MediaPage: React.FC = () => {
     }
   }
 
+  const deleteMedia = async (name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone and may break links if the image is in use.`)) {
+      return
+    }
+
+    setLoading(true)
+    setStatus(null)
+    try {
+      const res = await fetch(`/api/admin/media?name=${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Deletion failed.')
+      setStatus({ type: 'success', message: 'File deleted successfully.' })
+      await loadMedia()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Deletion failed.'
+      setStatus({ type: 'error', message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     uploadFiles(event.target.files)
   }
@@ -1019,10 +1042,21 @@ const MediaPage: React.FC = () => {
                         {formatBytes(item.sizeBytes)} · {new Date(item.uploadedAt).toLocaleString()}
                       </p>
                       <div className="mt-3 flex items-center justify-between text-sm">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-[#326101] font-medium">
-                          Open
-                        </a>
-                        <code className="text-gray-500 text-xs">/uploads/media/{item.name}</code>
+                        <div className="flex items-center gap-3">
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-[#326101] font-medium hover:underline">
+                            Open
+                          </a>
+                          <button
+                            onClick={() => deleteMedia(item.name)}
+                            className="text-red-600 font-medium hover:text-red-700 hover:underline disabled:opacity-50"
+                            disabled={loading}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        <code className="text-gray-500 text-xs bg-gray-50 px-1 py-0.5 rounded border border-gray-100">
+                          /uploads/media/{item.name}
+                        </code>
                       </div>
                     </div>
                   </div>

@@ -93,6 +93,30 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
     }
   }
 
+  const deleteMedia = async (item: MediaItem) => {
+    if (!confirm(`Are you sure you want to delete "${item.name}"? This will permanently remove the file and may break existing links.`)) {
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/media?name=${encodeURIComponent(item.name)}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Deletion failed.')
+      setMediaItems(prev => prev.filter(m => m.name !== item.name))
+      if (value === item.url) {
+        onChange('')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Deletion failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-2">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
@@ -208,7 +232,22 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
                         )}
                       </div>
                       <div className="p-3">
-                        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-gray-900 truncate flex-1">{item.name}</p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteMedia(item)
+                            }}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                            title="Delete this file"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">
                           {formatSize(item.sizeBytes)} • {new Date(item.uploadedAt).toLocaleString()}
                         </p>

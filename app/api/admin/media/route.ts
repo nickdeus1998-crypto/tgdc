@@ -149,3 +149,42 @@ export async function POST(request: Request) {
   }
 }
 
+export async function DELETE(request: Request) {
+  try {
+    if (!isAdmin(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const name = searchParams.get('name')
+
+    if (!name) {
+      return NextResponse.json({ error: 'Filename is required' }, { status: 400 })
+    }
+
+    // Sanitize and prevent directory traversal
+    const cleanName = path.basename(name)
+    const absPath = path.resolve(MEDIA_ROOT, cleanName)
+
+    // Ensure the resolved path is still within MEDIA_ROOT
+    if (!absPath.startsWith(MEDIA_ROOT)) {
+      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+    }
+
+    try {
+      const stats = await fs.stat(absPath)
+      if (!stats.isFile()) {
+        return NextResponse.json({ error: 'Not a file' }, { status: 400 })
+      }
+    } catch {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+    }
+
+    await fs.unlink(absPath)
+    return NextResponse.json({ success: true, message: 'File deleted successfully' })
+  } catch (error: any) {
+    console.error('ADMIN media delete error', error)
+    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
+  }
+}
+
