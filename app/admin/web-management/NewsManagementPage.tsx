@@ -304,8 +304,10 @@ const NewsManagementPage: React.FC = () => {
                         {/* Cover Image */}
                         <MediaPicker
                             label="Cover Image"
+                            helperText="Recommended size: 1200 × 675 px (16:9 aspect ratio)"
                             value={form.coverImage || ''}
                             onChange={(url) => setForm({ ...form, coverImage: url })}
+                            aspectRatio={16 / 9}
                         />
 
                         {/* Rich Content Editor */}

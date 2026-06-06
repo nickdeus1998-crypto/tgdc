@@ -13,6 +13,10 @@ interface HeaderData {
     mainTitle: string;
     tanescoMail: string;
     tgdcMail: string;
+    contactLabel: string;
+    contactUrl: string;
+    tanescoLabel: string;
+    tgdcLabel: string;
 }
 
 const HeaderPage: React.FC = () => {
@@ -24,6 +28,10 @@ const HeaderPage: React.FC = () => {
             mainTitle: 'Tanzania Geothermal Development Company',
             tanescoMail: 'https://mail.tanesco.go.tz',
             tgdcMail: 'https://mail.tgdc.go.tz',
+            contactLabel: 'Contact Us',
+            contactUrl: '/contact',
+            tanescoLabel: 'TANESCO Mail',
+            tgdcLabel: 'TGDC Mail',
         },
     });
 
@@ -206,22 +214,60 @@ const HeaderPage: React.FC = () => {
                                     </div>
 
                                     <div className="pt-4 border-t border-gray-100">
-                                        <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Utility Links</h4>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">TANESCO Mail Link</label>
-                                                <input
-                                                    {...register('tanescoMail', { required: 'TANESCO mail link is required' })}
-                                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:bg-white transition-all text-gray-900"
-                                                />
+                                        <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Top Utility Bar Links</h4>
+                                        <div className="space-y-6">
+                                            {/* Contact Us Link */}
+                                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Link Label</label>
+                                                    <input
+                                                        {...register('contactLabel', { required: 'Contact label is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact URL</label>
+                                                    <input
+                                                        {...register('contactUrl', { required: 'Contact URL is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">TGDC Mail Link</label>
-                                                <input
-                                                    {...register('tgdcMail', { required: 'TGDC mail link is required' })}
-                                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] focus:bg-white transition-all text-gray-900"
-                                                />
+                                            {/* TANESCO Mail Link */}
+                                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">TANESCO Link Label</label>
+                                                    <input
+                                                        {...register('tanescoLabel', { required: 'TANESCO label is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">TANESCO URL</label>
+                                                    <input
+                                                        {...register('tanescoMail', { required: 'TANESCO URL is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* TGDC Mail Link */}
+                                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">TGDC Link Label</label>
+                                                    <input
+                                                        {...register('tgdcLabel', { required: 'TGDC label is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">TGDC URL</label>
+                                                    <input
+                                                        {...register('tgdcMail', { required: 'TGDC URL is required' })}
+                                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#326101] text-gray-900 text-sm"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

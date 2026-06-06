@@ -13,6 +13,10 @@ interface HeaderSettings {
   mainTitle?: string;
   tanescoMail?: string;
   tgdcMail?: string;
+  contactLabel?: string;
+  contactUrl?: string;
+  tanescoLabel?: string;
+  tgdcLabel?: string;
 }
 
 interface DropdownItem {
@@ -219,28 +223,28 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1">
           <div className="flex items-center justify-end text-[13px]">
             <Link
-              href="/contact"
+              href={settings?.contactUrl || "/contact"}
               className="text-white font-medium hover:text-green-300 transition-colors"
             >
-              Contact Us
+              {settings?.contactLabel || "Contact Us"}
             </Link>
             <span className="mx-3 text-white/40">|</span>
             <a
               href={settings?.tanescoMail || "https://mail.tanesco.go.tz"}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white font-medium"
+              className="text-white font-medium hover:text-green-300 transition-colors"
             >
-              TANESCO Mail
+              {settings?.tanescoLabel || "TANESCO Mail"}
             </a>
             <span className="mx-3 text-white/40">|</span>
             <a
               href={settings?.tgdcMail || "https://mail.tgdc.go.tz"}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white font-medium"
+              className="text-white font-medium hover:text-green-300 transition-colors"
             >
-              TGDC Mail
+              {settings?.tgdcLabel || "TGDC Mail"}
             </a>
           </div>
         </div>

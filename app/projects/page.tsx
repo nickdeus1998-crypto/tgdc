@@ -5,6 +5,7 @@ import { DiagramSection } from './components/DiagramSection';
 import { PilotAreasSection } from './components/PilotAreaSection';
 import { RoadmapSection } from './components/RoadmapSection';
 import { HeroResourceSection } from './components/HeroSection';
+import { PortfolioProjectsSection } from './components/PortfolioProjectsSection';
 import { StrategicProjectsSection } from './components/StrategicProjectsSection';
 import prisma from '@/lib/prisma';
 
@@ -73,6 +74,8 @@ export default async function ResourcePage() {
             title={data?.heroTitle || undefined}
             subtitle={data?.heroSubtitle || undefined}
           />
+          
+          <PortfolioProjectsSection />
           
           <IntroSection 
             title={data?.introTitle || undefined}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { sanitizeHtml } from '@/app/lib/sanitize';
+import Link from 'next/link';
 
 interface Announcement {
     id: number;
@@ -164,12 +165,12 @@ export default function FloatingAnnouncement() {
                                 }`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.content) }} />
 
                             <div className="flex gap-2 mt-5">
-                                <button
-                                    onClick={() => setIsExpanded(!isExpanded)}
-                                    className="flex-1 bg-[#326101] hover:bg-[#254801] text-white text-[11px] font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-green-900/10"
+                                <Link
+                                    href={`/news/${current.id}`}
+                                    className="flex-1 bg-[#326101] hover:bg-[#254801] text-white text-[11px] font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-green-900/10 text-center flex items-center justify-center"
                                 >
-                                    {isExpanded ? 'Show Less' : 'View Full Details'}
-                                </button>
+                                    View Full Details
+                                </Link>
                                 {announcements.length > 1 && (
                                     <button
                                         onClick={nextAnnouncement}

@@ -472,15 +472,19 @@ model SiteSettings {
 }
 
 model HeaderSettings {
-  id          Int      @id @default(autoincrement())
-  emblemUrl   String?
-  logoUrl     String?
-  topTitle    String   @default("United Republic of Tanzania")
-  mainTitle   String   @default("Tanzania Geothermal Development Company")
-  tanescoMail String   @default("https://mail.tanesco.go.tz")
-  tgdcMail    String   @default("https://mail.tgdc.go.tz")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  emblemUrl    String?
+  logoUrl      String?
+  topTitle     String   @default("United Republic of Tanzania")
+  mainTitle    String   @default("Tanzania Geothermal Development Company")
+  tanescoMail  String   @default("https://mail.tanesco.go.tz")
+  tgdcMail     String   @default("https://mail.tgdc.go.tz")
+  contactLabel String   @default("Contact Us")
+  contactUrl   String   @default("/contact")
+  tanescoLabel String   @default("TANESCO Mail")
+  tgdcLabel    String   @default("TGDC Mail")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SiteSetting {

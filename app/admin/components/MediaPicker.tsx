@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import ImageCropper from './ImageCropper'
 
 type MediaItem = {
   name: string
@@ -15,6 +16,7 @@ interface MediaPickerProps {
   value: string
   onChange: (value: string) => void
   disabled?: boolean
+  aspectRatio?: number
 }
 
 const formatSize = (bytes: number) => {
@@ -29,7 +31,7 @@ const isImage = (url: string) => {
   return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
 }
 
-const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onChange, disabled }) => {
+const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onChange, disabled, aspectRatio }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -37,6 +39,10 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
   const [hasFetched, setHasFetched] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cropper states
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [isCropperOpen, setIsCropperOpen] = useState(false)
 
   const closeModal = () => {
     setIsModalOpen(false)
@@ -74,13 +80,11 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
     closeModal()
   }
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files?.length) return
+  const uploadFileDirectly = async (file: File) => {
     setUploading(true)
     try {
       const formData = new FormData()
-      for (let i = 0; i < files.length; i++) formData.append('files', files[i])
+      formData.append('files', file)
       const res = await fetch('/api/admin/media', { method: 'POST', body: formData })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'Upload failed')
@@ -90,6 +94,55 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files?.length) return
+
+    const file = files[0];
+    if (aspectRatio && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const width = img.naturalWidth;
+          const height = img.naturalHeight;
+          const currentAspect = width / height;
+
+          // Check if aspect ratio deviates by more than 0.05
+          if (Math.abs(currentAspect - aspectRatio) > 0.05) {
+            setCropImageSrc(reader.result as string);
+            setIsCropperOpen(true);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+          } else {
+            uploadFileDirectly(file);
+          }
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      uploadFileDirectly(file);
+    }
+  }
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setIsCropperOpen(false)
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      const file = new File([croppedBlob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' })
+      formData.append('files', file)
+      const res = await fetch('/api/admin/media', { method: 'POST', body: formData })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Upload failed')
+      if (data?.items?.[0]?.url) onChange(data.items[0].url)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -138,6 +191,19 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
               disabled={disabled}
             >
               Clear
+            </button>
+          )}
+          {value && isImage(value) && aspectRatio && (
+            <button
+              type="button"
+              onClick={() => {
+                setCropImageSrc(value)
+                setIsCropperOpen(true)
+              }}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-[#326101] bg-green-50 border-green-200 hover:bg-green-100 disabled:opacity-50 font-semibold"
+              disabled={disabled || uploading}
+            >
+              Crop
             </button>
           )}
           <button
@@ -269,6 +335,14 @@ const MediaPicker: React.FC<MediaPickerProps> = ({ label, helperText, value, onC
             )}
           </div>
         </div>
+      )}
+      {isCropperOpen && cropImageSrc && (
+        <ImageCropper
+          imageSrc={cropImageSrc}
+          aspectRatio={aspectRatio}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setIsCropperOpen(false)}
+        />
       )}
     </div>
   )

@@ -88,149 +88,11 @@ const StableQuillEditor = forwardRef<any, StableQuillProps>(
           isInternalChange.current = false;
         });
 
-        // === FIX PICKER DROPDOWNS ===
-        // Completely take over picker click handling to avoid Quill's
-        // internal event system that causes the blink.
+        // Prevent toolbar clicks from stealing focus from the editor
         const toolbar = containerRef.current?.querySelector('.ql-toolbar');
         if (toolbar) {
-          const allPickers = toolbar.querySelectorAll('.ql-picker');
-
-          // For each picker, replace the label's mousedown with our own click handler
-          allPickers.forEach((picker: Element) => {
-            const label = picker.querySelector('.ql-picker-label');
-            if (!label) return;
-
-            // Clone the label to remove ALL existing event listeners
-            const newLabel = label.cloneNode(true) as HTMLElement;
-            label.parentNode?.replaceChild(newLabel, label);
-
-            // Add our own click handler (not mousedown!)
-            newLabel.addEventListener('click', (e) => {
-              e.stopPropagation();
-              e.preventDefault();
-
-              const isExpanded = picker.classList.contains('ql-expanded');
-
-              // Close all other pickers
-              allPickers.forEach((p: Element) => {
-                if (p !== picker) {
-                  p.classList.remove('ql-expanded');
-                  p.querySelector('.ql-picker-label')?.setAttribute('aria-expanded', 'false');
-                  p.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'true');
-                }
-              });
-
-              // Toggle this picker
-              if (isExpanded) {
-                picker.classList.remove('ql-expanded');
-                newLabel.setAttribute('aria-expanded', 'false');
-                picker.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'true');
-              } else {
-                picker.classList.add('ql-expanded');
-                newLabel.setAttribute('aria-expanded', 'true');
-                picker.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'false');
-              }
-            });
-
-            // Also handle keyboard for accessibility
-            newLabel.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter') {
-                newLabel.click();
-              } else if (e.key === 'Escape') {
-                picker.classList.remove('ql-expanded');
-                newLabel.setAttribute('aria-expanded', 'false');
-                picker.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'true');
-                newLabel.focus();
-              }
-            });
-          });
-
-          // Close pickers on click outside the toolbar
-          outsideClickHandler = (e: MouseEvent) => {
-            if (!toolbar.contains(e.target as Node)) {
-              allPickers.forEach((p: Element) => {
-                p.classList.remove('ql-expanded');
-                p.querySelector('.ql-picker-label')?.setAttribute('aria-expanded', 'false');
-                p.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'true');
-              });
-            }
-          };
-          // Use setTimeout to avoid catching the current click
-          setTimeout(() => {
-            if (mounted) {
-              document.addEventListener('click', outsideClickHandler!, true);
-            }
-          }, 100);
-
-          // Handle picker item clicks (selecting an option)
-          allPickers.forEach((picker: Element) => {
-            const items = picker.querySelectorAll('.ql-picker-item');
-            items.forEach((item: Element) => {
-              // Clone to remove existing listeners
-              const newItem = item.cloneNode(true) as HTMLElement;
-              item.parentNode?.replaceChild(newItem, item);
-
-              newItem.addEventListener('click', (e) => {
-                e.stopPropagation();
-                
-                // Get the value
-                const dataValue = newItem.getAttribute('data-value');
-                
-                // Update the underlying select element
-                const select = picker.querySelector('select');
-                if (select) {
-                  if (dataValue) {
-                    select.value = dataValue;
-                  } else {
-                    // Empty value = default option (first one or the one without value)
-                    const defaultOption = select.querySelector('option[selected]') || select.querySelector('option');
-                    if (defaultOption) {
-                      select.value = (defaultOption as HTMLOptionElement).value;
-                    }
-                  }
-                  select.dispatchEvent(new Event('change'));
-                }
-
-                // Update visual selection
-                picker.querySelectorAll('.ql-picker-item').forEach((i: Element) => {
-                  i.classList.remove('ql-selected');
-                });
-                newItem.classList.add('ql-selected');
-
-                // Update label
-                const label = picker.querySelector('.ql-picker-label');
-                if (label) {
-                  if (dataValue) {
-                    label.setAttribute('data-value', dataValue);
-                  } else {
-                    label.removeAttribute('data-value');
-                  }
-                  const dataLabel = newItem.getAttribute('data-label');
-                  if (dataLabel) {
-                    label.setAttribute('data-label', dataLabel);
-                  } else {
-                    label.removeAttribute('data-label');
-                  }
-                }
-
-                // Close the picker
-                picker.classList.remove('ql-expanded');
-                (picker.querySelector('.ql-picker-label') as HTMLElement)?.setAttribute('aria-expanded', 'false');
-                picker.querySelector('.ql-picker-options')?.setAttribute('aria-hidden', 'true');
-              });
-            });
-          });
-        }
-
-        // Also neutralize the base theme's click handler for pickers
-        // by removing pickers from the theme's array
-        const theme = (quill as any).theme;
-        if (theme && theme.pickers) {
-          // Replace each picker's close method with a no-op
-          // so the base theme's click handler can't close them
-          theme.pickers.forEach((picker: any) => {
-            picker.close = () => {}; // no-op
-            picker.togglePicker = () => {}; // no-op (we handle toggling)
+          toolbar.addEventListener('mousedown', (e) => {
+            e.preventDefault();
           });
         }
       };
@@ -239,9 +101,6 @@ const StableQuillEditor = forwardRef<any, StableQuillProps>(
 
       return () => {
         mounted = false;
-        if (outsideClickHandler) {
-          document.removeEventListener('click', outsideClickHandler, true);
-        }
       };
     }, []); // Only run once
 
