@@ -24,7 +24,11 @@ export async function GET() {
         socialLinks: [
           { name: 'Twitter', url: '#', icon: '<path d="M8 19c11 0 17-9 17-17..." />' },
         ],
-        copyright: `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`,
+        relatedLinks: [],
+        staffMailLinks: [],
+        bottomNavLinks: [],
+        designedByText: '',
+        copyright: `© ${new Date().getFullYear()} TGDC. All rights reserved.`,
       });
     }
     const r = rows[0];
@@ -36,6 +40,10 @@ export async function GET() {
       phone: r.phone ?? '',
       quickLinks: parseJSON(r.quickLinks, [] as any[]),
       socialLinks: parseJSON(r.socialLinks, [] as any[]),
+      relatedLinks: parseJSON(r.relatedLinks, [] as any[]),
+      staffMailLinks: parseJSON(r.staffMailLinks, [] as any[]),
+      bottomNavLinks: parseJSON(r.bottomNavLinks, [] as any[]),
+      designedByText: r.designedByText ?? '',
       copyright: r.copyright ?? '',
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -56,13 +64,17 @@ export async function POST(request: NextRequest) {
       phone = '',
       quickLinks = [],
       socialLinks = [],
-      copyright = `\u00A9 ${new Date().getFullYear()} TGDC. All rights reserved.`,
+      relatedLinks = [],
+      staffMailLinks = [],
+      bottomNavLinks = [],
+      designedByText = '',
+      copyright = `© ${new Date().getFullYear()} TGDC. All rights reserved.`,
     } = body || {};
 
     const now = new Date().toISOString();
     await prisma.$executeRawUnsafe(
-      `INSERT INTO Footer (id, aboutText, address, email, phone, quickLinks, socialLinks, copyright, createdAt, updatedAt)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO Footer (id, aboutText, address, email, phone, quickLinks, socialLinks, relatedLinks, staffMailLinks, bottomNavLinks, designedByText, copyright, createdAt, updatedAt)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          aboutText = excluded.aboutText,
          address = excluded.address,
@@ -70,6 +82,10 @@ export async function POST(request: NextRequest) {
          phone = excluded.phone,
          quickLinks = excluded.quickLinks,
          socialLinks = excluded.socialLinks,
+         relatedLinks = excluded.relatedLinks,
+         staffMailLinks = excluded.staffMailLinks,
+         bottomNavLinks = excluded.bottomNavLinks,
+         designedByText = excluded.designedByText,
          copyright = excluded.copyright,
          updatedAt = excluded.updatedAt`,
       aboutText,
@@ -78,6 +94,10 @@ export async function POST(request: NextRequest) {
       phone,
       JSON.stringify(quickLinks),
       JSON.stringify(socialLinks),
+      JSON.stringify(relatedLinks),
+      JSON.stringify(staffMailLinks),
+      JSON.stringify(bottomNavLinks),
+      designedByText,
       copyright,
       now,
       now,
@@ -93,6 +113,10 @@ export async function POST(request: NextRequest) {
       phone: r.phone ?? phone,
       quickLinks: parseJSON(r.quickLinks, quickLinks),
       socialLinks: parseJSON(r.socialLinks, socialLinks),
+      relatedLinks: parseJSON(r.relatedLinks, relatedLinks),
+      staffMailLinks: parseJSON(r.staffMailLinks, staffMailLinks),
+      bottomNavLinks: parseJSON(r.bottomNavLinks, bottomNavLinks),
+      designedByText: r.designedByText ?? designedByText,
       copyright: r.copyright ?? copyright,
       createdAt: r.createdAt ?? now,
       updatedAt: r.updatedAt ?? now,
@@ -101,4 +125,3 @@ export async function POST(request: NextRequest) {
     console.error('POST /api/footer error:', error);
     return NextResponse.json({ error: 'Failed to save footer settings' }, { status: 500 }); }
 }
-

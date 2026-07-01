@@ -81,7 +81,9 @@ export default function OrgStructure() {
   }
 
   const topLevel = levels[0];
-  const otherLevels = levels.slice(1);
+  // Separate upper chain (levels with ≤2 members) from the management team level (bottom)
+  const chainLevels = levels.slice(1).filter((l) => l.members.length <= 2);
+  const managementLevel = levels.slice(1).find((l) => l.members.length > 2) ?? null;
 
   return (
     <section id="org-structure" className="py-20 bg-gray-50">
@@ -94,7 +96,7 @@ export default function OrgStructure() {
           </p>
         </div>
 
-        {/* Org Chart */}
+        {/* Org Chart — upper chain */}
         <div className="flex flex-col items-center">
 
           {/* Top Level — centered leader(s) */}
@@ -107,8 +109,8 @@ export default function OrgStructure() {
           {/* Connector: vertical line from top level down */}
           <div className="w-0.5 h-10 bg-[#326101]" />
 
-          {/* Remaining levels */}
-          {otherLevels.map((level, levelIdx) => {
+          {/* Chain levels (GM, Directors) */}
+          {chainLevels.map((level, levelIdx) => {
             const count = level.members.length;
             return (
               <div key={level.order} className="w-full flex flex-col items-center">
@@ -119,24 +121,41 @@ export default function OrgStructure() {
                 </div>
 
                 {/* Vertical drops to each card + the cards */}
-                <div className={`grid gap-x-6 gap-y-0 w-full max-w-5xl ${count === 1 ? 'grid-cols-1 max-w-xs' : count === 2 ? 'grid-cols-2 max-w-lg' : count === 3 ? 'grid-cols-3 max-w-3xl' : 'grid-cols-2 md:grid-cols-4'}`}>
+                <div className={`grid gap-x-6 gap-y-0 w-full max-w-5xl ${count === 1 ? 'grid-cols-1 max-w-xs' : count === 2 ? 'grid-cols-2 max-w-lg' : 'grid-cols-3 max-w-3xl'}`}>
                   {level.members.map((leader) => (
                     <div key={leader.id} className="flex flex-col items-center">
-                      {/* Vertical drop */}
                       <div className="w-0.5 h-6 bg-[#326101]" />
                       <LeaderCard leader={leader} />
                     </div>
                   ))}
                 </div>
 
-                {/* Connector to next level if not last */}
-                {levelIdx < otherLevels.length - 1 && (
+                {/* Connector to next chain level */}
+                {levelIdx < chainLevels.length - 1 && (
                   <div className="w-0.5 h-10 bg-[#326101]" />
                 )}
               </div>
             );
           })}
         </div>
+
+        {/* Management Team — shown as a labeled grid, not a hierarchy branch */}
+        {managementLevel && (
+          <div className="mt-14">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-sm font-semibold text-[#326101] uppercase tracking-widest px-3">
+                Management Team
+              </span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+              {managementLevel.members.map((leader) => (
+                <LeaderCard key={leader.id} leader={leader} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

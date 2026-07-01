@@ -1,7 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import OrgStructure from '../components/OrgStructure';
 import { sanitizeHtml } from '@/app/lib/sanitize';
 
 interface TimelineItem {
@@ -432,7 +431,6 @@ const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      <OrgStructure />
     </div>
   );
 };

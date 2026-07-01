@@ -138,7 +138,7 @@ export default function Header() {
         },
         {
           label: "Management",
-          href: "/about-us#org-structure",
+          href: "/management",
           description: "Our leadership team",
           icon: "M12 8c1.657 0 3-1.343 3-3S13.657 2 12 2 9 3.343 9 5s1.343 3 3 3zm0 2c-2.21 0-4 1.79-4 4v5h8v-5c0-2.21-1.79-4-4-4z",
         },
@@ -230,15 +230,6 @@ export default function Header() {
             </Link>
             <span className="mx-3 text-white/40">|</span>
             <a
-              href={settings?.tanescoMail || "https://mail.tanesco.go.tz"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white font-medium hover:text-green-300 transition-colors"
-            >
-              {settings?.tanescoLabel || "TANESCO Mail"}
-            </a>
-            <span className="mx-3 text-white/40">|</span>
-            <a
               href={settings?.tgdcMail || "https://mail.tgdc.go.tz"}
               target="_blank"
               rel="noopener noreferrer"
@@ -279,9 +270,9 @@ export default function Header() {
       {/* Navigation Bar */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/70 shadow-lg border-b border-gray-100 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12 lg:h-14">
+          <div className="flex items-center h-12 lg:h-14 gap-2 min-w-0">
             {/* Desktop Navigation */}
-            <nav ref={navRef} className="hidden lg:flex items-center gap-1 whitespace-nowrap">
+            <nav ref={navRef} className="hidden lg:flex items-center gap-0.5 flex-1 min-w-0 overflow-hidden">
               {navItems.map((item) => (
                 <div
                   key={item.name}
@@ -292,7 +283,7 @@ export default function Header() {
                   {/* Nav Link */}
                   <Link
                     href={item.href}
-                    className={`group flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[13px] font-medium tracking-wide transition-all duration-200 ${activeDropdown === item.name
+                    className={`group flex items-center gap-1 px-2 py-1.5 rounded-lg text-[12px] font-medium tracking-wide transition-all duration-200 whitespace-nowrap ${activeDropdown === item.name
                       ? 'text-[#326101] bg-[#326101]/5'
                       : 'text-gray-700 hover:text-[#326101] hover:bg-[#326101]/5'
                       }`}
@@ -396,7 +387,7 @@ export default function Header() {
             </nav>
 
             {/* Search + CTA + language */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="group flex items-center gap-2 text-gray-500 hover:text-[#326101] px-3 py-2 rounded-lg hover:bg-[#326101]/5 transition-all duration-200"
@@ -410,7 +401,7 @@ export default function Header() {
               <LanguageSwitcher />
               <Link
                 href="/stakeholder/login"
-                className="whitespace-nowrap bg-gradient-to-r from-[#326101] to-[#639427] text-white px-6 py-2 rounded-full font-medium text-sm hover:shadow-lg hover:scale-105 transition-all duration-300"
+                className="whitespace-nowrap bg-gradient-to-r from-[#326101] to-[#639427] text-white px-4 py-1.5 rounded-full font-medium text-[12px] hover:shadow-lg hover:scale-105 transition-all duration-300"
               >
                 {t('nav.stakeholders')}
               </Link>

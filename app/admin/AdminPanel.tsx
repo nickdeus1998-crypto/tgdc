@@ -861,6 +861,7 @@ const MediaPage: React.FC = () => {
   const [mediaItems, setMediaItems] = useState<MediaFileItem[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -921,11 +922,12 @@ const MediaPage: React.FC = () => {
       return
     }
 
-    setLoading(true)
+    setDeleting(true)
     setStatus(null)
     try {
       const res = await fetch(`/api/admin/media?name=${encodeURIComponent(name)}`, {
         method: 'DELETE',
+        credentials: 'same-origin',
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'Deletion failed.')
@@ -935,7 +937,7 @@ const MediaPage: React.FC = () => {
       const message = error instanceof Error ? error.message : 'Deletion failed.'
       setStatus({ type: 'error', message })
     } finally {
-      setLoading(false)
+      setDeleting(false)
     }
   }
 
@@ -1048,10 +1050,10 @@ const MediaPage: React.FC = () => {
                           </a>
                           <button
                             onClick={() => deleteMedia(item.name)}
-                            className="text-red-600 font-medium hover:text-red-700 hover:underline disabled:opacity-50"
-                            disabled={loading}
+                            className="text-red-600 font-medium hover:text-red-700 hover:underline disabled:opacity-40 cursor-pointer"
+                            disabled={deleting || uploading}
                           >
-                            Delete
+                            {deleting ? 'Deleting…' : 'Delete'}
                           </button>
                         </div>
                         <code className="text-gray-500 text-xs bg-gray-50 px-1 py-0.5 rounded border border-gray-100">

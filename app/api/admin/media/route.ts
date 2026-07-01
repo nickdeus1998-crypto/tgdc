@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyJwt, getJwtSecret } from '@/app/lib/auth'
+import { isAdmin } from '@/app/lib/auth'
 import path from 'path'
 import fs from 'fs/promises'
 
@@ -19,14 +19,6 @@ type MediaItem = {
   url: string
   sizeBytes: number
   uploadedAt: string
-}
-
-function isAdmin(request: Request) {
-  const cookie = request.headers.get('cookie') || ''
-  const match = cookie.match(/(?:^|; )user_token=([^;]+)/)
-  const token = match ? decodeURIComponent(match[1]) : null
-  const payload = token ? verifyJwt(token, getJwtSecret()) : null
-  return payload?.role === 'admin'
 }
 
 async function ensureMediaDir() {

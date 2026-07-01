@@ -40,8 +40,8 @@ const HeroPage: React.FC = () => {
 
   // Buttons state
   const [buttons, setButtons] = useState<HeroButton[]>([
-    { label: 'Start Your Project', href: '/about-us', visible: true },
-    { label: 'View Case Studies', href: '/projects', visible: true },
+    { label: 'Start Your Project', href: '/contact', visible: true },
+    { label: 'View Direct Use Projects', href: '/projects', visible: true },
   ]);
 
   // Fetch existing hero data on mount
